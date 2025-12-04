@@ -8,28 +8,25 @@ import {
 
 export class ChatWootApi implements ICredentialType {
 	name = 'chatwootApi';
-	displayName = 'ChatWoot API';
-	documentationUrl = 'https://developers.chatwoot.com/api-doc';
+	displayName = 'Chatwoot API';
+	documentationUrl = 'https://developers.chatwoot.com/api-reference/introduction#application-apis';
 
 	properties: INodeProperties[] = [
 		{
-			displayName: 'ChatWoot API URL',
+			displayName: 'Chatwoot API URL',
 			name: 'url',
 			type: 'string',
 			default: '',
 			required: true,
 			placeholder: 'https://app.chatwoot.com',
 			description:
-				'Base URL of your Chatwoot instance. E.g.: https://app.chatwoot.com or https://chat.yourdomain.com',
+				'Base URL of your Chatwoot instance. E.g.: https://chatwoot.fazerai.com',
 		},
 		{
-			displayName: 'Notice',
-			name: 'tokenInfo',
+			displayName: 'For enhanced features and optimal performance, we recommend using <a href="https://github.com/fazer-ai/chatwoot" target="_blank">fazer.ai\'s Chatwoot</a>.',
+			name: 'apiNotice',
 			type: 'notice',
 			default: '',
-			description:
-				'There are <a href="https://www.chatwoot.com/docs/product/api" target="_blank">different types of access tokens</a> in Chatwoot. This field uses a <b>Personal Access Token</b>, obtained from your profile. Make sure to use the correct token.',
-			typeOptions: { password: true },
 		},
 		{
 			displayName: 'Access Token',
@@ -41,7 +38,7 @@ export class ChatWootApi implements ICredentialType {
 			typeOptions: {
 				password: true,
 			},
-			description: 'Personal Access Token from your Chatwoot account. Generate it in Profile > Access Tokens.',
+			description: 'Personal Access Token from your Chatwoot account. Generate it in Profile settings > Access Token.',
 		},
 	];
 
@@ -63,5 +60,3 @@ export class ChatWootApi implements ICredentialType {
 
 	icon: Icon = 'file:../icons/chatwoot.svg';
 }
-
-
