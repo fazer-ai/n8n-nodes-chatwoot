@@ -54,7 +54,7 @@ export class ChatWootApi implements ICredentialType {
 	test: ICredentialTestRequest = {
 		request: {
 			baseURL: '={{$credentials.url}}',
-			url: '/api/v1/profile',
+			url: 'auth/validate_token',
 		},
 	};
 
