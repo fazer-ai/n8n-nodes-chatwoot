@@ -310,3 +310,118 @@ export const presenceStatusOptions: INodeProperties = {
 		{ name: 'Busy', value: 'busy' },
 	],
 };
+
+/**
+ * Field filter mode - Select or Except
+ */
+export const fieldFilterMode: INodeProperties = {
+	displayName: 'Field Filter Mode',
+	name: 'fieldFilterMode',
+	type: 'options',
+	default: 'none',
+	description: 'Choose how to filter the response fields',
+	options: [
+		{ name: 'None', value: 'none', description: 'Return all fields' },
+		{ name: 'Select Fields', value: 'select', description: 'Only include selected fields' },
+		{ name: 'Except Fields', value: 'except', description: 'Exclude selected fields' },
+	],
+};
+
+/**
+ * Select fields - multiOptions to select fields to include in response
+ */
+export const selectFieldsOption: INodeProperties = {
+	displayName: 'Select Field Names or IDs',
+	name: 'selectFields',
+	type: 'multiOptions',
+	default: [],
+	description: 'Select the fields to include in the response. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+	typeOptions: {
+		loadOptionsMethod: 'getResponseFields',
+	},
+};
+
+/**
+ * Except fields - multiOptions to select fields to exclude from response
+ */
+export const exceptFieldsOption: INodeProperties = {
+	displayName: 'Except Field Names or IDs',
+	name: 'exceptFields',
+	type: 'multiOptions',
+	default: [],
+	description: 'Select the fields to exclude from the response. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+	typeOptions: {
+		loadOptionsMethod: 'getResponseFields',
+	},
+};
+
+/**
+ * Response filter fields
+ */
+export const responseFilterFields: INodeProperties = {
+	displayName: 'Response Filters',
+	name: 'responseFilters',
+	type: 'fixedCollection',
+	placeholder: 'Add Response Filter',
+	default: {},
+	options: [
+		{
+			displayName: 'Field Filtering',
+			name: 'fieldFiltering',
+			values: [
+				{
+					displayName: 'Field Filter Mode',
+					name: 'fieldFilterMode',
+					type: 'options',
+					default: 'none',
+					description: 'Choose how to filter the response fields',
+					options: [
+						{ name: 'None', value: 'none', description: 'Return all fields' },
+						{
+							name: 'Select Fields',
+							value: 'select',
+							description: 'Only include selected fields',
+						},
+						{
+							name: 'Except Fields',
+							value: 'except',
+							description: 'Exclude selected fields',
+						},
+					],
+				},
+				{
+					displayName: 'Select Field Names or IDs',
+					name: 'selectFields',
+					type: 'multiOptions',
+					default: [],
+					description:
+						'Select the fields to include in the response. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+					typeOptions: {
+						loadOptionsMethod: 'getResponseFields',
+					},
+					displayOptions: {
+						show: {
+							fieldFilterMode: ['select'],
+						},
+					},
+				},
+				{
+					displayName: 'Except Field Names or IDs',
+					name: 'exceptFields',
+					type: 'multiOptions',
+					default: [],
+					description:
+						'Select the fields to exclude from the response. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+					typeOptions: {
+						loadOptionsMethod: 'getResponseFields',
+					},
+					displayOptions: {
+						show: {
+							fieldFilterMode: ['except'],
+						},
+					},
+				},
+			],
+		},
+	],
+};

@@ -14,6 +14,7 @@ import { conversationDescription } from './resources/conversation';
 import { messageDescription } from './resources/message';
 import { webhookDescription } from './resources/webhook';
 import { customAttributeDescription } from './resources/customAttribute';
+import { labelDescription } from './resources/label';
 
 import {
 	getAccounts,
@@ -24,6 +25,7 @@ import {
 	getTeams,
 	getLabels,
 	getWebhooks,
+	getResponseFields,
 } from './listSearch';
 
 import {
@@ -34,6 +36,8 @@ import {
 	getContactId,
 	getWebhookId,
 } from './shared/transport';
+
+import { filterResponseFields } from './shared/utils';
 
 /**
  * n8n node for interacting with the Chatwoot REST API.
@@ -94,6 +98,11 @@ export class Chatwoot implements INodeType {
 						description: 'Manage inboxes',
 					},
 					{
+						name: 'Label',
+						value: 'label',
+						description: 'Manage labels (tags)',
+					},
+					{
 						name: 'Message',
 						value: 'message',
 						description: 'Send and manage messages',
@@ -119,6 +128,7 @@ export class Chatwoot implements INodeType {
 			...messageDescription,
 			...webhookDescription,
 			...customAttributeDescription,
+			...labelDescription,
 		],
 		usableAsTool: true,
 	};
@@ -135,6 +145,7 @@ export class Chatwoot implements INodeType {
 			getAgents,
 			getTeams,
 			getLabels,
+			getResponseFields,
 		},
 	};
 
@@ -746,9 +757,97 @@ export class Chatwoot implements INodeType {
 							}
 						}
 						break;
+					case 'label':
+						switch (operation) {
+							case 'create': {
+								const accountId = getAccountId.call(this, i);
+								const title = this.getNodeParameter('title', i) as string;
+								const additionalFields = this.getNodeParameter(
+									'additionalFields',
+									i,
+								) as IDataObject;
+
+								const body: IDataObject = {
+									title,
+									...additionalFields,
+								};
+
+								responseData = (await chatwootApiRequest.call(
+									this,
+									'POST',
+									`/api/v1/accounts/${accountId}/labels`,
+									body,
+								)) as IDataObject;
+								break;
+							}
+							case 'getAll': {
+								const accountId = getAccountId.call(this, i);
+
+								const response = (await chatwootApiRequest.call(
+									this,
+									'GET',
+									`/api/v1/accounts/${accountId}/labels`,
+								)) as IDataObject;
+								responseData = (response.payload as IDataObject[]) || [];
+								break;
+							}
+							case 'update': {
+								const accountId = getAccountId.call(this, i);
+								const labelId = this.getNodeParameter('labelId', i) as string;
+								const additionalFields = this.getNodeParameter(
+									'additionalFields',
+									i,
+								) as IDataObject;
+
+								responseData = (await chatwootApiRequest.call(
+									this,
+									'PATCH',
+									`/api/v1/accounts/${accountId}/labels/${labelId}`,
+									additionalFields,
+								)) as IDataObject;
+								break;
+							}
+							case 'delete': {
+								const accountId = getAccountId.call(this, i);
+								const labelId = this.getNodeParameter('labelId', i) as string;
+
+								await chatwootApiRequest.call(
+									this,
+									'DELETE',
+									`/api/v1/accounts/${accountId}/labels/${labelId}`,
+								);
+								responseData = { success: true };
+								break;
+							}
+						}
+						break;
 				}
 
 				if (responseData !== undefined) {
+					const responseFilters = this.getNodeParameter(
+						'responseFilters.fieldFiltering',
+						i,
+						{},
+					) as IDataObject;
+
+					const fieldFilterMode = responseFilters.fieldFilterMode as string;
+
+					if (fieldFilterMode === 'select') {
+						const selectFields = responseFilters.selectFields as string[];
+						responseData = filterResponseFields(
+							responseData,
+							selectFields,
+							undefined,
+						) as IDataObject | IDataObject[];
+					} else if (fieldFilterMode === 'except') {
+						const exceptFields = responseFilters.exceptFields as string[];
+						responseData = filterResponseFields(
+							responseData,
+							undefined,
+							exceptFields,
+						) as IDataObject | IDataObject[];
+					}
+
 					if (Array.isArray(responseData)) {
 						returnData.push(...responseData.map((item) => ({ json: item })));
 					} else {

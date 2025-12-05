@@ -7,6 +7,7 @@ import {
 	conversationStatusOptions,
 	customAttributesField,
 	rawJsonBody,
+	responseFilterFields,
 } from '../../shared/descriptions';
 
 const showOnlyForConversation = {
@@ -71,19 +72,12 @@ export const conversationOperations: INodeProperties[] = [
 ];
 
 export const conversationFields: INodeProperties[] = [
-	// ============================================
-	// Account Selection (all operations)
-	// ============================================
 	{
 		...accountSelector,
 		displayOptions: {
 			show: showOnlyForConversation,
 		},
 	},
-
-	// ============================================
-	// Inbox Selection (for getAll and create) - Optional
-	// ============================================
 	{
 		...inboxSelector,
 		required: false,
@@ -95,10 +89,6 @@ export const conversationFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Conversation Selection (specific operations)
-	// ============================================
 	{
 		...conversationSelector,
 		displayOptions: {
@@ -108,10 +98,6 @@ export const conversationFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Status for toggleStatus
-	// ============================================
 	{
 		...conversationStatusOptions,
 		displayOptions: {
@@ -121,10 +107,6 @@ export const conversationFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Filters for getAll
-	// ============================================
 	{
 		displayName: 'Filters',
 		name: 'filters',
@@ -171,10 +153,6 @@ export const conversationFields: INodeProperties[] = [
 			},
 		],
 	},
-
-	// ============================================
-	// Agent Selector for assignAgent
-	// ============================================
 	{
 		displayName: 'Agent Name or ID',
 		name: 'agentId',
@@ -192,10 +170,6 @@ export const conversationFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Team Selector for assignTeam
-	// ============================================
 	{
 		displayName: 'Team Name or ID',
 		name: 'teamId',
@@ -213,10 +187,6 @@ export const conversationFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Labels for addLabels
-	// ============================================
 	{
 		displayName: 'Label Names or IDs',
 		name: 'labels',
@@ -233,10 +203,6 @@ export const conversationFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Contact Selection for create
-	// ============================================
 	{
 		...contactSelector,
 		displayOptions: {
@@ -247,10 +213,6 @@ export const conversationFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Additional fields for create
-	// ============================================
 	{
 		displayName: 'Additional Fields',
 		name: 'additionalFields',
@@ -277,10 +239,6 @@ export const conversationFields: INodeProperties[] = [
 			},
 		],
 	},
-
-	// ============================================
-	// Raw JSON body option
-	// ============================================
 	{
 		displayName: 'Use Raw JSON',
 		name: 'useRawJson',
@@ -301,6 +259,15 @@ export const conversationFields: INodeProperties[] = [
 				...showOnlyForConversation,
 				operation: ['create'],
 				useRawJson: [true],
+			},
+		},
+	},
+	{
+		...responseFilterFields,
+		displayOptions: {
+			show: {
+				...showOnlyForConversation,
+				operation: ['get', 'getAll'],
 			},
 		},
 	},

@@ -4,6 +4,7 @@ import {
 	contactSelector,
 	conversationSelector,
 	rawJsonBody,
+	responseFilterFields,
 } from '../../shared/descriptions';
 
 const showOnlyForCustomAttribute = {
@@ -56,19 +57,12 @@ export const customAttributeOperations: INodeProperties[] = [
 ];
 
 export const customAttributeFields: INodeProperties[] = [
-	// ============================================
-	// Account Selection (all operations)
-	// ============================================
 	{
 		...accountSelector,
 		displayOptions: {
 			show: showOnlyForCustomAttribute,
 		},
 	},
-
-	// ============================================
-	// Attribute Model (for definitions)
-	// ============================================
 	{
 		displayName: 'Attribute Model',
 		name: 'attributeModel',
@@ -86,10 +80,6 @@ export const customAttributeFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Create Definition Fields
-	// ============================================
 	{
 		displayName: 'Attribute Display Name',
 		name: 'attributeDisplayName',
@@ -155,10 +145,6 @@ export const customAttributeFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Contact Selection (setOnContact)
-	// ============================================
 	{
 		...contactSelector,
 		displayOptions: {
@@ -168,10 +154,6 @@ export const customAttributeFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Conversation Selection (setOnConversation)
-	// ============================================
 	{
 		...conversationSelector,
 		displayOptions: {
@@ -181,10 +163,6 @@ export const customAttributeFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Custom Attributes JSON (for set operations)
-	// ============================================
 	{
 		displayName: 'Custom Attributes',
 		name: 'customAttributes',
@@ -199,10 +177,6 @@ export const customAttributeFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Raw JSON body option (for createDefinition)
-	// ============================================
 	{
 		displayName: 'Use Raw JSON',
 		name: 'useRawJson',
@@ -223,6 +197,15 @@ export const customAttributeFields: INodeProperties[] = [
 				...showOnlyForCustomAttribute,
 				operation: ['createDefinition'],
 				useRawJson: [true],
+			},
+		},
+	},
+	{
+		...responseFilterFields,
+		displayOptions: {
+			show: {
+				...showOnlyForCustomAttribute,
+				operation: ['getDefinitions'],
 			},
 		},
 	},

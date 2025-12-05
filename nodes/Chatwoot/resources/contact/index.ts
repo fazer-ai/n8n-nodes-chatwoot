@@ -4,6 +4,7 @@ import {
 	contactSelector,
 	customAttributesField,
 	rawJsonBody,
+	responseFilterFields,
 } from '../../shared/descriptions';
 
 const showOnlyForContact = {
@@ -266,6 +267,19 @@ export const contactFields: INodeProperties[] = [
 				...showOnlyForContact,
 				operation: ['create', 'update'],
 				useRawJson: [true],
+			},
+		},
+	},
+
+	// ============================================
+	// Response Filters (get, getAll, search)
+	// ============================================
+	{
+		...responseFilterFields,
+		displayOptions: {
+			show: {
+				...showOnlyForContact,
+				operation: ['get', 'getAll', 'search'],
 			},
 		},
 	},

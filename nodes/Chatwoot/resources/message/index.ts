@@ -5,6 +5,7 @@ import {
 	messageTypeOptions,
 	typingStatusOptions,
 	rawJsonBody,
+	responseFilterFields,
 } from '../../shared/descriptions';
 
 const showOnlyForMessage = {
@@ -57,29 +58,18 @@ export const messageOperations: INodeProperties[] = [
 ];
 
 export const messageFields: INodeProperties[] = [
-	// ============================================
-	// Account Selection (all operations)
-	// ============================================
 	{
 		...accountSelector,
 		displayOptions: {
 			show: showOnlyForMessage,
 		},
 	},
-
-	// ============================================
-	// Conversation Selection (all operations)
-	// ============================================
 	{
 		...conversationSelector,
 		displayOptions: {
 			show: showOnlyForMessage,
 		},
 	},
-
-	// ============================================
-	// Send Message Fields
-	// ============================================
 	{
 		displayName: 'Message Content',
 		name: 'content',
@@ -122,10 +112,6 @@ export const messageFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Delete Message Fields
-	// ============================================
 	{
 		displayName: 'Message ID',
 		name: 'messageId',
@@ -140,10 +126,6 @@ export const messageFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Typing Status
-	// ============================================
 	{
 		...typingStatusOptions,
 		displayOptions: {
@@ -153,10 +135,6 @@ export const messageFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Additional Fields for send
-	// ============================================
 	{
 		displayName: 'Additional Fields',
 		name: 'additionalFields',
@@ -200,10 +178,6 @@ export const messageFields: INodeProperties[] = [
 			},
 		],
 	},
-
-	// ============================================
-	// Options for getAll
-	// ============================================
 	{
 		displayName: 'Options',
 		name: 'options',
@@ -233,10 +207,6 @@ export const messageFields: INodeProperties[] = [
 			},
 		],
 	},
-
-	// ============================================
-	// Raw JSON body option
-	// ============================================
 	{
 		displayName: 'Use Raw JSON',
 		name: 'useRawJson',
@@ -257,6 +227,15 @@ export const messageFields: INodeProperties[] = [
 				...showOnlyForMessage,
 				operation: ['send'],
 				useRawJson: [true],
+			},
+		},
+	},
+	{
+		...responseFilterFields,
+		displayOptions: {
+			show: {
+				...showOnlyForMessage,
+				operation: ['getAll'],
 			},
 		},
 	},

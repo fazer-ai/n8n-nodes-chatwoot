@@ -1,4 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
+import { responseFilterFields } from '../../shared/descriptions';
 
 const showOnlyForProfile = {
 	resource: ['profile'],
@@ -26,7 +27,15 @@ export const profileOperations: INodeProperties[] = [
 ];
 
 export const profileFields: INodeProperties[] = [
-	// No additional fields needed for profile fetch
+	{
+		...responseFilterFields,
+		displayOptions: {
+			show: {
+				...showOnlyForProfile,
+				operation: ['fetch'],
+			},
+		},
+	},
 ];
 
 export const profileDescription: INodeProperties[] = [

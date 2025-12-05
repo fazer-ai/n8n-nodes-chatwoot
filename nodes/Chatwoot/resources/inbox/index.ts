@@ -1,5 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { accountSelector, inboxSelector } from '../../shared/descriptions';
+import { accountSelector, inboxSelector, responseFilterFields } from '../../shared/descriptions';
 
 const showOnlyForInbox = {
 	resource: ['inbox'],
@@ -33,20 +33,27 @@ export const inboxOperations: INodeProperties[] = [
 ];
 
 export const inboxFields: INodeProperties[] = [
-	// Account selector (resourceLocator with From List / By ID) - for all operations
 	{
 		...accountSelector,
 		displayOptions: {
 			show: showOnlyForInbox,
 		},
 	},
-	// Inbox selector (resourceLocator with From List / By ID) - for get operation
 	{
 		...inboxSelector,
 		displayOptions: {
 			show: {
 				...showOnlyForInbox,
 				operation: ['get'],
+			},
+		},
+	},
+	{
+		...responseFilterFields,
+		displayOptions: {
+			show: {
+				...showOnlyForInbox,
+				operation: ['get', 'list'],
 			},
 		},
 	},

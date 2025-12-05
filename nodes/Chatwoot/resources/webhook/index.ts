@@ -4,6 +4,7 @@ import {
 	inboxSelector,
 	webhookSelector,
 	webhookEventsSelect,
+	responseFilterFields,
 } from '../../shared/descriptions';
 
 const showOnlyForWebhook = {
@@ -50,19 +51,12 @@ export const webhookOperations: INodeProperties[] = [
 ];
 
 export const webhookFields: INodeProperties[] = [
-	// ============================================
-	// Account Selection (all operations)
-	// ============================================
 	{
 		...accountSelector,
 		displayOptions: {
 			show: showOnlyForWebhook,
 		},
 	},
-
-	// ============================================
-	// Webhook Selector (update/delete)
-	// ============================================
 	{
 		...webhookSelector,
 		displayOptions: {
@@ -72,10 +66,6 @@ export const webhookFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Webhook URL (create/update)
-	// ============================================
 	{
 		displayName: 'Webhook URL',
 		name: 'webhookUrl',
@@ -91,10 +81,6 @@ export const webhookFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Events Selector (create/update)
-	// ============================================
 	{
 		...webhookEventsSelect,
 		displayOptions: {
@@ -104,10 +90,6 @@ export const webhookFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Optional Inbox Filter (create/update)
-	// ============================================
 	{
 		displayName: 'Filter by Inbox',
 		name: 'filterByInbox',
@@ -132,21 +114,25 @@ export const webhookFields: INodeProperties[] = [
 			},
 		},
 	},
-
-	// ============================================
-	// Auto-setup Webhook Option (like Telegram)
-	// ============================================
 	{
 		displayName: 'Auto-Setup Webhook',
 		name: 'autoSetup',
 		type: 'boolean',
 		default: false,
-		// eslint-disable-next-line n8n-nodes-base/node-param-description-boolean-without-whether
-		description: 'Automatically setup the webhook when enabling the workflow (similar to Telegram). Note: This requires a trigger node.',
+		description: 'Whether to automatically setup the webhook when enabling the workflow',
 		displayOptions: {
 			show: {
 				...showOnlyForWebhook,
 				operation: ['create'],
+			},
+		},
+	},
+	{
+		...responseFilterFields,
+		displayOptions: {
+			show: {
+				...showOnlyForWebhook,
+				operation: ['getAll'],
 			},
 		},
 	},

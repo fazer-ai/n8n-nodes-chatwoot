@@ -5,7 +5,6 @@ import type {
 } from 'n8n-workflow';
 import { chatwootApiRequest } from '../shared/transport';
 
-// Interfaces para os tipos de resposta da API
 interface ChatwootAccount {
 	id: number;
 	name: string;
@@ -100,7 +99,6 @@ export async function getAccounts(
 		value: String(account.id),
 	}));
 
-	// Apply filter if provided
 	if (filter) {
 		const filterLower = filter.toLowerCase();
 		results = results.filter(
@@ -140,7 +138,6 @@ export async function getInboxes(
 		value: String(inbox.id),
 	}));
 
-	// Apply filter if provided
 	if (filter) {
 		const filterLower = filter.toLowerCase();
 		results = results.filter(
@@ -189,7 +186,6 @@ export async function getConversations(
 		}),
 	);
 
-	// Apply filter if provided
 	if (filter) {
 		const filterLower = filter.toLowerCase();
 		results = results.filter(
@@ -231,7 +227,6 @@ export async function getContacts(
 		}),
 	);
 
-	// Apply filter if provided
 	if (filter) {
 		const filterLower = filter.toLowerCase();
 		results = results.filter(
@@ -348,7 +343,6 @@ export async function getWebhooks(
 		}),
 	);
 
-	// Apply filter if provided
 	if (filter) {
 		const filterLower = filter.toLowerCase();
 		results = results.filter(
@@ -359,4 +353,176 @@ export async function getWebhooks(
 	}
 
 	return { results };
+}
+
+/**
+ * Get all response fields dynamically based on resource and operation
+ * Makes a sample API call and extracts all available field names
+ */
+export async function getResponseFields(
+	this: ILoadOptionsFunctions,
+): Promise<INodePropertyOptions[]> {
+	const resource = this.getNodeParameter('resource', 0) as string;
+	const operation = this.getNodeParameter('operation', 0) as string;
+	const accountId = extractResourceLocatorValue(this, 'accountId');
+
+	if (!accountId) {
+		return [];
+	}
+
+	let sampleResponse: unknown;
+
+	try {
+		switch (resource) {
+			case 'profile':
+				sampleResponse = await chatwootApiRequest.call(this, 'GET', '/api/v1/profile');
+				break;
+
+			case 'account':
+				if (operation === 'getAll') {
+					const profile = (await chatwootApiRequest.call(
+						this,
+						'GET',
+						'/api/v1/profile',
+					)) as ChatwootProfileResponse;
+					sampleResponse = profile.accounts?.[0] || {};
+				} else {
+					sampleResponse = await chatwootApiRequest.call(
+						this,
+						'GET',
+						`/api/v1/accounts/${accountId}`,
+					);
+				}
+				break;
+
+			case 'inbox': {
+				const inboxResponse = (await chatwootApiRequest.call(
+					this,
+					'GET',
+					`/api/v1/accounts/${accountId}/inboxes`,
+				)) as ChatwootPayloadResponse<ChatwootInbox> | ChatwootInbox[];
+				const inboxes =
+					(inboxResponse as ChatwootPayloadResponse<ChatwootInbox>).payload ||
+					(inboxResponse as ChatwootInbox[]) ||
+					[];
+				sampleResponse = inboxes[0] || {};
+				break;
+			}
+
+			case 'contact': {
+				const contactResponse = (await chatwootApiRequest.call(
+					this,
+					'GET',
+					`/api/v1/accounts/${accountId}/contacts`,
+					undefined,
+					{ per_page: 1 },
+				)) as ChatwootPayloadResponse<ChatwootContact> | ChatwootContact[];
+				const contacts =
+					(contactResponse as ChatwootPayloadResponse<ChatwootContact>).payload ||
+					(contactResponse as ChatwootContact[]) ||
+					[];
+				sampleResponse = contacts[0] || {};
+				break;
+			}
+
+			case 'conversation': {
+				const convResponse = (await chatwootApiRequest.call(
+					this,
+					'GET',
+					`/api/v1/accounts/${accountId}/conversations`,
+					undefined,
+					{ per_page: 1 },
+				)) as ChatwootPayloadResponse<ChatwootConversation> | { data: { payload?: ChatwootConversation[] } };
+				const conversations =
+					(convResponse as ChatwootPayloadResponse<ChatwootConversation>).payload ||
+					(convResponse as { data: { payload?: ChatwootConversation[] } }).data?.payload ||
+					[];
+				sampleResponse = conversations[0] || {};
+				break;
+			}
+
+			case 'message': {
+				const msgConvResponse = (await chatwootApiRequest.call(
+					this,
+					'GET',
+					`/api/v1/accounts/${accountId}/conversations`,
+					undefined,
+					{ per_page: 1 },
+				)) as ChatwootPayloadResponse<ChatwootConversation> | { data: { payload?: ChatwootConversation[] } };
+				const msgConversations =
+					(msgConvResponse as ChatwootPayloadResponse<ChatwootConversation>).payload ||
+					(msgConvResponse as { data: { payload?: ChatwootConversation[] } }).data?.payload ||
+					[];
+				if (msgConversations.length > 0) {
+					const messagesResponse = (await chatwootApiRequest.call(
+						this,
+						'GET',
+						`/api/v1/accounts/${accountId}/conversations/${msgConversations[0].id}/messages`,
+					)) as unknown[];
+					sampleResponse = Array.isArray(messagesResponse) && messagesResponse.length > 0
+						? messagesResponse[0]
+						: {};
+				} else {
+					sampleResponse = {};
+				}
+				break;
+			}
+
+			case 'webhook': {
+				const webhookResponse = (await chatwootApiRequest.call(
+					this,
+					'GET',
+					`/api/v1/accounts/${accountId}/webhooks`,
+				)) as ChatwootPayloadResponse<ChatwootWebhook> | ChatwootWebhook[];
+				const webhooks =
+					(webhookResponse as ChatwootPayloadResponse<ChatwootWebhook>).payload ||
+					(webhookResponse as ChatwootWebhook[]) ||
+					[];
+				sampleResponse = webhooks[0] || {};
+				break;
+			}
+
+			case 'customAttribute': {
+				const attrResponse = (await chatwootApiRequest.call(
+					this,
+					'GET',
+					`/api/v1/accounts/${accountId}/custom_attribute_definitions`,
+					undefined,
+					{ attribute_model: 'contact_attribute' },
+				)) as unknown[];
+				sampleResponse = Array.isArray(attrResponse) && attrResponse.length > 0
+					? attrResponse[0]
+					: {};
+				break;
+			}
+
+			case 'label': {
+				const labelResponse = (await chatwootApiRequest.call(
+					this,
+					'GET',
+					`/api/v1/accounts/${accountId}/labels`,
+				)) as { payload?: unknown[] } | unknown[];
+				const labels =
+					(labelResponse as { payload?: unknown[] }).payload ||
+					(labelResponse as unknown[]) ||
+					[];
+				sampleResponse = Array.isArray(labels) && labels.length > 0
+					? labels[0]
+					: {};
+				break;
+			}
+
+			default:
+				return [];
+		}
+	} catch {
+		return [];
+	}
+
+	const fields = Object.keys(sampleResponse as Record<string, unknown>);
+
+	return fields.sort().map((field) => ({
+		name: field,
+		value: field,
+	}));
 }
