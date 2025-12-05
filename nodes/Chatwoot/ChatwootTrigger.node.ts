@@ -187,7 +187,9 @@ export class ChatwootTrigger implements INodeType {
 						const sortedExpected = [...events].sort();
 
 						const currentName = webhook.name;
-						const expectedName = this.getNode().name;
+						const nodeName = this.getNode().name;
+						const mode = this.getActivationMode();
+						const expectedName = mode === 'manual' ? `[N8N-TEST] ${nodeName}` : `[N8N] ${nodeName}`;
 
 						if (
 							JSON.stringify(sortedCurrent) === JSON.stringify(sortedExpected) &&
@@ -233,12 +235,14 @@ export class ChatwootTrigger implements INodeType {
 
 				const events = this.getNodeParameter('events');
 				const nodeName = this.getNode().name;
+				const mode = this.getActivationMode();
+				const webhookName = mode === 'manual' ? `[N8N-TEST] ${nodeName}` : `[N8N] ${nodeName}`;
 
 				const endpoint = `/api/v1/accounts/${accountId}/webhooks`;
 
 				const body: IDataObject = {
 					webhook: {
-						name: `[N8N] ${nodeName}`,
+						name: webhookName,
 						url: webhookUrl,
 						subscriptions: events,
 					}
