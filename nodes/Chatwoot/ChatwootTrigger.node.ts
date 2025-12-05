@@ -33,6 +33,9 @@ export class ChatwootTrigger implements INodeType {
 				required: true,
 			},
 		],
+		codex: {
+			categories: ['Messaging', 'Customer Support'],
+		},
 		webhooks: [
 			{
 				name: 'default',
