@@ -21,6 +21,7 @@ import { executeMessageOperation } from './resources/message/operations';
 import { webhookDescription } from './resources/webhook';
 import { executeWebhookOperation } from './resources/webhook/operations';
 import { customAttributeDescription } from './resources/customAttribute';
+import { executeCustomAttributeOperation } from './resources/customAttribute/operations';
 import { labelDescription } from './resources/label';
 
 import {
@@ -192,118 +193,7 @@ export class Chatwoot implements INodeType {
 					responseData = await executeWebhookOperation(this, operation, i);
 					break;
 				case 'customAttribute':
-					switch (operation) {
-					case 'createDefinition': {
-						const accountId = getAccountId.call(this, i);
-						const useRawJson = this.getNodeParameter('useRawJson', i, false) as boolean;
-
-						let body: IDataObject;
-						if (useRawJson) {
-							body = JSON.parse(this.getNodeParameter('jsonBody', i, '{}') as string);
-						} else {
-							const attributeModel = this.getNodeParameter('attributeModel', i) as string;
-							const attributeDisplayName = this.getNodeParameter('attributeDisplayName', i) as string;
-							const attributeKey = this.getNodeParameter('attributeKey', i) as string;
-							const attributeType = this.getNodeParameter('attributeType', i) as string;
-							const additionalFields = this.getNodeParameter('additionalFields', i, {}) as IDataObject;
-
-							body = {
-								attribute_display_name: attributeDisplayName,
-								attribute_key: attributeKey,
-								attribute_display_type: attributeType,
-								attribute_model: attributeModel === 'contact_attribute' ? 0 : 1,
-							};
-
-							if (attributeType === 'list') {
-								const attributeValuesInput = this.getNodeParameter('attributeValues', i) as
-											| string
-											| string[];
-								const attributeValues = (
-									Array.isArray(attributeValuesInput)
-										? attributeValuesInput
-										: [attributeValuesInput]
-								).filter((value) => value !== '');
-
-								if (attributeValues.length) {
-									body.attribute_values = attributeValues;
-								}
-							}
-
-							const attributeDescription = additionalFields.attributeDescription as string | undefined;
-							if (attributeDescription) {
-								body.attribute_description = attributeDescription;
-							}
-						}
-
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'POST',
-							`/api/v1/accounts/${accountId}/custom_attribute_definitions`,
-							body,
-						)) as IDataObject;
-						break;
-					}
-					case 'getDefinitions': {
-						const accountId = getAccountId.call(this, i);
-						const attributeModel = this.getNodeParameter('attributeModel', i) as string;
-
-						const query: IDataObject = {
-							attribute_model: attributeModel,
-						};
-
-						const response = (await chatwootApiRequest.call(
-							this,
-							'GET',
-							`/api/v1/accounts/${accountId}/custom_attribute_definitions`,
-							undefined,
-							query,
-						)) as IDataObject[];
-						responseData = response;
-						break;
-					}
-					case 'setOnContact': {
-						const accountId = getAccountId.call(this, i);
-						const contactId = getContactId.call(this, i);
-						const customAttributes = JSON.parse(
-									this.getNodeParameter('customAttributes', i) as string,
-						);
-
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'PUT',
-							`/api/v1/accounts/${accountId}/contacts/${contactId}`,
-							{ custom_attributes: customAttributes },
-						)) as IDataObject;
-						break;
-					}
-					case 'setOnConversation': {
-						const accountId = getAccountId.call(this, i);
-						const conversationId = getConversationId.call(this, i);
-						const customAttributes = JSON.parse(
-									this.getNodeParameter('customAttributes', i) as string,
-						);
-
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'POST',
-							`/api/v1/accounts/${accountId}/conversations/${conversationId}/custom_attributes`,
-							{ custom_attributes: customAttributes },
-						)) as IDataObject;
-						break;
-					}
-					case 'deleteDefinition': {
-						const accountId = getAccountId.call(this, i);
-						const attributeKey = this.getNodeParameter('attributeKey', i) as string;
-
-						await chatwootApiRequest.call(
-							this,
-							'DELETE',
-							`/api/v1/accounts/${accountId}/custom_attribute_definitions/${attributeKey}`,
-						);
-						responseData = { success: true };
-						break;
-					}
-					}
+					responseData = await executeCustomAttributeOperation(this, operation, i);
 					break;
 				case 'label':
 					switch (operation) {
