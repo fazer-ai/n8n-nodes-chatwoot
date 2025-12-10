@@ -5,14 +5,14 @@ export async function executeAccountOperation(
 	context: IExecuteFunctions,
 	operation: string,
 	itemIndex: number,
-): Promise<IDataObject | IDataObject[] | undefined> {
+): Promise<IDataObject | IDataObject[] | null> {
   if (operation === 'getAll') {
     return getAllAccounts(context);
   } else if (operation === 'get') {
     return getAccount(context, itemIndex);
   }
 
-  return undefined;
+  return null;
 }
 
 

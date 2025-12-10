@@ -5,7 +5,7 @@ export async function executeLabelOperation(
 	context: IExecuteFunctions,
 	operation: string,
 	itemIndex: number,
-): Promise<IDataObject | IDataObject[] | undefined> {
+): Promise<IDataObject | IDataObject[] | null> {
   if (operation === 'create') {
     return createLabel(context, itemIndex);
   } else if (operation === 'getAll') {
@@ -16,7 +16,7 @@ export async function executeLabelOperation(
     return deleteLabel(context, itemIndex);
   }
 
-  return undefined;
+  return null;
 }
 
 async function createLabel(

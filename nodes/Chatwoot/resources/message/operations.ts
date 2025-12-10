@@ -9,7 +9,7 @@ export async function executeMessageOperation(
   context: IExecuteFunctions,
   operation: string,
   itemIndex: number,
-): Promise<IDataObject | IDataObject[] | undefined> {
+): Promise<IDataObject | IDataObject[] | null> {
   if (operation === 'send') {
     return sendMessage(context, itemIndex);
   } else if (operation === 'getAll') {
@@ -22,7 +22,7 @@ export async function executeMessageOperation(
     return updatePresence(context, itemIndex);
   }
 
-  return undefined;
+  return null;
 }
 
 async function sendMessage(

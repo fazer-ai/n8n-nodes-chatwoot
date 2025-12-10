@@ -67,7 +67,7 @@ export async function executeWebhookOperation(
 	context: IExecuteFunctions,
 	operation: string,
 	itemIndex: number,
-): Promise<IDataObject | IDataObject[] | undefined> {
+): Promise<IDataObject | IDataObject[] | null> {
 	if (operation === 'create') {
 		return createWebhookOperation(context, itemIndex);
 	}
@@ -81,7 +81,7 @@ export async function executeWebhookOperation(
 		return deleteWebhookOperation(context, itemIndex);
 	}
 
-	return undefined;
+	return null;
 }
 
 async function createWebhookOperation(

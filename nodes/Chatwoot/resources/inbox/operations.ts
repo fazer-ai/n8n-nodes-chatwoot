@@ -5,14 +5,14 @@ export async function executeInboxOperation(
   context: IExecuteFunctions,
   operation: string,
   itemIndex: number,
-): Promise<IDataObject | IDataObject[] | undefined> {
+): Promise<IDataObject | IDataObject[] | null> {
   if (operation === 'list') {
     return listInboxes(context, itemIndex);
   } else if (operation === 'get') {
     return getInbox(context, itemIndex);
   }
 
-  return undefined;
+  return null;
 }
 
 async function listInboxes(

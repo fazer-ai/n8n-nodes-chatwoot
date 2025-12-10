@@ -151,39 +151,31 @@ export class Chatwoot implements INodeType {
 
 		for (let i = 0; i < items.length; i++) {
 			try {
-				let responseData: IDataObject | IDataObject[] | undefined;
+				let responseData: IDataObject | IDataObject[] | null;
 
-				switch (resource) {
-				case 'profile':
+				if (resource === 'profile') {
 					responseData = await executeProfileOperation(this, operation);
-					break;
-				case 'account':
+				} else if (resource === 'account') {
 					responseData = await executeAccountOperation(this, operation, i);
-					break;
-				case 'inbox':
+				} else if (resource === 'inbox') {
 					responseData = await executeInboxOperation(this, operation, i);
-					break;
-				case 'contact':
+				} else if (resource === 'contact') {
 					responseData = await executeContactOperation(this, operation, i);
-					break;
-				case 'conversation':
+				} else if (resource === 'conversation') {
 					responseData = await executeConversationOperation(this, operation, i);
-					break;
-				case 'message':
+				} else if (resource === 'message') {
 					responseData = await executeMessageOperation(this, operation, i);
-					break;
-				case 'webhook':
+				} else if (resource === 'webhook') {
 					responseData = await executeWebhookOperation(this, operation, i);
-					break;
-				case 'customAttribute':
+				} else if (resource === 'customAttribute') {
 					responseData = await executeCustomAttributeOperation(this, operation, i);
-					break;
-				case 'label':
+				} else if (resource === 'label') {
 					responseData = await executeLabelOperation(this, operation, i);
-					break;
+				} else {
+					responseData = null;
 				}
 
-				if (responseData !== undefined) {
+				if (responseData) {
 					const responseFilters = this.getNodeParameter(
 						'responseFilters.fieldFiltering',
 						i,

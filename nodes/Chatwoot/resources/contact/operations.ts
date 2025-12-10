@@ -9,7 +9,7 @@ export async function executeContactOperation(
   context: IExecuteFunctions,
   operation: string,
   itemIndex: number,
-): Promise<IDataObject | IDataObject[] | undefined> {
+): Promise<IDataObject | IDataObject[] | null> {
   if (operation === 'create') {
     return createContact(context, itemIndex);
   } else if (operation === 'get') {
@@ -24,7 +24,7 @@ export async function executeContactOperation(
     return searchContacts(context, itemIndex);
   }
 
-  return undefined;
+  return null;
 }
 
 async function createContact(

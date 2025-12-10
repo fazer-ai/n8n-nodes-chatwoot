@@ -11,7 +11,7 @@ export async function executeConversationOperation(
 	context: IExecuteFunctions,
 	operation: string,
 	itemIndex: number,
-): Promise<IDataObject | IDataObject[] | undefined> {
+): Promise<IDataObject | IDataObject[] | null> {
   if (operation === 'create') {
     return createConversation(context, itemIndex);
   } else if (operation === 'get') {
@@ -28,7 +28,7 @@ export async function executeConversationOperation(
     return addLabels(context, itemIndex);
   }
 
-  return undefined;
+  return null;
 }
 
 

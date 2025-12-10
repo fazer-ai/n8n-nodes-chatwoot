@@ -10,7 +10,7 @@ export async function executeCustomAttributeOperation(
 	context: IExecuteFunctions,
 	operation: string,
 	itemIndex: number,
-): Promise<IDataObject | IDataObject[] | undefined> {
+): Promise<IDataObject | IDataObject[] | null> {
   if (operation === 'createDefinition') {
     return createDefinition(context, itemIndex);
   } else if (operation === 'getDefinitions') {
@@ -23,7 +23,7 @@ export async function executeCustomAttributeOperation(
     return deleteDefinition(context, itemIndex);
   }
 
-  return undefined;
+  return null;
 }
 
 
