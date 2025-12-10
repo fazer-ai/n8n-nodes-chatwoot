@@ -11,6 +11,7 @@ import { executeProfileOperation } from './resources/profile/operations';
 import { accountDescription } from './resources/account';
 import { executeAccountOperation } from './resources/account/operations';
 import { inboxDescription } from './resources/inbox';
+import { executeInboxOperation } from './resources/inbox/operations';
 import { contactDescription } from './resources/contact';
 import { conversationDescription } from './resources/conversation';
 import { messageDescription } from './resources/message';
@@ -172,28 +173,7 @@ export class Chatwoot implements INodeType {
 					responseData = await executeAccountOperation(this, operation, i);
 					break;
 				case 'inbox':
-					switch (operation) {
-					case 'list': {
-						const accountId = getAccountId.call(this, i);
-						const response = (await chatwootApiRequest.call(
-							this,
-							'GET',
-							`/api/v1/accounts/${accountId}/inboxes`,
-						)) as IDataObject;
-						responseData = (response.payload as IDataObject[]) || response;
-						break;
-					}
-					case 'get': {
-						const accountId = getAccountId.call(this, i);
-						const inboxId = getInboxId.call(this, i);
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'GET',
-							`/api/v1/accounts/${accountId}/inboxes/${inboxId}`,
-						)) as IDataObject;
-						break;
-					}
-					}
+					responseData = await executeInboxOperation(this, operation, i);
 					break;
 				case 'contact':
 					switch (operation) {
