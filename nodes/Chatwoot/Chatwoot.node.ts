@@ -17,6 +17,7 @@ import { executeContactOperation } from './resources/contact/operations';
 import { conversationDescription } from './resources/conversation';
 import { executeConversationOperation } from './resources/conversation/operations';
 import { messageDescription } from './resources/message';
+import { executeMessageOperation } from './resources/message/operations';
 import { webhookDescription } from './resources/webhook';
 import { customAttributeDescription } from './resources/customAttribute';
 import { labelDescription } from './resources/label';
@@ -184,104 +185,7 @@ export class Chatwoot implements INodeType {
 					responseData = await executeConversationOperation(this, operation, i);
 					break;
 				case 'message':
-					switch (operation) {
-					case 'send': {
-						const accountId = getAccountId.call(this, i);
-						const conversationId = getConversationId.call(this, i);
-						const useRawJson = this.getNodeParameter('useRawJson', i, false) as boolean;
-
-						let body: IDataObject;
-						if (useRawJson) {
-							body = JSON.parse(this.getNodeParameter('jsonBody', i, '{}') as string);
-						} else {
-							const content = this.getNodeParameter('content', i) as string;
-							const messageType = this.getNodeParameter('messageType', i) as string;
-							const isPrivate = this.getNodeParameter('private', i, false) as boolean;
-
-							body = {
-								content,
-								message_type: messageType,
-								private: isPrivate,
-							};
-
-							const additionalFields = this.getNodeParameter('additionalFields', i, {}) as IDataObject;
-
-							if (additionalFields.content_type) {
-								body.content_type = additionalFields.content_type;
-							}
-							if (additionalFields.content_attributes) {
-								body.content_attributes = JSON.parse(additionalFields.content_attributes as string);
-							}
-							if (additionalFields.template_params) {
-								body.template_params = JSON.parse(additionalFields.template_params as string);
-							}
-						}
-
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'POST',
-							`/api/v1/accounts/${accountId}/conversations/${conversationId}/messages`,
-							body,
-						)) as IDataObject;
-						break;
-					}
-					case 'getAll': {
-						const accountId = getAccountId.call(this, i);
-						const conversationId = getConversationId.call(this, i);
-						const options = this.getNodeParameter('options', i, {}) as IDataObject;
-
-						const query: IDataObject = {};
-						if (options.before) query.before = options.before;
-						if (options.after) query.after = options.after;
-
-						const response = (await chatwootApiRequest.call(
-							this,
-							'GET',
-							`/api/v1/accounts/${accountId}/conversations/${conversationId}/messages`,
-							undefined,
-							query,
-						)) as IDataObject;
-						responseData = (response.payload as IDataObject[]) || response;
-						break;
-					}
-					case 'delete': {
-						const accountId = getAccountId.call(this, i);
-						const conversationId = getConversationId.call(this, i);
-						const messageId = this.getNodeParameter('messageId', i) as number;
-
-						await chatwootApiRequest.call(
-							this,
-							'DELETE',
-							`/api/v1/accounts/${accountId}/conversations/${conversationId}/messages/${messageId}`,
-						);
-						responseData = { success: true };
-						break;
-					}
-					case 'setTyping': {
-						const accountId = getAccountId.call(this, i);
-						const conversationId = getConversationId.call(this, i);
-						const typingStatus = this.getNodeParameter('typingStatus', i) as string;
-
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'POST',
-							`/api/v1/accounts/${accountId}/conversations/${conversationId}/toggle_typing_status`,
-							{ typing_status: typingStatus },
-						)) as IDataObject;
-						break;
-					}
-					case 'updatePresence': {
-						const accountId = getAccountId.call(this, i);
-						const conversationId = getConversationId.call(this, i);
-
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'POST',
-							`/api/v1/accounts/${accountId}/conversations/${conversationId}/update_last_seen`,
-						)) as IDataObject;
-						break;
-					}
-					}
+					responseData = await executeMessageOperation(this, operation, i);
 					break;
 				case 'webhook':
 					switch (operation) {
