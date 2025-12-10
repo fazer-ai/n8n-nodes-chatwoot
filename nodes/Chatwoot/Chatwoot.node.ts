@@ -23,6 +23,7 @@ import { executeWebhookOperation } from './resources/webhook/operations';
 import { customAttributeDescription } from './resources/customAttribute';
 import { executeCustomAttributeOperation } from './resources/customAttribute/operations';
 import { labelDescription } from './resources/label';
+import { executeLabelOperation } from './resources/label/operations';
 
 import {
 	getAccounts,
@@ -35,15 +36,6 @@ import {
 	getWebhooks,
 	getResponseFields,
 } from './listSearch';
-
-import {
-	chatwootApiRequest,
-	getAccountId,
-	getInboxId,
-	getConversationId,
-	getContactId,
-	getWebhookId,
-} from './shared/transport';
 
 import { filterResponseFields } from './shared/utils';
 
@@ -196,79 +188,7 @@ export class Chatwoot implements INodeType {
 					responseData = await executeCustomAttributeOperation(this, operation, i);
 					break;
 				case 'label':
-					switch (operation) {
-					case 'create': {
-						const accountId = getAccountId.call(this, i);
-						const useRawJson = this.getNodeParameter('useRawJson', i, false) as boolean;
-
-						let body: IDataObject;
-						if (useRawJson) {
-							body = JSON.parse(this.getNodeParameter('jsonBody', i, '{}') as string);
-						} else {
-							const title = this.getNodeParameter('title', i) as string;
-							const additionalFields = this.getNodeParameter(
-								'additionalFields',
-								i,
-							) as IDataObject;
-
-							body = {
-								title,
-								...additionalFields,
-							};
-						}
-
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'POST',
-							`/api/v1/accounts/${accountId}/labels`,
-							body,
-						)) as IDataObject;
-						break;
-					}
-					case 'getAll': {
-						const accountId = getAccountId.call(this, i);
-
-						const response = (await chatwootApiRequest.call(
-							this,
-							'GET',
-							`/api/v1/accounts/${accountId}/labels`,
-						)) as IDataObject;
-						responseData = (response.payload as IDataObject[]) || [];
-						break;
-					}
-					case 'update': {
-						const accountId = getAccountId.call(this, i);
-						const labelId = this.getNodeParameter('labelId', i) as string;
-						const useRawJson = this.getNodeParameter('useRawJson', i, false) as boolean;
-
-						let body: IDataObject;
-						if (useRawJson) {
-							body = JSON.parse(this.getNodeParameter('jsonBody', i, '{}') as string);
-						} else {
-							body = this.getNodeParameter('additionalFields', i, {}) as IDataObject;
-						}
-
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'PATCH',
-							`/api/v1/accounts/${accountId}/labels/${labelId}`,
-							body,
-						)) as IDataObject;
-						break;
-					}
-					case 'delete': {
-						const accountId = getAccountId.call(this, i);
-						const labelId = this.getNodeParameter('labelId', i) as string;
-
-						await chatwootApiRequest.call(
-							this,
-							'DELETE',
-							`/api/v1/accounts/${accountId}/labels/${labelId}`,
-						);
-						responseData = { success: true };
-						break;
-					}
-					}
+					responseData = await executeLabelOperation(this, operation, i);
 					break;
 				}
 
