@@ -8,8 +8,6 @@ import {
 
 type WebhookContext = IExecuteFunctions | IHookFunctions;
 
-// Low-level API functions for reuse in both node and trigger
-
 export async function fetchWebhooks(
 	context: WebhookContext,
 	accountId: number,
@@ -64,8 +62,6 @@ export async function updateWebhook(
 		body,
 	)) as IDataObject;
 }
-
-// High-level operations for the Chatwoot node
 
 export async function executeWebhookOperation(
 	context: IExecuteFunctions,

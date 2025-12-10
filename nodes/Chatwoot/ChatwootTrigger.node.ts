@@ -205,8 +205,6 @@ export class ChatwootTrigger implements INodeType {
 							webhookData.webhookId = webhook.id;
 							return true;
 						}
-
-						// Webhook exists but with different config, delete it
 						try {
 							await deleteWebhook(this, accountId, webhook.id as number);
 						} catch (error) {
