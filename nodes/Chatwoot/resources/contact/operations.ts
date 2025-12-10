@@ -22,9 +22,9 @@ export async function executeContactOperation(
     return deleteContact(context, itemIndex);
   } else if (operation === 'search') {
     return searchContacts(context, itemIndex);
-  } else {
-    return undefined;
   }
+
+  return undefined;
 }
 
 async function createContact(

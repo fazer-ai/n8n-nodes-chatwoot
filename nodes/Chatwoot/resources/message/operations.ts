@@ -20,9 +20,9 @@ export async function executeMessageOperation(
     return setTypingStatus(context, itemIndex);
   } else if (operation === 'updatePresence') {
     return updatePresence(context, itemIndex);
-  } else {
-    return undefined;
   }
+
+  return undefined;
 }
 
 async function sendMessage(

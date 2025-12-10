@@ -10,9 +10,9 @@ export async function executeAccountOperation(
     return getAllAccounts(context);
   } else if (operation === 'get') {
     return getAccount(context, itemIndex);
-  } else {
-    return undefined;
   }
+
+  return undefined;
 }
 
 

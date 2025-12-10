@@ -14,9 +14,9 @@ export async function executeLabelOperation(
     return updateLabel(context, itemIndex);
   } else if (operation === 'delete') {
     return deleteLabel(context, itemIndex);
-  } else {
-    return undefined;
   }
+
+  return undefined;
 }
 
 async function createLabel(

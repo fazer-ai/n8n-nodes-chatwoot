@@ -10,9 +10,9 @@ export async function executeInboxOperation(
     return listInboxes(context, itemIndex);
   } else if (operation === 'get') {
     return getInbox(context, itemIndex);
-  } else {
-    return undefined;
   }
+
+  return undefined;
 }
 
 async function listInboxes(

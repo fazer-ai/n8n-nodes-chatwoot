@@ -21,9 +21,9 @@ export async function executeCustomAttributeOperation(
     return setOnConversation(context, itemIndex);
   } else if (operation === 'deleteDefinition') {
     return deleteDefinition(context, itemIndex);
-  } else {
-    return undefined;
   }
+
+  return undefined;
 }
 
 

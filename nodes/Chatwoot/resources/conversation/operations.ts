@@ -26,9 +26,9 @@ export async function executeConversationOperation(
     return assignTeam(context, itemIndex);
   } else if (operation === 'addLabels') {
     return addLabels(context, itemIndex);
-  } else {
-    return undefined;
   }
+
+  return undefined;
 }
 
 

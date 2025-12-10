@@ -19,9 +19,9 @@ export async function executeWebhookOperation(
     return updateWebhook(context, itemIndex);
   } else if (operation === 'delete') {
     return deleteWebhook(context, itemIndex);
-  } else {
-    return undefined;
   }
+
+  return undefined;
 }
 
 

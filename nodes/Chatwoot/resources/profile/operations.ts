@@ -5,12 +5,11 @@ export async function executeProfileOperation(
   context: IExecuteFunctions,
   operation: string,
 ): Promise<IDataObject | IDataObject[] | undefined> {
-  if(operation === 'fetch') {
+  if (operation === 'fetch') {
     return fetchProfile(context);
   }
-  else {
-    return undefined;
-  }
+
+  return undefined;
 }
 
 async function fetchProfile(
