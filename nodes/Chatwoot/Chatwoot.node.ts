@@ -13,6 +13,7 @@ import { executeAccountOperation } from './resources/account/operations';
 import { inboxDescription } from './resources/inbox';
 import { executeInboxOperation } from './resources/inbox/operations';
 import { contactDescription } from './resources/contact';
+import { executeContactOperation } from './resources/contact/operations';
 import { conversationDescription } from './resources/conversation';
 import { messageDescription } from './resources/message';
 import { webhookDescription } from './resources/webhook';
@@ -176,134 +177,7 @@ export class Chatwoot implements INodeType {
 					responseData = await executeInboxOperation(this, operation, i);
 					break;
 				case 'contact':
-					switch (operation) {
-					case 'create': {
-						const accountId = getAccountId.call(this, i);
-						const useRawJson = this.getNodeParameter('useRawJson', i, false) as boolean;
-
-						let body: IDataObject;
-						if (useRawJson) {
-							body = JSON.parse(this.getNodeParameter('jsonBody', i, '{}') as string);
-						} else {
-							body = {
-								name: this.getNodeParameter('name', i, '') as string,
-								email: this.getNodeParameter('email', i, '') as string,
-								phone_number: this.getNodeParameter('phoneNumber', i, '') as string,
-							};
-
-							const additionalFields = this.getNodeParameter('additionalFields', i, {}) as IDataObject;
-							Object.assign(body, additionalFields);
-
-							if (typeof body.customAttributes === 'string') {
-								body.custom_attributes = JSON.parse(body.customAttributes as string);
-								delete body.customAttributes;
-							}
-						}
-
-						Object.keys(body).forEach((key) => {
-							if (body[key] === '' || body[key] === undefined) {
-								delete body[key];
-							}
-						});
-
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'POST',
-							`/api/v1/accounts/${accountId}/contacts`,
-							body,
-						)) as IDataObject;
-						break;
-					}
-					case 'get': {
-						const accountId = getAccountId.call(this, i);
-						const contactId = getContactId.call(this, i);
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'GET',
-							`/api/v1/accounts/${accountId}/contacts/${contactId}`,
-						)) as IDataObject;
-						break;
-					}
-					case 'getAll': {
-						const accountId = getAccountId.call(this, i);
-						const returnAll = this.getNodeParameter('returnAll', i, false) as boolean;
-						const limit = this.getNodeParameter('limit', i, 50) as number;
-
-						const query: IDataObject = {};
-						if (!returnAll) {
-							query.per_page = limit;
-						}
-
-						const response = (await chatwootApiRequest.call(
-							this,
-							'GET',
-							`/api/v1/accounts/${accountId}/contacts`,
-							undefined,
-							query,
-						)) as IDataObject;
-						responseData = (response.payload as IDataObject[]) || response;
-						break;
-					}
-					case 'update': {
-						const accountId = getAccountId.call(this, i);
-						const contactId = getContactId.call(this, i);
-						const useRawJson = this.getNodeParameter('useRawJson', i, false) as boolean;
-
-						let body: IDataObject;
-						if (useRawJson) {
-							body = JSON.parse(this.getNodeParameter('jsonBody', i, '{}') as string);
-						} else {
-							body = {};
-							const additionalFields = this.getNodeParameter('additionalFields', i, {}) as IDataObject;
-							Object.assign(body, additionalFields);
-
-							if (typeof body.customAttributes === 'string') {
-								body.custom_attributes = JSON.parse(body.customAttributes as string);
-								delete body.customAttributes;
-							}
-						}
-
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'PUT',
-							`/api/v1/accounts/${accountId}/contacts/${contactId}`,
-							body,
-						)) as IDataObject;
-						break;
-					}
-					case 'delete': {
-						const accountId = getAccountId.call(this, i);
-						const contactId = getContactId.call(this, i);
-						await chatwootApiRequest.call(
-							this,
-							'DELETE',
-							`/api/v1/accounts/${accountId}/contacts/${contactId}`,
-						);
-						responseData = { success: true };
-						break;
-					}
-					case 'search': {
-						const accountId = getAccountId.call(this, i);
-						const searchQuery = this.getNodeParameter('searchQuery', i) as string;
-						const returnAll = this.getNodeParameter('returnAll', i, false) as boolean;
-						const limit = this.getNodeParameter('limit', i, 50) as number;
-
-						const query: IDataObject = { q: searchQuery };
-						if (!returnAll) {
-							query.per_page = limit;
-						}
-
-						const response = (await chatwootApiRequest.call(
-							this,
-							'GET',
-							`/api/v1/accounts/${accountId}/contacts/search`,
-							undefined,
-							query,
-						)) as IDataObject;
-						responseData = (response.payload as IDataObject[]) || response;
-						break;
-					}
-					}
+					responseData = await executeContactOperation(this, operation, i);
 					break;
 				case 'conversation':
 					switch (operation) {
