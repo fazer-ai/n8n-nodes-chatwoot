@@ -7,6 +7,7 @@ import type {
 } from 'n8n-workflow';
 
 import { profileDescription } from './resources/profile';
+import { executeProfileOperation } from './resources/profile/operations';
 import { accountDescription } from './resources/account';
 import { inboxDescription } from './resources/inbox';
 import { contactDescription } from './resources/contact';
@@ -164,16 +165,7 @@ export class Chatwoot implements INodeType {
 
 				switch (resource) {
 				case 'profile':
-					switch (operation) {
-					case 'fetch': {
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'GET',
-							'/api/v1/profile',
-						)) as IDataObject;
-						break;
-					}
-					}
+					responseData = await executeProfileOperation(this, operation);
 					break;
 				case 'account':
 					switch (operation) {
