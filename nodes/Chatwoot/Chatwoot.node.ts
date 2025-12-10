@@ -15,6 +15,7 @@ import { executeInboxOperation } from './resources/inbox/operations';
 import { contactDescription } from './resources/contact';
 import { executeContactOperation } from './resources/contact/operations';
 import { conversationDescription } from './resources/conversation';
+import { executeConversationOperation } from './resources/conversation/operations';
 import { messageDescription } from './resources/message';
 import { webhookDescription } from './resources/webhook';
 import { customAttributeDescription } from './resources/customAttribute';
@@ -180,133 +181,7 @@ export class Chatwoot implements INodeType {
 					responseData = await executeContactOperation(this, operation, i);
 					break;
 				case 'conversation':
-					switch (operation) {
-					case 'create': {
-						const accountId = getAccountId.call(this, i);
-						const useRawJson = this.getNodeParameter('useRawJson', i, false) as boolean;
-
-						let body: IDataObject;
-						if (useRawJson) {
-							body = JSON.parse(this.getNodeParameter('jsonBody', i, '{}') as string);
-						} else {
-							const contactId = getContactId.call(this, i);
-							body = {
-								contact_id: contactId,
-							};
-
-							const inboxId = getInboxId.call(this, i);
-							if (inboxId) {
-								body.inbox_id = inboxId;
-							}
-
-							const additionalFields = this.getNodeParameter('additionalFields', i, {}) as IDataObject;
-							Object.assign(body, additionalFields);
-
-							if (typeof body.customAttributes === 'string') {
-								body.custom_attributes = JSON.parse(body.customAttributes as string);
-								delete body.customAttributes;
-							}
-						}
-
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'POST',
-							`/api/v1/accounts/${accountId}/conversations`,
-							body,
-						)) as IDataObject;
-						break;
-					}
-					case 'get': {
-						const accountId = getAccountId.call(this, i);
-						const conversationId = getConversationId.call(this, i);
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'GET',
-							`/api/v1/accounts/${accountId}/conversations/${conversationId}`,
-						)) as IDataObject;
-						break;
-					}
-					case 'getAll': {
-						const accountId = getAccountId.call(this, i);
-						const filters = this.getNodeParameter('filters', i, {}) as IDataObject;
-
-						const query: IDataObject = {};
-						if (filters.status) query.status = filters.status;
-						if (filters.assignee_type) query.assignee_type = filters.assignee_type;
-						if (filters.page) query.page = filters.page;
-
-						const inboxId = getInboxId.call(this, i);
-						if (inboxId) {
-							query.inbox_id = inboxId;
-						}
-
-						const response = (await chatwootApiRequest.call(
-							this,
-							'GET',
-							`/api/v1/accounts/${accountId}/conversations`,
-							undefined,
-							query,
-						)) as IDataObject;
-
-						const dataObj = response.data as IDataObject | undefined;
-						responseData = dataObj?.payload as IDataObject[] ||
-									response.payload as IDataObject[] ||
-									response;
-						break;
-					}
-					case 'toggleStatus': {
-						const accountId = getAccountId.call(this, i);
-						const conversationId = getConversationId.call(this, i);
-						const status = this.getNodeParameter('status', i) as string;
-
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'POST',
-							`/api/v1/accounts/${accountId}/conversations/${conversationId}/toggle_status`,
-							{ status },
-						)) as IDataObject;
-						break;
-					}
-					case 'assignAgent': {
-						const accountId = getAccountId.call(this, i);
-						const conversationId = getConversationId.call(this, i);
-						const agentId = this.getNodeParameter('agentId', i) as number;
-
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'POST',
-							`/api/v1/accounts/${accountId}/conversations/${conversationId}/assignments`,
-							{ assignee_id: agentId },
-						)) as IDataObject;
-						break;
-					}
-					case 'assignTeam': {
-						const accountId = getAccountId.call(this, i);
-						const conversationId = getConversationId.call(this, i);
-						const teamId = this.getNodeParameter('teamId', i) as number;
-
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'POST',
-							`/api/v1/accounts/${accountId}/conversations/${conversationId}/assignments`,
-							{ team_id: teamId },
-						)) as IDataObject;
-						break;
-					}
-					case 'addLabels': {
-						const accountId = getAccountId.call(this, i);
-						const conversationId = getConversationId.call(this, i);
-						const labels = this.getNodeParameter('labels', i) as string[];
-
-						responseData = (await chatwootApiRequest.call(
-							this,
-							'POST',
-							`/api/v1/accounts/${accountId}/conversations/${conversationId}/labels`,
-							{ labels },
-						)) as IDataObject;
-						break;
-					}
-					}
+					responseData = await executeConversationOperation(this, operation, i);
 					break;
 				case 'message':
 					switch (operation) {
