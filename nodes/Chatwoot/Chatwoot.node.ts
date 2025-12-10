@@ -12,7 +12,7 @@ import { inboxDescription, executeInboxOperation } from './resources/inbox';
 import { contactDescription, executeContactOperation } from './resources/contact';
 import { conversationDescription, executeConversationOperation } from './resources/conversation';
 import { messageDescription, executeMessageOperation } from './resources/message';
-import { webhookDescription, executeWebhookOperation } from './resources/webhook';
+import { /*webhookDescription,*/ executeWebhookOperation } from './resources/webhook';
 import { customAttributeDescription, executeCustomAttributeOperation } from './resources/customAttribute';
 import { labelDescription, executeLabelOperation } from './resources/label';
 
@@ -103,11 +103,11 @@ export class Chatwoot implements INodeType {
 						value: 'profile',
 						description: 'Access user profile and authentication info',
 					},
-					{
-						name: 'Webhook',
-						value: 'webhook',
-						description: 'Manage webhooks for event subscriptions',
-					},
+					// {
+					// 	name: 'Webhook',
+					// 	value: 'webhook',
+					// 	description: 'Manage webhooks for event subscriptions',
+					// },
 				],
 				default: 'conversation',
 			},
@@ -117,7 +117,7 @@ export class Chatwoot implements INodeType {
 			...contactDescription,
 			...conversationDescription,
 			...messageDescription,
-			...webhookDescription,
+			// ...webhookDescription,
 			...customAttributeDescription,
 			...labelDescription,
 		],
