@@ -29,18 +29,18 @@ function extractAccountId(context: IHookFunctions): number {
 	return Number(accountIdParam);
 }
 
-function extractInboxId(context: IHookFunctions): number | undefined {
+function extractInboxId(context: IHookFunctions): number | null {
 	const inboxIdParam = context.getNodeParameter('inboxId') as
 		| string
 		| number
-		| { mode: string; value: string }
-		| undefined;
+		| { mode: string; value: string };
 
-	if (!inboxIdParam) return undefined;
-
-	if (typeof inboxIdParam === 'object' && inboxIdParam.value !== undefined) {
+	if (typeof inboxIdParam === 'object') {
+		if (!inboxIdParam.value || inboxIdParam.value === '') return null;
 		return Number(inboxIdParam.value);
 	}
+
+	if (inboxIdParam === '' || inboxIdParam === 0) return null;
 	return Number(inboxIdParam);
 }
 
@@ -189,7 +189,20 @@ export class ChatwootTrigger implements INodeType {
 				const events = this.getNodeParameter('events') as string[];
 				const expectedName = getWebhookName(this);
 
-				const webhooks = await fetchWebhooks(this, accountId);
+				let webhooks: IDataObject[];
+				try {
+					webhooks = await fetchWebhooks(this, accountId);
+				} catch (error) {
+					throw new NodeApiError(this.getNode(), error as JsonObject, {
+						message: `Failed to fetch webhooks: ${(error as Error).message}`,
+					});
+				}
+
+				if (!Array.isArray(webhooks)) {
+					throw new NodeApiError(this.getNode(), { webhooks } as JsonObject, {
+						message: `Unexpected response from Chatwoot API: webhooks is not an array. Received: ${JSON.stringify(webhooks)}`,
+					});
+				}
 
 				for (const webhook of webhooks) {
 					if (webhook.url === webhookUrl) {
@@ -208,7 +221,9 @@ export class ChatwootTrigger implements INodeType {
 						try {
 							await deleteWebhook(this, accountId, webhook.id as number);
 						} catch (error) {
-							throw new NodeApiError(this.getNode(), error as JsonObject);
+							throw new NodeApiError(this.getNode(), error as JsonObject, {
+								message: `Failed to delete existing webhook: ${(error as Error).message}`,
+							});
 						}
 						return false;
 					}
@@ -228,17 +243,40 @@ export class ChatwootTrigger implements INodeType {
 						name: webhookName,
 						url: webhookUrl,
 						subscriptions: events,
-						inbox_id: inboxId ?? null,
+						inbox_id: inboxId,
 					},
 				};
 
-				const response = await createWebhook(this, accountId, body);
+				let response: IDataObject;
+				try {
+					response = await createWebhook(this, accountId, body) as IDataObject;
+				} catch (error) {
+					throw new NodeApiError(this.getNode(), error as JsonObject, {
+						message: `Failed to create webhook: ${(error as Error).message}`,
+					});
+				}
+
 				const webhookData = this.getWorkflowStaticData('node');
 
-				const payload = (response as IDataObject).payload as IDataObject;
-				const webhook = payload.webhook as IDataObject;
-				webhookData.webhookId = webhook.id;
+				let webhookId: unknown;
+				if (response.payload && typeof response.payload === 'object') {
+					const payload = response.payload as IDataObject;
+					if (payload.webhook && typeof payload.webhook === 'object') {
+						webhookId = (payload.webhook as IDataObject).id;
+					} else if (payload.id) {
+						webhookId = payload.id;
+					}
+				} else if (response.id) {
+					webhookId = response.id;
+				}
 
+				if (!webhookId) {
+					throw new NodeApiError(this.getNode(), response as JsonObject, {
+						message: `Failed to extract webhook ID from response. Response: ${JSON.stringify(response)}`,
+					});
+				}
+
+				webhookData.webhookId = webhookId;
 				return true;
 			},
 
@@ -250,7 +288,9 @@ export class ChatwootTrigger implements INodeType {
 					try {
 						await deleteWebhook(this, accountId, webhookData.webhookId as number);
 					} catch (error) {
-						throw new NodeApiError(this.getNode(), error as JsonObject);
+						throw new NodeApiError(this.getNode(), error as JsonObject, {
+							message: `Failed to delete webhook: ${(error as Error).message}`,
+						});
 					}
 					delete webhookData.webhookId;
 				}

@@ -4,12 +4,44 @@ import {
 	inboxSelector,
 	webhookSelector,
 	webhookEventsSelect,
-	rawJsonBody,
 	responseFilterFields,
 } from '../../shared/descriptions';
 
 const showOnlyForWebhook = {
 	resource: ['webhook'],
+};
+
+// Inbox selector with "All Inboxes" option for webhooks
+const webhookInboxSelector: INodeProperties = {
+	...inboxSelector,
+	required: false,
+	modes: [
+		{
+			displayName: 'From List',
+			name: 'list',
+			type: 'list',
+			placeholder: 'Select an inbox...',
+			typeOptions: {
+        searchListMethod: 'getInboxes',
+				searchable: true,
+			},
+		},
+		{
+			displayName: 'By ID',
+			name: 'id',
+			type: 'string',
+			placeholder: 'e.g. 1 (leave empty for all)',
+			validation: [
+				{
+					type: 'regex',
+					properties: {
+						regex: '^[0-9]*$',
+						errorMessage: 'The ID must be a number or empty',
+					},
+				},
+			],
+		},
+	],
 };
 
 const webhookOperations: INodeProperties[] = [
@@ -68,29 +100,6 @@ const webhookFields: INodeProperties[] = [
 		},
 	},
 	{
-		displayName: 'Use Raw JSON',
-		name: 'useRawJson',
-		type: 'boolean',
-		default: false,
-		description: 'Whether to use raw JSON body instead of fields',
-		displayOptions: {
-			show: {
-				...showOnlyForWebhook,
-				operation: ['create', 'update'],
-			},
-		},
-	},
-	{
-		...rawJsonBody,
-		displayOptions: {
-			show: {
-				...showOnlyForWebhook,
-				operation: ['create', 'update'],
-				useRawJson: [true],
-			},
-		},
-	},
-	{
 		displayName: 'Webhook URL',
 		name: 'webhookUrl',
 		type: 'string',
@@ -102,7 +111,6 @@ const webhookFields: INodeProperties[] = [
 			show: {
 				...showOnlyForWebhook,
 				operation: ['create', 'update'],
-				useRawJson: [false],
 			},
 		},
 	},
@@ -112,7 +120,6 @@ const webhookFields: INodeProperties[] = [
 			show: {
 				...showOnlyForWebhook,
 				operation: ['create', 'update'],
-				useRawJson: [false],
 			},
 		},
 	},
@@ -126,19 +133,16 @@ const webhookFields: INodeProperties[] = [
 			show: {
 				...showOnlyForWebhook,
 				operation: ['create', 'update'],
-				useRawJson: [false],
 			},
 		},
 	},
 	{
-		...inboxSelector,
-		required: false,
+		...webhookInboxSelector,
 		displayOptions: {
 			show: {
 				...showOnlyForWebhook,
 				operation: ['create', 'update'],
 				filterByInbox: [true],
-				useRawJson: [false],
 			},
 		},
 	},
@@ -152,7 +156,6 @@ const webhookFields: INodeProperties[] = [
 			show: {
 				...showOnlyForWebhook,
 				operation: ['create'],
-				useRawJson: [false],
 			},
 		},
 	},

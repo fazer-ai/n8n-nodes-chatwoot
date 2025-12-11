@@ -1,12 +1,30 @@
 import type { IDataObject, IExecuteFunctions, IHookFunctions } from 'n8n-workflow';
 import {
-	chatwootApiRequest,
+  chatwootApiRequest,
 	getAccountId,
 	getInboxId,
 	getWebhookId,
 } from '../../shared/transport';
+import { WebhookOperation } from './types';
 
 type WebhookContext = IExecuteFunctions | IHookFunctions;
+
+export async function executeWebhookOperation(
+  context: IExecuteFunctions,
+  operation: WebhookOperation,
+  itemIndex: number,
+): Promise<IDataObject | IDataObject[]> {
+  switch (operation) {
+    case 'create':
+      return createWebhookOperation(context, itemIndex);
+    case 'getAll':
+      return getAllWebhooksOperation(context, itemIndex);
+    case 'update':
+      return updateWebhookOperation(context, itemIndex);
+    case 'delete':
+      return deleteWebhookOperation(context, itemIndex);
+  }
+}
 
 export async function fetchWebhooks(
 	context: WebhookContext,
@@ -21,7 +39,13 @@ export async function fetchWebhooks(
 	if (Array.isArray(response)) {
 		return response as IDataObject[];
 	}
-	return (response.payload as IDataObject[]) || [];
+	if (Array.isArray(response.webhooks)) {
+		return response.webhooks as IDataObject[];
+	}
+	if (Array.isArray(response.payload)) {
+		return response.payload as IDataObject[];
+	}
+	return [];
 }
 
 export async function createWebhook(
@@ -63,26 +87,6 @@ export async function updateWebhook(
 	)) as IDataObject;
 }
 
-export async function executeWebhookOperation(
-	context: IExecuteFunctions,
-	operation: string,
-	itemIndex: number,
-): Promise<IDataObject | IDataObject[] | null> {
-	if (operation === 'create') {
-		return createWebhookOperation(context, itemIndex);
-	}
-	if (operation === 'getAll') {
-		return getAllWebhooksOperation(context, itemIndex);
-	}
-	if (operation === 'update') {
-		return updateWebhookOperation(context, itemIndex);
-	}
-	if (operation === 'delete') {
-		return deleteWebhookOperation(context, itemIndex);
-	}
-
-	return null;
-}
 
 async function createWebhookOperation(
 	context: IExecuteFunctions,
@@ -128,12 +132,6 @@ function buildWebhookBody(
 	context: IExecuteFunctions,
 	itemIndex: number,
 ): IDataObject {
-	const useRawJson = context.getNodeParameter('useRawJson', itemIndex, false) as boolean;
-
-	if (useRawJson) {
-		return JSON.parse(context.getNodeParameter('jsonBody', itemIndex, '{}') as string);
-	}
-
 	const webhookUrl = context.getNodeParameter('webhookUrl', itemIndex) as string;
 	const events = context.getNodeParameter('events', itemIndex) as string[];
 
