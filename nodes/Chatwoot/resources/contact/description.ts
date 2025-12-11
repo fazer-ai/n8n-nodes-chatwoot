@@ -3,7 +3,6 @@ import {
 	accountSelector,
 	contactSelector,
 	customAttributesField,
-	rawJsonBody,
 	responseFilterFields,
 } from '../../shared/descriptions';
 
@@ -79,29 +78,6 @@ const contactFields: INodeProperties[] = [
 		},
 	},
 	{
-		displayName: 'Use Raw JSON',
-		name: 'useRawJson',
-		type: 'boolean',
-		default: false,
-		description: 'Whether to use raw JSON body instead of fields',
-		displayOptions: {
-			show: {
-				...showOnlyForContact,
-				operation: ['create', 'update'],
-			},
-		},
-	},
-	{
-		...rawJsonBody,
-		displayOptions: {
-			show: {
-				...showOnlyForContact,
-				operation: ['create', 'update'],
-				useRawJson: [true],
-			},
-		},
-	},
-	{
 		displayName: 'Name',
 		name: 'name',
 		type: 'string',
@@ -111,7 +87,6 @@ const contactFields: INodeProperties[] = [
 			show: {
 				...showOnlyForContact,
 				operation: ['create'],
-				useRawJson: [false],
 			},
 		},
 	},
@@ -126,7 +101,6 @@ const contactFields: INodeProperties[] = [
 			show: {
 				...showOnlyForContact,
 				operation: ['create'],
-				useRawJson: [false],
 			},
 		},
 	},
@@ -140,7 +114,6 @@ const contactFields: INodeProperties[] = [
 			show: {
 				...showOnlyForContact,
 				operation: ['create'],
-				useRawJson: [false],
 			},
 		},
 	},
@@ -198,7 +171,6 @@ const contactFields: INodeProperties[] = [
 			show: {
 				...showOnlyForContact,
 				operation: ['create', 'update'],
-				useRawJson: [false],
 			},
 		},
 		options: [
