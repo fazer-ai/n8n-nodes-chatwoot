@@ -32,25 +32,19 @@ async function createContact(
 	itemIndex: number,
 ): Promise<IDataObject> {
 	const accountId = getAccountId.call(context, itemIndex);
-	const useRawJson = context.getNodeParameter('useRawJson', itemIndex, false) as boolean;
 
-	let body: IDataObject;
-	if (useRawJson) {
-		body = JSON.parse(context.getNodeParameter('jsonBody', itemIndex, '{}') as string);
-	} else {
-		body = {
-			name: context.getNodeParameter('name', itemIndex, '') as string,
-			email: context.getNodeParameter('email', itemIndex, '') as string,
-			phone_number: context.getNodeParameter('phoneNumber', itemIndex, '') as string,
-		};
+	const body: IDataObject = {
+		name: context.getNodeParameter('name', itemIndex, '') as string,
+		email: context.getNodeParameter('email', itemIndex, '') as string,
+		phone_number: context.getNodeParameter('phoneNumber', itemIndex, '') as string,
+	};
 
-		const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {}) as IDataObject;
-		Object.assign(body, additionalFields);
+	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {}) as IDataObject;
+	Object.assign(body, additionalFields);
 
-		if (typeof body.customAttributes === 'string') {
-			body.custom_attributes = JSON.parse(body.customAttributes as string);
-			delete body.customAttributes;
-		}
+	if (typeof body.customAttributes === 'string') {
+		body.custom_attributes = JSON.parse(body.customAttributes as string);
+		delete body.customAttributes;
 	}
 
 	Object.keys(body).forEach((key) => {
@@ -111,20 +105,14 @@ async function updateContact(
 ): Promise<IDataObject> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const contactId = getContactId.call(context, itemIndex);
-	const useRawJson = context.getNodeParameter('useRawJson', itemIndex, false) as boolean;
 
-	let body: IDataObject;
-	if (useRawJson) {
-		body = JSON.parse(context.getNodeParameter('jsonBody', itemIndex, '{}') as string);
-	} else {
-		body = {};
-		const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {}) as IDataObject;
-		Object.assign(body, additionalFields);
+	const body: IDataObject = {};
+	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {}) as IDataObject;
+	Object.assign(body, additionalFields);
 
-		if (typeof body.customAttributes === 'string') {
-			body.custom_attributes = JSON.parse(body.customAttributes as string);
-			delete body.customAttributes;
-		}
+	if (typeof body.customAttributes === 'string') {
+		body.custom_attributes = JSON.parse(body.customAttributes as string);
+		delete body.customAttributes;
 	}
 
 	return (await chatwootApiRequest.call(
