@@ -4,7 +4,6 @@ import {
 	conversationSelector,
 	messageTypeOptions,
 	typingStatusOptions,
-	rawJsonBody,
 	responseFilterFields,
 } from '../../shared/descriptions';
 
@@ -71,29 +70,6 @@ const messageFields: INodeProperties[] = [
 		},
 	},
 	{
-		displayName: 'Use Raw JSON',
-		name: 'useRawJson',
-		type: 'boolean',
-		default: false,
-		description: 'Whether to use raw JSON body instead of fields',
-		displayOptions: {
-			show: {
-				...showOnlyForMessage,
-				operation: ['send'],
-			},
-		},
-	},
-	{
-		...rawJsonBody,
-		displayOptions: {
-			show: {
-				...showOnlyForMessage,
-				operation: ['send'],
-				useRawJson: [true],
-			},
-		},
-	},
-	{
 		displayName: 'Message Content',
 		name: 'content',
 		type: 'string',
@@ -107,7 +83,6 @@ const messageFields: INodeProperties[] = [
 			show: {
 				...showOnlyForMessage,
 				operation: ['send'],
-				useRawJson: [false],
 			},
 		},
 	},
@@ -117,7 +92,6 @@ const messageFields: INodeProperties[] = [
 			show: {
 				...showOnlyForMessage,
 				operation: ['send'],
-				useRawJson: [false],
 			},
 		},
 	},
@@ -131,7 +105,6 @@ const messageFields: INodeProperties[] = [
 			show: {
 				...showOnlyForMessage,
 				operation: ['send'],
-				useRawJson: [false],
 			},
 		},
 	},
@@ -168,7 +141,6 @@ const messageFields: INodeProperties[] = [
 			show: {
 				...showOnlyForMessage,
 				operation: ['send'],
-				useRawJson: [false],
 			},
 		},
 		options: [
