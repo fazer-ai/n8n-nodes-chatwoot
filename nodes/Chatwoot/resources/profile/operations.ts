@@ -1,15 +1,15 @@
 import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
 import { chatwootApiRequest } from '../../shared/transport';
+import { ProfileOperation } from './types';
 
 export async function executeProfileOperation(
   context: IExecuteFunctions,
-  operation: string,
-): Promise<IDataObject | IDataObject[] | null> {
-  if (operation === 'fetch') {
-    return fetchProfile(context);
+  operation: ProfileOperation,
+): Promise<IDataObject | IDataObject[]> {
+  switch (operation) {
+    case 'fetch':
+      return fetchProfile(context);
   }
-
-  return null;
 }
 
 async function fetchProfile(
@@ -21,4 +21,3 @@ async function fetchProfile(
 		'/api/v1/profile',
 	)) as IDataObject;
 }
-
