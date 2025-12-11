@@ -61,22 +61,36 @@ interface ChatwootPayloadResponse<T> {
 	};
 }
 
+interface ChatwootKanbanBoard {
+	id: number;
+	name: string;
+}
+
+interface ChatwootKanbanStep {
+	id: number;
+	name: string;
+}
+
+interface ChatwootKanbanTask {
+	id: number;
+	title: string;
+}
+
 function extractResourceLocatorValue(
 	context: ILoadOptionsFunctions,
 	paramName: string,
-): string | undefined {
+): string | null {
 	try {
 		const param = context.getNodeParameter(paramName, 0) as
 			| string
-			| { mode: string; value: string }
-			| undefined;
+			| { mode: string; value: string };
 
-		if (!param) return undefined;
+		if (!param) return null;
 		if (typeof param === 'string') return param;
 		if (typeof param === 'object' && param.value) return String(param.value);
-		return undefined;
+		return null;
 	} catch {
-		return undefined;
+		return null;
 	}
 }
 
@@ -531,4 +545,124 @@ export async function getResponseFields(
 		name: field,
 		value: field,
 	}));
+}
+
+export async function getKanbanBoards(
+	this: ILoadOptionsFunctions,
+	filter?: string,
+): Promise<INodeListSearchResult> {
+	const accountId = extractResourceLocatorValue(this, 'accountId');
+	if (!accountId) {
+		return { results: [] };
+	}
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/kanban/boards`,
+	)) as { boards?: ChatwootKanbanBoard[] } | ChatwootKanbanBoard[];
+
+	const boards =
+		(response as { boards?: ChatwootKanbanBoard[] }).boards ||
+		(response as ChatwootKanbanBoard[]) ||
+		[];
+
+	let results = boards.map((board: ChatwootKanbanBoard) => ({
+		name: board.name,
+		value: String(board.id),
+	}));
+
+	if (filter) {
+		const filterLower = filter.toLowerCase();
+		results = results.filter(
+			(item) =>
+				item.name.toLowerCase().includes(filterLower) ||
+				item.value.includes(filter),
+		);
+	}
+
+	return { results };
+}
+
+export async function getKanbanSteps(
+	this: ILoadOptionsFunctions,
+	filter?: string,
+): Promise<INodeListSearchResult> {
+	const accountId = extractResourceLocatorValue(this, 'accountId');
+	const boardId = extractResourceLocatorValue(this, 'boardId');
+
+	if (!accountId || !boardId) {
+		return { results: [] };
+	}
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/steps`,
+	)) as { steps?: ChatwootKanbanStep[] } | ChatwootKanbanStep[];
+
+	const steps =
+		(response as { steps?: ChatwootKanbanStep[] }).steps ||
+		(response as ChatwootKanbanStep[]) ||
+		[];
+
+	let results = steps.map((step: ChatwootKanbanStep) => ({
+		name: step.name,
+		value: String(step.id),
+	}));
+
+	if (filter) {
+		const filterLower = filter.toLowerCase();
+		results = results.filter(
+			(item) =>
+				item.name.toLowerCase().includes(filterLower) ||
+				item.value.includes(filter),
+		);
+	}
+
+	return { results };
+}
+
+export async function getKanbanTasks(
+	this: ILoadOptionsFunctions,
+	filter?: string,
+): Promise<INodeListSearchResult> {
+	const accountId = extractResourceLocatorValue(this, 'accountId');
+	if (!accountId) {
+		return { results: [] };
+	}
+
+	const boardId = extractResourceLocatorValue(this, 'boardId');
+
+	let endpoint = `/api/v1/accounts/${accountId}/kanban/tasks`;
+	if (boardId) {
+		endpoint += `?board_id=${boardId}`;
+	}
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		endpoint,
+	)) as { tasks?: ChatwootKanbanTask[] } | ChatwootKanbanTask[];
+
+	const tasks =
+		(response as { tasks?: ChatwootKanbanTask[] }).tasks ||
+		(response as ChatwootKanbanTask[]) ||
+		[];
+
+	let results = tasks.map((task: ChatwootKanbanTask) => ({
+		name: task.title,
+		value: String(task.id),
+	}));
+
+	if (filter) {
+		const filterLower = filter.toLowerCase();
+		results = results.filter(
+			(item) =>
+				item.name.toLowerCase().includes(filterLower) ||
+				item.value.includes(filter),
+		);
+	}
+
+	return { results };
 }
