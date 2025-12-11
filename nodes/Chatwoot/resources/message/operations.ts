@@ -31,33 +31,27 @@ async function sendMessage(
 ): Promise<IDataObject> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const conversationId = getConversationId.call(context, itemIndex);
-	const useRawJson = context.getNodeParameter('useRawJson', itemIndex, false) as boolean;
 
-	let body: IDataObject;
-	if (useRawJson) {
-		body = JSON.parse(context.getNodeParameter('jsonBody', itemIndex, '{}') as string);
-	} else {
-		const content = context.getNodeParameter('content', itemIndex) as string;
-		const messageType = context.getNodeParameter('messageType', itemIndex) as string;
-		const isPrivate = context.getNodeParameter('private', itemIndex, false) as boolean;
+	const content = context.getNodeParameter('content', itemIndex) as string;
+	const messageType = context.getNodeParameter('messageType', itemIndex) as string;
+	const isPrivate = context.getNodeParameter('private', itemIndex, false) as boolean;
 
-		body = {
-			content,
-			message_type: messageType,
-			private: isPrivate,
-		};
+	const body: IDataObject = {
+		content,
+		message_type: messageType,
+		private: isPrivate,
+	};
 
-		const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {}) as IDataObject;
+	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {}) as IDataObject;
 
-		if (additionalFields.content_type) {
-			body.content_type = additionalFields.content_type;
-		}
-		if (additionalFields.content_attributes) {
-			body.content_attributes = JSON.parse(additionalFields.content_attributes as string);
-		}
-		if (additionalFields.template_params) {
-			body.template_params = JSON.parse(additionalFields.template_params as string);
-		}
+	if (additionalFields.content_type) {
+		body.content_type = additionalFields.content_type;
+	}
+	if (additionalFields.content_attributes) {
+		body.content_attributes = JSON.parse(additionalFields.content_attributes as string);
+	}
+	if (additionalFields.template_params) {
+		body.template_params = JSON.parse(additionalFields.template_params as string);
 	}
 
 	return (await chatwootApiRequest.call(
