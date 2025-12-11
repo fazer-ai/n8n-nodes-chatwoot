@@ -1,22 +1,22 @@
 import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
 import { chatwootApiRequest, getAccountId } from '../../shared/transport';
+import { LabelOperation } from './types';
 
 export async function executeLabelOperation(
 	context: IExecuteFunctions,
-	operation: string,
+	operation: LabelOperation,
 	itemIndex: number,
-): Promise<IDataObject | IDataObject[] | null> {
-  if (operation === 'create') {
-    return createLabel(context, itemIndex);
-  } else if (operation === 'getAll') {
-    return getAllLabels(context, itemIndex);
-  } else if (operation === 'update') {
-    return updateLabel(context, itemIndex);
-  } else if (operation === 'delete') {
-    return deleteLabel(context, itemIndex);
+): Promise<IDataObject | IDataObject[]> {
+  switch (operation) {
+    case 'create':
+      return createLabel(context, itemIndex);
+    case 'getAll':
+      return getAllLabels(context, itemIndex);
+    case 'update':
+      return updateLabel(context, itemIndex);
+    case 'delete':
+      return deleteLabel(context, itemIndex);
   }
-
-  return null;
 }
 
 async function createLabel(
