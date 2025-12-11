@@ -1,20 +1,19 @@
 import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
 import { chatwootApiRequest, getAccountId } from '../../shared/transport';
+import { AccountOperation } from './types';
 
 export async function executeAccountOperation(
 	context: IExecuteFunctions,
-	operation: string,
+	operation: AccountOperation,
 	itemIndex: number,
-): Promise<IDataObject | IDataObject[] | null> {
-  if (operation === 'getAll') {
+): Promise<IDataObject | IDataObject[]> {
+  switch (operation) {
+  case 'getAll':
     return getAllAccounts(context);
-  } else if (operation === 'get') {
+  case 'get':
     return getAccount(context, itemIndex);
   }
-
-  return null;
 }
-
 
 async function getAllAccounts(
 	context: IExecuteFunctions,
