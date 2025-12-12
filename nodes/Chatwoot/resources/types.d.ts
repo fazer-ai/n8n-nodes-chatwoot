@@ -3,7 +3,9 @@ import type { ContactOperation } from './contact/types';
 import type { ConversationOperation } from './conversation/types';
 import type { CustomAttributeOperation } from './customAttribute/types';
 import type { InboxOperation } from './inbox/types';
-import type { KanbanOperation } from './kanban/types';
+import type { KanbanBoardOperation } from './kanbanBoard/types';
+import type { KanbanStepOperation } from './kanbanStep/types';
+import type { KanbanTaskOperation } from './kanbanTask/types';
 import type { LabelOperation } from './label/types';
 import type { MessageOperation } from './message/types';
 import type { ProfileOperation } from './profile/types';
@@ -15,7 +17,9 @@ export type ChatwootResources =
 	| 'conversation'
 	| 'customAttribute'
 	| 'inbox'
-	| 'kanban'
+	| 'kanbanBoard'
+	| 'kanbanStep'
+	| 'kanbanTask'
 	| 'label'
 	| 'message'
 	| 'profile'
@@ -27,7 +31,9 @@ export type ChatwootOperations =
 	| ConversationOperation
 	| CustomAttributeOperation
 	| InboxOperation
-	| KanbanOperation
+	| KanbanBoardOperation
+	| KanbanStepOperation
+	| KanbanTaskOperation
 	| LabelOperation
 	| MessageOperation
 	| ProfileOperation
@@ -39,7 +45,9 @@ export type {
 	ConversationOperation,
 	CustomAttributeOperation,
 	InboxOperation,
-	KanbanOperation,
+	KanbanBoardOperation,
+	KanbanStepOperation,
+	KanbanTaskOperation,
 	LabelOperation,
 	MessageOperation,
 	ProfileOperation,

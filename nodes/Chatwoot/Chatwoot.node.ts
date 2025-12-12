@@ -13,6 +13,9 @@ import type {
 	ConversationOperation,
 	CustomAttributeOperation,
 	InboxOperation,
+	KanbanBoardOperation,
+	KanbanStepOperation,
+	KanbanTaskOperation,
 	LabelOperation,
 	MessageOperation,
 	ProfileOperation,
@@ -28,6 +31,9 @@ import { messageDescription, executeMessageOperation } from './resources/message
 import { /*webhookDescription,*/ executeWebhookOperation } from './resources/webhook';
 import { customAttributeDescription, executeCustomAttributeOperation } from './resources/customAttribute';
 import { labelDescription, executeLabelOperation } from './resources/label';
+import { kanbanBoardDescription, executeKanbanBoardOperation } from './resources/kanbanBoard';
+import { kanbanStepDescription, executeKanbanStepOperation } from './resources/kanbanStep';
+import { kanbanTaskDescription, executeKanbanTaskOperation } from './resources/kanbanTask';
 
 import {
 	getAccounts,
@@ -39,6 +45,9 @@ import {
 	getLabels,
 	getWebhooks,
 	getResponseFields,
+	getKanbanBoards,
+	getKanbanSteps,
+	getKanbanTasks,
 } from './listSearch';
 
 import { filterResponseFields } from './shared/utils';
@@ -102,6 +111,21 @@ export class Chatwoot implements INodeType {
 						description: 'Manage inboxes',
 					},
 					{
+						name: 'Kanban Board',
+						value: 'kanbanBoard',
+						description: 'Manage Kanban boards',
+					},
+					{
+						name: 'Kanban Step',
+						value: 'kanbanStep',
+						description: 'Manage Kanban steps (columns)',
+					},
+					{
+						name: 'Kanban Task',
+						value: 'kanbanTask',
+						description: 'Manage Kanban tasks',
+					},
+					{
 						name: 'Label',
 						value: 'label',
 						description: 'Manage labels',
@@ -133,6 +157,9 @@ export class Chatwoot implements INodeType {
 			// ...webhookDescription,
 			...customAttributeDescription,
 			...labelDescription,
+			...kanbanBoardDescription,
+			...kanbanStepDescription,
+			...kanbanTaskDescription,
 		],
 		usableAsTool: true,
 	};
@@ -144,6 +171,9 @@ export class Chatwoot implements INodeType {
 			getConversations,
 			getContacts,
 			getWebhooks,
+			getKanbanBoards,
+			getKanbanSteps,
+			getKanbanTasks,
 		},
 		loadOptions: {
 			getAgents,
@@ -193,8 +223,14 @@ export class Chatwoot implements INodeType {
 					case 'label':
 						responseData = await executeLabelOperation(this, operation as LabelOperation, i);
 						break;
-					case 'kanban':
-						responseData = await executeKanbanOperation(this, operation as KanbanOperation, i);
+					case 'kanbanBoard':
+						responseData = await executeKanbanBoardOperation(this, operation as KanbanBoardOperation, i);
+						break;
+					case 'kanbanStep':
+						responseData = await executeKanbanStepOperation(this, operation as KanbanStepOperation, i);
+						break;
+					case 'kanbanTask':
+						responseData = await executeKanbanTaskOperation(this, operation as KanbanTaskOperation, i);
 						break;
 				}
 				const responseFilters = this.getNodeParameter(
