@@ -1,4 +1,5 @@
 import type { IDataObject } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 
 /**
  * Parse custom attributes from JSON string to object
@@ -6,8 +7,12 @@ import type { IDataObject } from 'n8n-workflow';
 export function parseCustomAttributes(customAttributes: string): Record<string, unknown> {
 	try {
 		return JSON.parse(customAttributes) as Record<string, unknown>;
-	} catch {
-		return {};
+	} catch (error) {
+		throw new NodeOperationError(
+			{ name: 'Chatwoot', type: 'n8n-nodes-chatwoot.chatwoot', typeVersion: 1 } as never,
+			`Invalid JSON in custom attributes: ${(error as Error).message}`,
+			{ description: 'Please provide valid JSON for custom attributes, e.g. {"key": "value"}' },
+		);
 	}
 }
 
