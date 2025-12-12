@@ -1,1 +1,1 @@
-export type AccountOperation = 'get' | 'getAll';
+export type AccountOperation = 'get';

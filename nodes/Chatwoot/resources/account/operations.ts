@@ -8,23 +8,9 @@ export async function executeAccountOperation(
 	itemIndex: number,
 ): Promise<IDataObject | IDataObject[]> {
   switch (operation) {
-  case 'getAll':
-    return getAllAccounts(context);
   case 'get':
     return getAccount(context, itemIndex);
   }
-}
-
-async function getAllAccounts(
-	context: IExecuteFunctions,
-): Promise<IDataObject[]> {
-	const profile = (await chatwootApiRequest.call(
-		context,
-		'GET',
-		'/api/v1/profile',
-	)) as IDataObject;
-
-	return (profile.accounts as IDataObject[]) || [];
 }
 
 async function getAccount(
