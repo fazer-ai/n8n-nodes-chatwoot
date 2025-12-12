@@ -4,4 +4,5 @@ export type ContactOperation =
 	| 'getAll'
 	| 'update'
 	| 'delete'
-	| 'search';
+	| 'search'
+	| 'setCustomAttribute';

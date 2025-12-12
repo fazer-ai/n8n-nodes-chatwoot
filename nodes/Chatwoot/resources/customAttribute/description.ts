@@ -1,7 +1,6 @@
 import type { INodeProperties } from 'n8n-workflow';
 import {
 	accountSelector,
-	contactSelector,
 	conversationSelector,
 	responseFilterFields,
 } from '../../shared/descriptions';
@@ -37,12 +36,6 @@ const customAttributeOperations: INodeProperties[] = [
 				value: 'getCustomAttribute',
 				description: 'Get all custom attribute definitions',
 				action: 'Get custom attribute definitions',
-			},
-			{
-				name: 'Set on Contact',
-				value: 'setOnContact',
-				description: 'Set custom attributes on a contact',
-				action: 'Set custom attributes on contact',
 			},
 			{
 				name: 'Set on Conversation',
@@ -168,15 +161,6 @@ const customAttributeFields: INodeProperties[] = [
 		],
 	},
 	{
-		...contactSelector,
-		displayOptions: {
-			show: {
-				...showOnlyForCustomAttribute,
-				operation: ['setOnContact'],
-			},
-		},
-	},
-	{
 		...conversationSelector,
 		displayOptions: {
 			show: {
@@ -195,7 +179,7 @@ const customAttributeFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				...showOnlyForCustomAttribute,
-				operation: ['setOnContact', 'setOnConversation'],
+				operation: ['setOnConversation'],
 			},
 		},
 	},

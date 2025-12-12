@@ -24,6 +24,8 @@ export async function executeContactOperation(
       return deleteContact(context, itemIndex);
     case 'search':
       return searchContacts(context, itemIndex);
+    case 'setCustomAttribute':
+      return setCustomAttribute(context, itemIndex);
     }
 }
 
@@ -162,5 +164,23 @@ async function searchContacts(
 	)) as IDataObject;
 
 	return (response.payload as IDataObject[]) || response;
+}
+
+async function setCustomAttribute(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<IDataObject> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const contactId = getContactId.call(context, itemIndex);
+	const customAttributes = JSON.parse(
+		context.getNodeParameter('customAttributes', itemIndex) as string,
+	);
+
+	return (await chatwootApiRequest.call(
+		context,
+		'PUT',
+		`/api/v1/accounts/${accountId}/contacts/${contactId}`,
+		{ custom_attributes: customAttributes },
+	)) as IDataObject;
 }
 

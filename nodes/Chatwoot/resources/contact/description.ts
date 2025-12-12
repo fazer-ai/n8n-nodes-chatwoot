@@ -51,6 +51,12 @@ const contactOperations: INodeProperties[] = [
 				action: 'Search contacts',
 			},
 			{
+				name: 'Set Custom Attribute',
+				value: 'setCustomAttribute',
+				description: 'Set custom attributes on a contact',
+				action: 'Set custom attribute on contact',
+			},
+			{
 				name: 'Update',
 				value: 'update',
 				description: 'Update a contact',
@@ -73,7 +79,7 @@ const contactFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				...showOnlyForContact,
-				operation: ['get', 'update', 'delete'],
+				operation: ['get', 'update', 'delete', 'setCustomAttribute'],
 			},
 		},
 	},
@@ -216,11 +222,25 @@ const contactFields: INodeProperties[] = [
 		],
 	},
 	{
+		displayName: 'Custom Attributes',
+		name: 'customAttributes',
+		type: 'json',
+		default: '{}',
+		required: true,
+		description: 'Custom attributes as JSON object (key-value pairs)',
+		displayOptions: {
+			show: {
+				...showOnlyForContact,
+				operation: ['setCustomAttribute'],
+			},
+		},
+	},
+	{
 		...responseFilterFields,
 		displayOptions: {
 			show: {
 				...showOnlyForContact,
-				operation: ['get', 'getAll', 'search'],
+				operation: ['get', 'getAll', 'search', 'setCustomAttribute'],
 			},
 		},
 	},
