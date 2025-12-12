@@ -90,6 +90,7 @@ function extractResourceLocatorValue(
 		if (typeof param === 'object' && param.value) return String(param.value);
 		return null;
 	} catch {
+		//  NOTE: Parameter not found or not set - return null as fallback
 		return null;
 	}
 }
@@ -536,6 +537,7 @@ export async function getResponseFields(
 				return [];
 		}
 	} catch {
+		// NOTE: API call failed - return empty fields list as graceful fallback
 		return [];
 	}
 
