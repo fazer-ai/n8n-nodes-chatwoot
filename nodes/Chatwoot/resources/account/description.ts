@@ -16,10 +16,10 @@ const accountOperations: INodeProperties[] = [
 		},
 		options: [
 			{
-				name: 'Get Specific Account',
+				name: 'Get Account',
 				value: 'get',
-				description: 'Get information about a specific account',
-				action: 'Get account info',
+				description: 'Retrieve detailed information about a specific Chatwoot account',
+				action: 'Get account information',
 			}
 		],
 		default: 'get',
