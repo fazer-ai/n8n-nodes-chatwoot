@@ -1,5 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { accountSelector, responseFilterFields } from '../../shared/descriptions';
+import { accountSelector } from '../../shared/descriptions';
 
 const showOnlyForAccount = {
 	resource: ['account'],
@@ -35,16 +35,7 @@ const accountFields: INodeProperties[] = [
 				operation: ['get'],
 			},
 		},
-	},
-	{
-		...responseFilterFields,
-		displayOptions: {
-			show: {
-				...showOnlyForAccount,
-				operation: ['get'],
-			},
-		},
-	},
+	}
 ];
 
 export const accountDescription: INodeProperties[] = [
