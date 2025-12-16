@@ -134,24 +134,18 @@ async function searchContacts(
 	itemIndex: number,
 ): Promise<IDataObject | IDataObject[]> {
 	const accountId = getAccountId.call(context, itemIndex);
-	const searchQuery = context.getNodeParameter('searchQuery', itemIndex) as string;
-	const returnAll = context.getNodeParameter('returnAll', itemIndex, false) as boolean;
-	const limit = context.getNodeParameter('limit', itemIndex, 50) as number;
+	const searchQuery = context.getNodeParameter('searchQuery', itemIndex);
+	const page = context.getNodeParameter('page', itemIndex, 1);
 
-	const query: IDataObject = { q: searchQuery };
-	if (!returnAll) {
-		query.per_page = limit;
-	}
+	const query: IDataObject = { q: searchQuery, page };
 
-	const response = (await chatwootApiRequest.call(
+	return (await chatwootApiRequest.call(
 		context,
 		'GET',
 		`/api/v1/accounts/${accountId}/contacts/search`,
 		undefined,
 		query,
 	)) as IDataObject;
-
-	return (response.payload as IDataObject[]) || response;
 }
 
 async function setCustomAttribute(
