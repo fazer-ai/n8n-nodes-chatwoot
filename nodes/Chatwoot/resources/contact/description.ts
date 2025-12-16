@@ -3,7 +3,6 @@ import {
 	accountSelector,
 	contactSelector,
 	customAttributesField,
-	responseFilterFields,
 } from '../../shared/descriptions';
 
 const showOnlyForContact = {
@@ -35,7 +34,7 @@ const contactOperations: INodeProperties[] = [
 			{
 				name: 'Get',
 				value: 'get',
-				description: 'Get a specific contact',
+				description: 'Get a contact information',
 				action: 'Get contact',
 			},
 			{
@@ -326,16 +325,7 @@ const contactFields: INodeProperties[] = [
 				operation: ['setCustomAttribute'],
 			},
 		},
-	},
-	{
-		...responseFilterFields,
-		displayOptions: {
-			show: {
-				...showOnlyForContact,
-				operation: ['get', 'getAll', 'search', 'setCustomAttribute'],
-			},
-		},
-	},
+	}
 ];
 
 export const contactDescription: INodeProperties[] = [
