@@ -49,6 +49,12 @@ const contactOperations: INodeProperties[] = [
 				action: 'List contacts',
 			},
 			{
+				name: 'On Whatsapp',
+				value: 'onWhatsapp',
+				description: 'Mark contact as on WhatsApp',
+				action: 'Mark contact as on whats app',
+			},
+			{
 				name: 'Search',
 				value: 'search',
 				description: 'Search for contacts',
@@ -77,7 +83,7 @@ const contactFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				...showOnlyForContact,
-				operation: ['get', 'update', 'delete', 'setCustomAttribute'],
+				operation: ['get', 'update', 'delete', 'setCustomAttributes', 'destroyCustomAttributes', 'onWhatsapp'],
 			},
 		},
 	},

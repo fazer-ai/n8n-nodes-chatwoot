@@ -30,6 +30,9 @@ export async function executeContactOperation(
       return setCustomAttributes(context, itemIndex);
     case 'destroyCustomAttributes':
 			return destroyCustomAttributes(context, itemIndex);
+		case 'onWhatsapp':
+			return onWhatsapp(context, itemIndex);
+		}
 }
 
 async function createContact(
@@ -208,3 +211,17 @@ async function destroyCustomAttributes(
 	)) as IDataObject;
 }
 
+// TODO: Fix the endpoint for onWhatsapp
+async function onWhatsapp(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<IDataObject> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const contactId = getContactId.call(context, itemIndex);
+
+	return (await chatwootApiRequest.call(
+		context,
+		'GET',
+		`/api/v1/accounts/${accountId}/contacts/${contactId}/on-whatsapp`,
+	)) as IDataObject;
+}
