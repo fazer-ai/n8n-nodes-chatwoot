@@ -247,12 +247,10 @@ export const conversationStatusOptions: INodeProperties = {
 	displayName: 'Status',
 	name: 'status',
 	type: 'options',
-	default: 'open',
+	default: 'resolved',
 	options: [
 		{ name: 'Open', value: 'open' },
 		{ name: 'Resolved', value: 'resolved' },
-		{ name: 'Pending', value: 'pending' },
-		{ name: 'Snoozed', value: 'snoozed' },
 	],
 };
 
