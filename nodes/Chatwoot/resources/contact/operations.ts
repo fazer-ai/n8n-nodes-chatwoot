@@ -26,9 +26,8 @@ export async function executeContactOperation(
       return deleteContact(context, itemIndex);
     case 'search':
       return searchContacts(context, itemIndex);
-    case 'setCustomAttribute':
-      return setCustomAttribute(context, itemIndex);
-    }
+    case 'destroyCustomAttributes':
+			return destroyCustomAttributes(context, itemIndex);
 }
 
 async function createContact(
@@ -162,7 +161,22 @@ async function setCustomAttribute(
 		context,
 		'PUT',
 		`/api/v1/accounts/${accountId}/contacts/${contactId}`,
-		{ custom_attributes: customAttributes },
+async function destroyCustomAttributes(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<IDataObject> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const contactId = getContactId.call(context, itemIndex);
+	const customAttributesToDestroy = context.getNodeParameter(
+		'customAttributesToDestroy',
+		itemIndex,
+	) as string[];
+
+	return (await chatwootApiRequest.call(
+		context,
+		'POST',
+		`/api/v1/accounts/${accountId}/contacts/${contactId}/destroy_custom_attributes`,
+		{ custom_attributes: customAttributesToDestroy },
 	)) as IDataObject;
 }
 

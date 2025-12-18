@@ -4,4 +4,4 @@ export type ContactOperation =
 	| 'list'
 	| 'delete'
 	| 'search'
-	| 'setCustomAttribute';
+	| 'destroyCustomAttributes'

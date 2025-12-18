@@ -31,6 +31,12 @@ const contactOperations: INodeProperties[] = [
 				action: 'Delete contact',
 			},
 			{
+				name: 'Destroy Custom Attributes',
+				value: 'destroyCustomAttributes',
+				description: 'Destroy all custom attributes of a contact',
+				action: 'Destroy all custom attributes of contact',
+			},
+			{
 				name: 'Get',
 				value: 'get',
 				description: 'Get a contact information',
@@ -259,7 +265,21 @@ const contactFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				...showOnlyForContact,
-				operation: ['setCustomAttribute'],
+	},
+	{
+		displayName: 'Custom Attributes to Destroy',
+		name: 'customAttributesToDestroy',
+		type: 'multiOptions',
+		required: true,
+		typeOptions: {
+			loadOptionsMethod: 'getContactCustomAttributeDefinitions',
+		},
+		default: [],
+		description: 'Select the custom attributes that will be destroyed. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+		displayOptions: {
+			show: {
+				...showOnlyForContact,
+				operation: ['destroyCustomAttributes'],
 			},
 		},
 	}

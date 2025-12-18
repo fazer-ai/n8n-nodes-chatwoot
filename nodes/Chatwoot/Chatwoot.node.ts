@@ -48,6 +48,7 @@ import {
 	getKanbanBoards,
 	getKanbanSteps,
 	getKanbanTasks,
+	getContactCustomAttributeDefinitions,
 } from './listSearch';
 
 import { filterResponseFields } from './shared/utils';
@@ -180,6 +181,7 @@ export class Chatwoot implements INodeType {
 			getTeams,
 			getLabels,
 			getResponseFields,
+			getContactCustomAttributeDefinitions,
 		},
 	};
 

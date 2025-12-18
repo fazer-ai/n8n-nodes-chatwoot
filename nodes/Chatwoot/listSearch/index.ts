@@ -335,6 +335,35 @@ export async function getLabels(
 	}));
 }
 
+interface ChatwootCustomAttributeDefinition {
+	id: number;
+	attribute_key: string;
+	attribute_display_name: string;
+	attribute_model: number;
+}
+
+export async function getContactCustomAttributeDefinitions(
+	this: ILoadOptionsFunctions,
+): Promise<INodePropertyOptions[]> {
+	const accountId = extractResourceLocatorValue(this, 'accountId');
+	if (!accountId) {
+		return [];
+	}
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/custom_attribute_definitions`,
+		undefined,
+		{ attribute_model: 'contact_attribute' },
+	)) as ChatwootCustomAttributeDefinition[];
+
+	return (response || []).map((attr: ChatwootCustomAttributeDefinition) => ({
+		name: attr.attribute_display_name,
+		value: attr.attribute_key,
+	}));
+}
+
 /**
  * Get all webhooks for the selected account (for resourceLocator)
  */
