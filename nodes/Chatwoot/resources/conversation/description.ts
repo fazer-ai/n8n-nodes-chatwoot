@@ -6,7 +6,6 @@ import {
 	contactSelector,
 	conversationStatusOptions,
 	customAttributesField,
-	responseFilterFields,
 } from '../../shared/descriptions';
 
 const showOnlyForConversation = {
@@ -54,10 +53,10 @@ const conversationOperations: INodeProperties[] = [
 				action: 'Get conversation',
 			},
 			{
-				name: 'Get Many',
-				value: 'getAll',
-				description: 'Get many conversations',
-				action: 'Get many conversations',
+				name: 'List',
+				value: 'list',
+				description: 'List conversations',
+				action: 'List conversations',
 			},
 			{
 				name: 'Set Custom Attribute',
@@ -72,7 +71,7 @@ const conversationOperations: INodeProperties[] = [
 				action: 'Toggle conversation status',
 			},
 		],
-		default: 'getAll',
+		default: 'list',
 	},
 ];
 
@@ -90,7 +89,7 @@ const conversationFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				...showOnlyForConversation,
-				operation: ['getAll'],
+				operation: ['list'],
 			},
 		},
 	},
@@ -121,7 +120,7 @@ const conversationFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				...showOnlyForConversation,
-				operation: ['getAll'],
+				operation: ['list'],
 			},
 		},
 		options: [
@@ -264,15 +263,6 @@ const conversationFields: INodeProperties[] = [
 			show: {
 				...showOnlyForConversation,
 				operation: ['setCustomAttribute'],
-			},
-		},
-	},
-	{
-		...responseFilterFields,
-		displayOptions: {
-			show: {
-				...showOnlyForConversation,
-				operation: ['get', 'getAll', 'setCustomAttribute'],
 			},
 		},
 	},

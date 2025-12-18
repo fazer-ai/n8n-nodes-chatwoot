@@ -18,8 +18,8 @@ export async function executeConversationOperation(
       return createConversation(context, itemIndex);
     case 'get':
       return getConversation(context, itemIndex);
-    case 'getAll':
-      return getAllConversations(context, itemIndex);
+    case 'list':
+      return listConversations(context, itemIndex);
     case 'toggleStatus':
       return toggleConversationStatus(context, itemIndex);
     case 'assignAgent':
@@ -79,7 +79,7 @@ async function getConversation(
 	)) as IDataObject;
 }
 
-async function getAllConversations(
+async function listConversations(
 	context: IExecuteFunctions,
 	itemIndex: number,
 ): Promise<IDataObject | IDataObject[]> {
@@ -96,18 +96,13 @@ async function getAllConversations(
 		query.inbox_id = inboxId;
 	}
 
-	const response = (await chatwootApiRequest.call(
+	return (await chatwootApiRequest.call(
 		context,
 		'GET',
 		`/api/v1/accounts/${accountId}/conversations`,
 		undefined,
 		query,
 	)) as IDataObject;
-
-	const dataObj = response.data as IDataObject | undefined;
-	return dataObj?.payload as IDataObject[] ||
-		response.payload as IDataObject[] ||
-		response;
 }
 
 async function toggleConversationStatus(

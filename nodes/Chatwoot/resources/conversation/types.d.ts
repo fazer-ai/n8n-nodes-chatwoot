@@ -1,7 +1,7 @@
 export type ConversationOperation =
 	| 'create'
 	| 'get'
-	| 'getAll'
+	| 'list'
 	| 'toggleStatus'
 	| 'assignAgent'
 	| 'assignTeam'
