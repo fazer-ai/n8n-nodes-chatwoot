@@ -76,6 +76,12 @@ const conversationOperations: INodeProperties[] = [
 				description: 'Toggle conversation status (resolved/open)',
 				action: 'Toggle conversation status',
 			},
+			{
+				name: 'Update Labels',
+				value: 'updateLabels',
+				description: 'Update labels to conversation',
+				action: 'Update labels to conversation',
+			},
 		],
 		default: 'list',
 	},
@@ -104,7 +110,7 @@ const conversationFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				...showOnlyForConversation,
-				operation: ['get', 'toggleStatus', 'assignAgent', 'assignTeam', 'setLabels', 'setCustomAttribute', 'setPriority'],
+				operation: ['get', 'toggleStatus', 'assignAgent', 'assignTeam', 'updateLabels', 'setCustomAttribute', 'setPriority'],
 			},
 		},
 	},
@@ -198,7 +204,8 @@ const conversationFields: INodeProperties[] = [
 		},
 	},
 	{
-		displayName: 'Label Names or IDs',
+		// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-multi-options
+		displayName: 'Labels',
 		name: 'labels',
 		type: 'multiOptions',
 		default: [],
@@ -209,7 +216,7 @@ const conversationFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				...showOnlyForConversation,
-				operation: ['setLabels'],
+				operation: ['updateLabels'],
 			},
 		},
 	},

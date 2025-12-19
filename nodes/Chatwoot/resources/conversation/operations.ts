@@ -26,7 +26,7 @@ export async function executeConversationOperation(
       return assignConversationAgent(context, itemIndex);
     case 'assignTeam':
       return assignConversationTeam(context, itemIndex);
-    case 'setLabels':
+    case 'updateLabels':
       return setConversationLabels(context, itemIndex);
     case 'setCustomAttribute':
       return setConversationCustomAttributes(context, itemIndex);
