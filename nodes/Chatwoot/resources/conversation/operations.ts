@@ -115,13 +115,21 @@ async function toggleConversationStatus(
 ): Promise<IDataObject> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const conversationId = getConversationId.call(context, itemIndex);
-	const status = context.getNodeParameter('status', itemIndex) as string;
+	const status = context.getNodeParameter('status', itemIndex);
+	const snoozeUntilRaw = context.getNodeParameter('snoozeUntil', itemIndex, null) as string | null;
+
+	const body: IDataObject = { status };
+
+	if (snoozeUntilRaw) {
+		const snoozeDate = new Date(snoozeUntilRaw);
+		body.snoozed_until = Math.floor(snoozeDate.getTime() / 1000);
+	}
 
 	return (await chatwootApiRequest.call(
 		context,
 		'POST',
 		`/api/v1/accounts/${accountId}/conversations/${conversationId}/toggle_status`,
-		{ status },
+		body,
 	)) as IDataObject;
 }
 

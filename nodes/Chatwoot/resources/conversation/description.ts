@@ -344,6 +344,20 @@ const conversationFields: INodeProperties[] = [
 			},
 		},
 	},
+	{
+		displayName: 'Snooze Until',
+		name: 'snoozeUntil',
+		type: 'dateTime',
+		default: '',
+		description: 'Timestamp until which the conversation is snoozed',
+		displayOptions: {
+			show: {
+				...showOnlyForConversation,
+				operation: ['toggleStatus'],
+				status: ['snoozed'],
+			},
+		},
+	}
 ];
 
 export const conversationDescription: INodeProperties[] = [
