@@ -47,6 +47,12 @@ const conversationOperations: INodeProperties[] = [
 				action: 'Create conversation',
 			},
 			{
+				name: 'Destroy Custom Attributes',
+				value: 'destroyCustomAttributes',
+				description: 'Reset custom attributes in conversation',
+				action: 'Reset custom attributes in conversation',
+			},
+			{
 				name: 'Get',
 				value: 'get',
 				description: 'Get a specific conversation',
@@ -59,10 +65,35 @@ const conversationOperations: INodeProperties[] = [
 				action: 'List conversations',
 			},
 			{
-				name: 'Set Custom Attribute',
-				value: 'setCustomAttribute',
+				name: 'List Messages',
+				value: 'listMessages',
+				description: 'List messages in conversation',
+				action: 'List messages in conversation',
+			},
+			{
+				name: 'Remove Label',
+				value: 'removeLabel',
+				description: 'Remove a label from conversation',
+				action: 'Remove label from conversation',
+			},
+			{
+				name: 'Send File',
+				value: 'sendFile',
+				description: 'Send a file message in conversation',
+				action: 'Send file message in conversation',
+
+			},
+			{
+				name: 'Send Message',
+				value: 'sendMessage',
+				description: 'Send a text message in conversation',
+				action: 'Send text message in conversation',
+			},
+			{
+				name: 'Set Custom Attributes',
+				value: 'setCustomAttributes',
 				description: 'Set custom attributes on conversation',
-				action: 'Set custom attribute on conversation',
+				action: 'Set custom attributes on conversation',
 			},
 			{
 				name: 'Set Priority',
@@ -81,6 +112,18 @@ const conversationOperations: INodeProperties[] = [
 				value: 'updateLabels',
 				description: 'Update labels to conversation',
 				action: 'Update labels to conversation',
+			},
+			{
+				name: 'Update Last Seen',
+				value: 'updateLastSeen',
+				description: 'Update the last seen timestamp of the conversation',
+				action: 'Update last seen timestamp',
+			},
+			{
+				name: 'Update Presence',
+				value: 'updatePresence',
+				description: 'Define presence status as off, typing or recording',
+				action: 'Define presence status',
 			},
 		],
 		default: 'list',

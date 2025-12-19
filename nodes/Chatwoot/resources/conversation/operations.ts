@@ -28,10 +28,12 @@ export async function executeConversationOperation(
       return assignConversationTeam(context, itemIndex);
     case 'updateLabels':
       return setConversationLabels(context, itemIndex);
-    case 'setCustomAttribute':
+    case 'setCustomAttributes':
       return setConversationCustomAttributes(context, itemIndex);
     case 'setPriority':
       return setConversationPriority(context, itemIndex);
+		default:
+			throw new Error(`The operation "${operation}" is not implemented yet!`);
   }
 }
 

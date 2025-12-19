@@ -1,10 +1,30 @@
 export type ConversationOperation =
+	// TODO
+	| 'addLabel'
 	| 'create'
+	// TODO
+	| 'destroyCustomAttributes'
 	| 'get'
 	| 'list'
+	// TODO
+	| 'listMessages'
 	| 'toggleStatus'
 	| 'assignAgent'
 	| 'assignTeam'
 	| 'updateLabels'
-	| 'setCustomAttribute'
-	| 'setPriority';
+	// TODO
+	| 'removeLabel'
+	// TODO
+	| 'sendMessage'
+	// TODO
+	| 'sendFile'
+	// TODO
+	| 'setCustomAttributes'
+	// TODO
+	| 'setPriority'
+	// TODO
+	| 'updateLabels'
+	// TODO
+	| 'updateLastSeen'
+	// TODO
+	| 'updatePresence';
