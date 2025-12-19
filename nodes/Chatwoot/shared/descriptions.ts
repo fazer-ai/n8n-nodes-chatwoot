@@ -368,6 +368,8 @@ export const conversationStatusOptions: INodeProperties = {
 	options: [
 		{ name: 'Open', value: 'open' },
 		{ name: 'Resolved', value: 'resolved' },
+		{ name: 'Pending', value: 'pending' },
+		{ name: 'Snoozed', value: 'snoozed' },
 	],
 };
 
