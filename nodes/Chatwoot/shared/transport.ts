@@ -206,3 +206,57 @@ export function getWebhookId(this: IExecuteFunctions, itemIndex: number): number
 	}
 	return param as number;
 }
+
+/**
+ * Helper to get the team ID from parameters (handles resourceLocator)
+ */
+export function getTeamId(this: IExecuteFunctions, itemIndex: number): number {
+	const param = this.getNodeParameter('teamId', itemIndex) as
+		| string
+		| number
+		| { mode: string; value: string };
+
+	if (typeof param === 'object' && param.value !== undefined) {
+		return Number(param.value);
+	}
+	if (typeof param === 'string') {
+		return Number(param);
+	}
+	return param as number;
+}
+
+/**
+ * Helper to get the agent ID from parameters (handles resourceLocator)
+ */
+export function getAgentId(this: IExecuteFunctions, itemIndex: number): number {
+	const param = this.getNodeParameter('agentId', itemIndex) as
+		| string
+		| number
+		| { mode: string; value: string };
+
+	if (typeof param === 'object' && param.value !== undefined) {
+		return Number(param.value);
+	}
+	if (typeof param === 'string') {
+		return Number(param);
+	}
+	return param as number;
+}
+
+/**
+ * Helper to get the team member ID from parameters (handles resourceLocator)
+ */
+export function getTeamMemberId(this: IExecuteFunctions, itemIndex: number): number {
+	const param = this.getNodeParameter('teamMemberId', itemIndex) as
+		| string
+		| number
+		| { mode: string; value: string };
+
+	if (typeof param === 'object' && param.value !== undefined) {
+		return Number(param.value);
+	}
+	if (typeof param === 'string') {
+		return Number(param);
+	}
+	return param as number;
+}

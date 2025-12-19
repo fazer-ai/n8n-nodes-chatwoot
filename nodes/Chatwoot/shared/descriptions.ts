@@ -134,7 +134,102 @@ export const contactSelector: INodeProperties = {
 			type: 'list',
 			placeholder: 'Select a contact...',
 			typeOptions: {
-				searchListMethod: 'getContacts',
+/**
+ * Agent selector using resourceLocator (From List / By ID in single field)
+ */
+export const agentSelector: INodeProperties = {
+	displayName: 'Agent',
+	name: 'agentId',
+	type: 'resourceLocator',
+	default: { mode: 'list', value: '' },
+	required: true,
+	description: 'Select the agent to use',
+	modes: [
+		{
+			displayName: 'From List',
+			name: 'list',
+			type: 'list',
+			placeholder: 'Select an agent...',
+			typeOptions: {
+				searchListMethod: 'searchAgents',
+				searchable: true,
+			},
+		},
+		{
+			displayName: 'By ID',
+			name: 'id',
+			type: 'string',
+			placeholder: 'e.g. 1',
+			validation: [
+				{
+					type: 'regex',
+					properties: {
+						regex: '^[0-9]+$',
+						errorMessage: 'The ID must be a number',
+					},
+				},
+			],
+		},
+	],
+};
+
+/**
+ * Team Member selector using resourceLocator (From List / By ID in single field)
+ */
+export const teamMemberSelector: INodeProperties = {
+	displayName: 'Team Member',
+	name: 'teamMemberId',
+	type: 'resourceLocator',
+	default: { mode: 'list', value: '' },
+	required: true,
+	description: 'Select the team member to use',
+	modes: [
+		{
+			displayName: 'From List',
+			name: 'list',
+			type: 'list',
+			placeholder: 'Select a team member...',
+			typeOptions: {
+				searchListMethod: 'searchTeamMembers',
+				searchable: true,
+			},
+		},
+		{
+			displayName: 'By ID',
+			name: 'id',
+			type: 'string',
+			placeholder: 'e.g. 1',
+			validation: [
+				{
+					type: 'regex',
+					properties: {
+						regex: '^[0-9]+$',
+						errorMessage: 'The ID must be a number',
+					},
+				},
+			],
+		},
+	],
+};
+
+/**
+ * Team selector using resourceLocator (From List / By ID in single field)
+ */
+export const teamSelector: INodeProperties = {
+	displayName: 'Team',
+	name: 'teamId',
+	type: 'resourceLocator',
+	default: { mode: 'list', value: '' },
+	required: true,
+	description: 'Select the team to use',
+	modes: [
+		{
+			displayName: 'From List',
+			name: 'list',
+			type: 'list',
+			placeholder: 'Select a team...',
+			typeOptions: {
+				searchListMethod: 'searchTeams',
 				searchable: true,
 			},
 		},

@@ -263,7 +263,7 @@ export async function getContacts(
 /**
  * Get all agents for the selected account (for loadOptions)
  */
-export async function getAgents(
+export async function loadAgentsOptions(
 	this: ILoadOptionsFunctions,
 ): Promise<INodePropertyOptions[]> {
 	const accountId = extractResourceLocatorValue(this, 'accountId');
@@ -285,9 +285,45 @@ export async function getAgents(
 }
 
 /**
+ * Get all agents for the selected account (for resourceLocator)
+ */
+export async function searchAgents(
+	this: ILoadOptionsFunctions,
+	filter?: string,
+): Promise<INodeListSearchResult> {
+	const accountId = extractResourceLocatorValue(this, 'accountId');
+	if (!accountId) {
+		return { results: [] };
+	}
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/agents`,
+	)) as ChatwootAgent[];
+	const agents = response || [];
+
+	let results = agents.map((agent: ChatwootAgent) => ({
+		name: agent.name || agent.email || `Agent ${agent.id}`,
+		value: String(agent.id),
+	}));
+
+	if (filter) {
+		const filterLower = filter.toLowerCase();
+		results = results.filter(
+			(item) =>
+				item.name.toLowerCase().includes(filterLower) ||
+				item.value.includes(filter),
+		);
+	}
+
+	return { results };
+}
+
+/**
  * Get all teams for the selected account (for loadOptions)
  */
-export async function getTeams(
+export async function loadTeamsOptions(
 	this: ILoadOptionsFunctions,
 ): Promise<INodePropertyOptions[]> {
 	const accountId = extractResourceLocatorValue(this, 'accountId');
@@ -306,6 +342,110 @@ export async function getTeams(
 		name: team.name,
 		value: team.id,
 	}));
+}
+
+/**
+ * Get all teams for the selected account (for resourceLocator)
+ */
+export async function searchTeams(
+	this: ILoadOptionsFunctions,
+	filter?: string,
+): Promise<INodeListSearchResult> {
+	const accountId = extractResourceLocatorValue(this, 'accountId');
+	if (!accountId) {
+		return { results: [] };
+	}
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/teams`,
+	)) as ChatwootTeam[];
+	const teams = response || [];
+
+	let results = teams.map((team: ChatwootTeam) => ({
+		name: team.name,
+		value: String(team.id),
+	}));
+
+	if (filter) {
+		const filterLower = filter.toLowerCase();
+		results = results.filter(
+			(item) =>
+				item.name.toLowerCase().includes(filterLower) ||
+				item.value.includes(filter),
+		);
+	}
+
+	return { results };
+}
+
+interface ChatwootTeamMember {
+	id: number;
+	name?: string;
+	email?: string;
+}
+
+/**
+ * Get all members of the selected team (for loadOptions)
+ */
+export async function loadTeamMembersOptions(
+	this: ILoadOptionsFunctions,
+): Promise<INodePropertyOptions[]> {
+	const accountId = extractResourceLocatorValue(this, 'accountId');
+	const teamId = extractResourceLocatorValue(this, 'teamId');
+	if (!accountId || !teamId) {
+		return [];
+	}
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/teams/${teamId}/team_members`,
+	)) as ChatwootTeamMember[];
+	const members = response || [];
+
+	return members.map((member: ChatwootTeamMember) => ({
+		name: member.name || member.email || `Agent ${member.id}`,
+		value: member.id,
+	}));
+}
+
+/**
+ * Get all members of the selected team (for resourceLocator/listSearch)
+ */
+export async function searchTeamMembers(
+	this: ILoadOptionsFunctions,
+	filter?: string,
+): Promise<INodeListSearchResult> {
+	const accountId = extractResourceLocatorValue(this, 'accountId');
+	const teamId = extractResourceLocatorValue(this, 'teamId');
+	if (!accountId || !teamId) {
+		return { results: [] };
+	}
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/teams/${teamId}/team_members`,
+	)) as ChatwootTeamMember[];
+	const members = response || [];
+
+	let results = members.map((member: ChatwootTeamMember) => ({
+		name: member.name || member.email || `Agent ${member.id}`,
+		value: String(member.id),
+	}));
+
+	if (filter) {
+		const filterLower = filter.toLowerCase();
+		results = results.filter(
+			(item) =>
+				item.name.toLowerCase().includes(filterLower) ||
+				item.value.includes(filter),
+		);
+	}
+
+	return { results };
 }
 
 /**

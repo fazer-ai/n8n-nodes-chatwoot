@@ -19,6 +19,7 @@ import type {
 	LabelOperation,
 	MessageOperation,
 	ProfileOperation,
+	TeamOperation,
 	WebhookOperation,
 } from './resources/types';
 
@@ -34,21 +35,15 @@ import { labelDescription, executeLabelOperation } from './resources/label';
 import { kanbanBoardDescription, executeKanbanBoardOperation } from './resources/kanbanBoard';
 import { kanbanStepDescription, executeKanbanStepOperation } from './resources/kanbanStep';
 import { kanbanTaskDescription, executeKanbanTaskOperation } from './resources/kanbanTask';
+import { teamDescription, executeTeamOperation } from './resources/team';
 
 import {
-	getAccounts,
-	getInboxes,
-	getConversations,
-	getContacts,
-	getAgents,
-	getTeams,
-	getLabels,
-	getWebhooks,
-	getResponseFields,
-	getKanbanBoards,
-	getKanbanSteps,
-	getKanbanTasks,
-	getContactCustomAttributeDefinitions,
+	searchAgents,
+	loadAgentsOptions,
+	searchTeams,
+	loadTeamsOptions,
+	searchTeamMembers,
+	loadTeamMembersOptions,
 } from './listSearch';
 
 import { filterResponseFields } from './shared/utils';
@@ -141,6 +136,11 @@ export class Chatwoot implements INodeType {
 						value: 'profile',
 						description: 'Access user profile and authentication info',
 					},
+					{
+						name: 'Team',
+						value: 'team',
+						description: 'Manage teams and team members',
+					},
 					// {
 					// 	name: 'Webhook',
 					// 	value: 'webhook',
@@ -161,27 +161,21 @@ export class Chatwoot implements INodeType {
 			...kanbanBoardDescription,
 			...kanbanStepDescription,
 			...kanbanTaskDescription,
+			...teamDescription,
 		],
 		usableAsTool: true,
 	};
 
 	methods = {
 		listSearch: {
-			getAccounts,
-			getInboxes,
-			getConversations,
-			getContacts,
-			getWebhooks,
-			getKanbanBoards,
-			getKanbanSteps,
-			getKanbanTasks,
+			searchAgents,
+			searchTeams,
+			searchTeamMembers,
 		},
 		loadOptions: {
-			getAgents,
-			getTeams,
-			getLabels,
-			getResponseFields,
-			getContactCustomAttributeDefinitions,
+			loadAgentsOptions,
+			loadTeamsOptions,
+			loadTeamMembersOptions,
 		},
 	};
 
@@ -233,6 +227,9 @@ export class Chatwoot implements INodeType {
 						break;
 					case 'kanbanTask':
 						responseData = await executeKanbanTaskOperation(this, operation as KanbanTaskOperation, i);
+						break;
+					case 'team':
+						responseData = await executeTeamOperation(this, operation as TeamOperation, i);
 						break;
 				}
 				const responseFilters = this.getNodeParameter(
