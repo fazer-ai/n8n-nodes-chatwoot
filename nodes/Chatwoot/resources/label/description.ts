@@ -28,10 +28,10 @@ const labelOperations: INodeProperties[] = [
 				action: 'Delete label',
 			},
 			{
-				name: 'Get Many',
-				value: 'getAll',
-				description: 'Get many labels',
-				action: 'Get labels',
+				name: 'List',
+				value: 'list',
+				description: 'List the labels',
+				action: 'List labels',
 			},
 			{
 				name: 'Update',
@@ -40,7 +40,7 @@ const labelOperations: INodeProperties[] = [
 				action: 'Update label',
 			},
 		],
-		default: 'getAll',
+		default: 'list',
 	},
 ];
 
@@ -130,16 +130,7 @@ const labelFields: INodeProperties[] = [
 				},
 			},
 		],
-	},
-	{
-		...responseFilterFields,
-		displayOptions: {
-			show: {
-				...showOnlyForLabel,
-				operation: ['getAll'],
-			},
-		},
-	},
+	}
 ];
 
 export const labelDescription: INodeProperties[] = [

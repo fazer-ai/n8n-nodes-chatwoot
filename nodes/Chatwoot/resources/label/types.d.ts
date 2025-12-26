@@ -1,1 +1,1 @@
-export type LabelOperation = 'create' | 'getAll' | 'update' | 'delete';
+export type LabelOperation = 'create' | 'list' | 'update' | 'delete';
