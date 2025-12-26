@@ -283,9 +283,18 @@ export class Chatwoot implements INodeType {
 				}
 
 				if (Array.isArray(responseData)) {
-					returnData.push(...responseData.map((item) => ({ json: item })));
+					returnData.push(...responseData.map((item) => {
+						if ('json' in item || 'binary' in item) {
+							return item as INodeExecutionData;
+						}
+						return { json: item };
+					}));
 				} else {
-					returnData.push({ json: responseData });
+					if ('json' in responseData || 'binary' in responseData) {
+						returnData.push(responseData as INodeExecutionData);
+					} else {
+						returnData.push({ json: responseData });
+					}
 				}
 
 			} catch (error) {

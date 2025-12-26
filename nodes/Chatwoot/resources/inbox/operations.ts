@@ -114,10 +114,14 @@ async function whatsappGetQrCode(context: IExecuteFunctions, itemIndex: number):
 				);
 
 				return {
-					success: true,
-					message: 'QR Code generated successfully',
-					connection: 'connecting',
-					__binaryData: binaryData,
+					json: {
+						success: true,
+						message: 'QR Code generated successfully',
+						connection: 'connecting',
+					},
+					binary: {
+						file: binaryData,
+					}
 				};
 			}
 
