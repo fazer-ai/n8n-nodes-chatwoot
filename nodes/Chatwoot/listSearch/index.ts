@@ -44,6 +44,7 @@ interface ChatwootTeam {
 }
 
 interface ChatwootLabel {
+	id:	number;
 	title: string;
 }
 
@@ -519,6 +520,45 @@ export async function loadLabelsOptions(
 		name: label.title,
 		value: label.title,
 	}));
+}
+
+/**
+ * Search labels for the selected account (for resourceLocator)
+ */
+export async function searchLabels(
+	this: ILoadOptionsFunctions,
+	filter?: string,
+): Promise<INodeListSearchResult> {
+	const accountId = extractResourceLocatorValue(this, 'accountId');
+	if (!accountId) {
+		return { results: [] };
+	}
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/labels`,
+	)) as ChatwootPayloadResponse<ChatwootLabel> | ChatwootLabel[];
+	const labels =
+		(response as ChatwootPayloadResponse<ChatwootLabel>).payload ||
+		(response as ChatwootLabel[]) ||
+		[];
+
+	let results = (labels as ChatwootLabel[]).map((label: ChatwootLabel) => ({
+		name: label.title,
+		value: String(label.id),
+	}));
+
+	if (filter) {
+		const filterLower = filter.toLowerCase();
+		results = results.filter(
+			(item) =>
+				item.name.toLowerCase().includes(filterLower) ||
+				item.value.includes(filter),
+		);
+	}
+
+	return { results };
 }
 
 interface ChatwootCustomAttributeDefinition {

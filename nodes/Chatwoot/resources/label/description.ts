@@ -1,5 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { accountSelector, responseFilterFields } from '../../shared/descriptions';
+import { accountSelector, labelSelector } from '../../shared/descriptions';
 
 const showOnlyForLabel = {
 	resource: ['label'],
@@ -52,16 +52,7 @@ const labelFields: INodeProperties[] = [
 		},
 	},
 	{
-		displayName: 'Label Name or ID',
-		name: 'labelId',
-		type: 'options',
-		default: '',
-		required: true,
-		description:
-			'Select the label. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
-		typeOptions: {
-			loadOptionsMethod: 'loadLabelsOptions',
-		},
+		...labelSelector,
 		displayOptions: {
 			show: {
 				...showOnlyForLabel,

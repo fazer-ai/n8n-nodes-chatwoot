@@ -208,6 +208,24 @@ export function getContactId(this: IExecuteFunctions, itemIndex: number): number
 }
 
 /**
+ * Helper to get the label ID from parameters (handles resourceLocator)
+ */
+export function getLabelId(this: IExecuteFunctions, itemIndex: number): number {
+	const param = this.getNodeParameter('labelId', itemIndex) as
+		| string
+		| number
+		| { mode: string; value: string };
+
+	if (typeof param === 'object' && param.value !== undefined) {
+		return Number(param.value);
+	}
+	if (typeof param === 'string') {
+		return Number(param);
+	}
+	return param as number;
+}
+
+/**
  * Helper to get the webhook ID from parameters (handles resourceLocator)
  */
 export function getWebhookId(this: IExecuteFunctions, itemIndex: number): number {

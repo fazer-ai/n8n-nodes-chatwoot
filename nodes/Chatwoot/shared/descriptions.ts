@@ -214,6 +214,45 @@ export const contactSelector: INodeProperties = {
 };
 
 /**
+ * Label selector using resourceLocator (From List / By ID in single field)
+ */
+export const labelSelector: INodeProperties = {
+	displayName: 'Label',
+	name: 'labelId',
+	type: 'resourceLocator',
+	default: { mode: 'list', value: '' },
+	required: true,
+	description: 'Select the label to use',
+	modes: [
+		{
+			displayName: 'From List',
+			name: 'list',
+			type: 'list',
+			placeholder: 'Select a label...',
+			typeOptions: {
+				searchListMethod: 'searchLabels',
+				searchable: true,
+			},
+		},
+		{
+			displayName: 'By ID',
+			name: 'id',
+			type: 'string',
+			placeholder: 'e.g. 1',
+			validation: [
+				{
+					type: 'regex',
+					properties: {
+						regex: '^[0-9]+$',
+						errorMessage: 'The ID must be a number',
+					},
+				},
+			],
+		},
+	],
+};
+
+/**
  * Agent selector using resourceLocator (From List / By ID in single field)
  */
 export const agentSelector: INodeProperties = {
