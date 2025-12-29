@@ -1,4 +1,4 @@
-import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
+import type { IDataObject, IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 import {
 	chatwootApiRequest,
 	getAccountId,
@@ -12,7 +12,7 @@ export async function executeConversationOperation(
 	context: IExecuteFunctions,
 	operation: ConversationOperation,
 	itemIndex: number,
-): Promise<IDataObject | IDataObject[]> {
+): Promise<INodeExecutionData> {
   switch (operation) {
     case 'create':
       return createConversation(context, itemIndex);
@@ -40,7 +40,7 @@ export async function executeConversationOperation(
 async function createConversation(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const contactId = getContactId.call(context, itemIndex);
 
@@ -61,32 +61,36 @@ async function createConversation(
 		delete body.customAttributes;
 	}
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/conversations`,
-		body,
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/conversations`,
+			body,
+		)) as IDataObject
+	};
 }
 
 async function getConversation(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const conversationId = getConversationId.call(context, itemIndex);
 
-	return (await chatwootApiRequest.call(
-		context,
-		'GET',
-		`/api/v1/accounts/${accountId}/conversations/${conversationId}`,
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'GET',
+			`/api/v1/accounts/${accountId}/conversations/${conversationId}`,
+		)) as IDataObject
+	};
 }
 
 async function listConversations(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject | IDataObject[]> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const filters = context.getNodeParameter('filters', itemIndex, {}) as IDataObject;
 
@@ -100,19 +104,21 @@ async function listConversations(
 		query.inbox_id = inboxId;
 	}
 
-	return (await chatwootApiRequest.call(
-		context,
-		'GET',
-		`/api/v1/accounts/${accountId}/conversations`,
-		undefined,
-		query,
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'GET',
+			`/api/v1/accounts/${accountId}/conversations`,
+			undefined,
+			query,
+		)) as IDataObject
+	};
 }
 
 async function toggleConversationStatus(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const conversationId = getConversationId.call(context, itemIndex);
 	const status = context.getNodeParameter('status', itemIndex);
@@ -125,94 +131,106 @@ async function toggleConversationStatus(
 		body.snoozed_until = Math.floor(snoozeDate.getTime() / 1000);
 	}
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/conversations/${conversationId}/toggle_status`,
-		body,
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/conversations/${conversationId}/toggle_status`,
+			body,
+		)) as IDataObject
+	};
 }
 
 async function assignConversationAgent(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const conversationId = getConversationId.call(context, itemIndex);
 	const agentId = context.getNodeParameter('agentId', itemIndex) as number;
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/conversations/${conversationId}/assignments`,
-		{ assignee_id: agentId },
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/conversations/${conversationId}/assignments`,
+			{ assignee_id: agentId },
+		)) as IDataObject
+	};
 }
 
 async function assignConversationTeam(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const conversationId = getConversationId.call(context, itemIndex);
 	const teamId = context.getNodeParameter('teamId', itemIndex) as number;
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/conversations/${conversationId}/assignments`,
-		{ team_id: teamId },
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/conversations/${conversationId}/assignments`,
+			{ team_id: teamId },
+		)) as IDataObject
+	};
 }
 
 async function setConversationLabels(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const conversationId = getConversationId.call(context, itemIndex);
 	const labels = context.getNodeParameter('labels', itemIndex) as string[];
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/conversations/${conversationId}/labels`,
-		{ labels },
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/conversations/${conversationId}/labels`,
+			{ labels },
+		)) as IDataObject
+	};
 }
 
 async function setConversationCustomAttributes(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const conversationId = getConversationId.call(context, itemIndex);
 	const customAttributes = JSON.parse(
 		context.getNodeParameter('customAttributes', itemIndex) as string,
 	);
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/conversations/${conversationId}/custom_attributes`,
-		{ custom_attributes: customAttributes },
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/conversations/${conversationId}/custom_attributes`,
+			{ custom_attributes: customAttributes },
+		)) as IDataObject
+	};
 }
 
 async function setConversationPriority(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const conversationId = getConversationId.call(context, itemIndex);
 	const priorityValue = context.getNodeParameter('priority', itemIndex) as string;
 
 	const priority = priorityValue === 'null' ? null : priorityValue;
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/conversations/${conversationId}/toggle_priority`,
-		{ priority },
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/conversations/${conversationId}/toggle_priority`,
+			{ priority },
+		)) as IDataObject
+	};
 }

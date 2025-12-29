@@ -1,4 +1,4 @@
-import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
+import type { IDataObject, IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 import { chatwootApiRequest, getAccountId, getInboxId, getWhatsappSpecialProviderInboxId } from '../../shared/transport';
 import { InboxOperation } from './types';
 
@@ -6,7 +6,7 @@ export async function executeInboxOperation(
   context: IExecuteFunctions,
   operation: InboxOperation,
   itemIndex: number,
-): Promise<IDataObject | IDataObject[]> {
+): Promise<INodeExecutionData> {
   switch (operation) {
 	case 'get':
 		return getInbox(context, itemIndex);
@@ -24,57 +24,63 @@ export async function executeInboxOperation(
 async function listInboxes(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject | IDataObject[]> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 
-	const response = (await chatwootApiRequest.call(
-		context,
-		'GET',
-		`/api/v1/accounts/${accountId}/inboxes`,
-	)) as IDataObject;
-
-	return (response.payload as IDataObject[]) || response;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'GET',
+			`/api/v1/accounts/${accountId}/inboxes`,
+		)) as IDataObject
+	};
 }
 
 async function getInbox(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const inboxId = getInboxId.call(context, itemIndex);
 
-	return (await chatwootApiRequest.call(
-		context,
-		'GET',
-		`/api/v1/accounts/${accountId}/inboxes/${inboxId}`,
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'GET',
+			`/api/v1/accounts/${accountId}/inboxes/${inboxId}`,
+		)) as IDataObject
+	};
 }
 
-async function onWhatsapp(context: IExecuteFunctions, itemIndex: number): Promise<IDataObject> {
+async function onWhatsapp(context: IExecuteFunctions, itemIndex: number): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const inboxId = getWhatsappSpecialProviderInboxId.call(context, itemIndex);
 	const phoneNumber = context.getNodeParameter('phoneNumber', itemIndex);
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/inboxes/${inboxId}/on_whatsapp`,
-		{ phone_number: phoneNumber },
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/inboxes/${inboxId}/on_whatsapp`,
+			{ phone_number: phoneNumber },
+		)) as IDataObject
+	};
 }
 
-async function whatsappDisconnect(context: IExecuteFunctions, itemIndex: number): Promise<IDataObject>{
+async function whatsappDisconnect(context: IExecuteFunctions, itemIndex: number): Promise<INodeExecutionData>{
 	const accountId = getAccountId.call(context, itemIndex);
 	const inboxId = getWhatsappSpecialProviderInboxId.call(context, itemIndex);
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/inboxes/${inboxId}/disconnect_channel_provider`,
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/inboxes/${inboxId}/disconnect_channel_provider`,
+		)) as IDataObject
+	};
 }
 
-async function whatsappGetQrCode(context: IExecuteFunctions, itemIndex: number):  Promise<IDataObject> {
+async function whatsappGetQrCode(context: IExecuteFunctions, itemIndex: number):  Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const inboxId = getWhatsappSpecialProviderInboxId.call(context, itemIndex);
 
@@ -118,6 +124,7 @@ async function whatsappGetQrCode(context: IExecuteFunctions, itemIndex: number):
 						success: true,
 						message: 'QR Code generated successfully',
 						connection: 'connecting',
+						qr_code_url: qrDataUrl,
 					},
 					binary: {
 						file: binaryData,
@@ -126,18 +133,22 @@ async function whatsappGetQrCode(context: IExecuteFunctions, itemIndex: number):
 			}
 
 			return {
-				success: true,
-				message: 'QR Code URL retrieved successfully',
-				connection: 'connecting',
-				qr_code_url: qrDataUrl,
+				json: {
+					success: true,
+					message: 'QR Code URL retrieved successfully',
+					connection: 'connecting',
+					qr_code_url: qrDataUrl,
+				}
 			};
 		}
 
 		if (provider_connection?.connection === 'connected') {
 			return {
-				success: true,
-				message: 'Channel already connected',
-				connection: 'connected',
+				json:{
+					success: true,
+					message: 'Channel already connected',
+					connection: 'connected',
+				}
 			};
 		}
 
@@ -150,7 +161,10 @@ async function whatsappGetQrCode(context: IExecuteFunctions, itemIndex: number):
 	}
 
 	return {
-		success: false,
-		message: `Timeout waiting for QR code after ${maxAttempts} attempts`,
+		json: {
+			success: false,
+			connection: 'connected',
+			message: `Timeout waiting for QR code after ${maxAttempts} attempts`,
+		}
 	};
 }

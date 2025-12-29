@@ -1,4 +1,4 @@
-import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
+import type { IDataObject, IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 import { chatwootApiRequest, getAccountId } from '../../shared/transport';
 import type { KanbanBoardOperation } from './types';
 
@@ -20,7 +20,7 @@ export async function executeKanbanBoardOperation(
 	context: IExecuteFunctions,
 	operation: KanbanBoardOperation,
 	itemIndex: number,
-): Promise<IDataObject | IDataObject[]> {
+): Promise<INodeExecutionData> {
 	switch (operation) {
 		case 'create':
 			return createBoard(context, itemIndex);
@@ -42,7 +42,7 @@ export async function executeKanbanBoardOperation(
 async function createBoard(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const name = context.getNodeParameter('boardName', itemIndex) as string;
 	const additionalFields = context.getNodeParameter('boardAdditionalFields', itemIndex, {}) as IDataObject;
@@ -61,33 +61,37 @@ async function createBoard(
 		board.inbox_ids = parseCommaSeparatedIds(additionalFields.inbox_ids as string);
 	}
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/kanban/boards`,
-		{ board },
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/kanban/boards`,
+			{ board },
+		)) as IDataObject
+	};
 }
 
 async function getBoard(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const boardIdParam = context.getNodeParameter('boardId', itemIndex) as ResourceLocatorParam;
 	const boardId = getResourceLocatorValue(boardIdParam);
 
-	return (await chatwootApiRequest.call(
-		context,
-		'GET',
-		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}`,
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'GET',
+			`/api/v1/accounts/${accountId}/kanban/boards/${boardId}`,
+		)) as IDataObject
+	};
 }
 
 async function getAllBoards(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject[]> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const filters = context.getNodeParameter('boardFilters', itemIndex, {}) as IDataObject;
 
@@ -95,26 +99,21 @@ async function getAllBoards(
 	if (filters.sort) query.sort = filters.sort;
 	if (filters.order) query.order = filters.order;
 
-	const response = (await chatwootApiRequest.call(
-		context,
-		'GET',
-		`/api/v1/accounts/${accountId}/kanban/boards`,
-		undefined,
-		query,
-	)) as IDataObject;
-
-	if (Array.isArray(response)) {
-		return response as IDataObject[];
-	}
-	return (response.boards as IDataObject[]) ||
-		(response.payload as IDataObject[]) ||
-		[];
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'GET',
+			`/api/v1/accounts/${accountId}/kanban/boards`,
+			undefined,
+			query,
+		)) as IDataObject
+	};
 }
 
 async function updateBoard(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const boardIdParam = context.getNodeParameter('boardId', itemIndex) as ResourceLocatorParam;
 	const boardId = getResourceLocatorValue(boardIdParam);
@@ -133,63 +132,69 @@ async function updateBoard(
 		board.inbox_ids = parseCommaSeparatedIds(updateFields.inbox_ids as string);
 	}
 
-	return (await chatwootApiRequest.call(
-		context,
-		'PUT',
-		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}`,
-		{ board },
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'PUT',
+			`/api/v1/accounts/${accountId}/kanban/boards/${boardId}`,
+			{ board },
+		)) as IDataObject
+	};
 }
 
 async function deleteBoard(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const boardIdParam = context.getNodeParameter('boardId', itemIndex) as ResourceLocatorParam;
 	const boardId = getResourceLocatorValue(boardIdParam);
 
-	await chatwootApiRequest.call(
-		context,
-		'DELETE',
-		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}`,
-	);
-
-	return { success: true, deleted: boardId };
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'DELETE',
+			`/api/v1/accounts/${accountId}/kanban/boards/${boardId}`,
+		)) as IDataObject
+	};
 }
 
 async function updateBoardAgents(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const boardIdParam = context.getNodeParameter('boardId', itemIndex) as ResourceLocatorParam;
 	const boardId = getResourceLocatorValue(boardIdParam);
 	const agentIdsStr = context.getNodeParameter('agentIds', itemIndex) as string;
 	const agentIds = parseCommaSeparatedIds(agentIdsStr);
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/update_agents`,
-		{ agent_ids: agentIds },
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/update_agents`,
+			{ agent_ids: agentIds },
+		)) as IDataObject
+	};
 }
 
 async function updateBoardInboxes(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const boardIdParam = context.getNodeParameter('boardId', itemIndex) as ResourceLocatorParam;
 	const boardId = getResourceLocatorValue(boardIdParam);
 	const inboxIdsStr = context.getNodeParameter('inboxIds', itemIndex) as string;
 	const inboxIds = parseCommaSeparatedIds(inboxIdsStr);
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/update_inboxes`,
-		{ inbox_ids: inboxIds },
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/update_inboxes`,
+			{ inbox_ids: inboxIds },
+		)) as IDataObject
+	};
 }

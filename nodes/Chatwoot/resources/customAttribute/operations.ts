@@ -1,4 +1,4 @@
-import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
+import type { IDataObject, IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 import {
 	chatwootApiRequest,
 	getAccountId,
@@ -9,7 +9,7 @@ export async function executeCustomAttributeOperation(
 	context: IExecuteFunctions,
 	operation: CustomAttributeOperation,
 	itemIndex: number,
-): Promise<IDataObject | IDataObject[]> {
+): Promise<INodeExecutionData> {
   switch (operation) {
     case 'create':
       return createCustomAttribute(context, itemIndex);
@@ -23,7 +23,7 @@ export async function executeCustomAttributeOperation(
 async function createCustomAttribute(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 
 	const attributeModel = context.getNodeParameter('attributeModel', itemIndex);
@@ -65,18 +65,20 @@ async function createCustomAttribute(
 		body.attribute_description = attributeDescription;
 	}
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/custom_attribute_definitions`,
-		body,
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/custom_attribute_definitions`,
+			body,
+		)) as IDataObject
+	};
 }
 
 async function listCustomAttributes(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject[]> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const attributeModel = context.getNodeParameter('attributeModel', itemIndex);
 
@@ -84,27 +86,29 @@ async function listCustomAttributes(
 		attribute_model: attributeModel,
 	};
 
-	return (await chatwootApiRequest.call(
-		context,
-		'GET',
-		`/api/v1/accounts/${accountId}/custom_attribute_definitions`,
-		undefined,
-		query,
-	)) as IDataObject[];
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'GET',
+			`/api/v1/accounts/${accountId}/custom_attribute_definitions`,
+			undefined,
+			query,
+		)) as IDataObject
+	};
 }
 
 async function removeCustomAttribute(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const attributeKey = context.getNodeParameter('attributeKeyToDelete', itemIndex);
 
-	await chatwootApiRequest.call(
-		context,
-		'DELETE',
-		`/api/v1/accounts/${accountId}/custom_attribute_definitions/${attributeKey}`,
-	);
-
-	return { success: true };
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'DELETE',
+			`/api/v1/accounts/${accountId}/custom_attribute_definitions/${attributeKey}`,
+		)) as IDataObject
+	};
 }

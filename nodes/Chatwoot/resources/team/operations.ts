@@ -1,4 +1,4 @@
-import { type IDataObject, type IExecuteFunctions } from 'n8n-workflow';
+import { INodeExecutionData, type IDataObject, type IExecuteFunctions } from 'n8n-workflow';
 import { chatwootApiRequest, getAccountId, getAgentId, getTeamId, getTeamMemberId } from '../../shared/transport';
 import { TeamOperation } from './types';
 
@@ -6,7 +6,7 @@ export async function executeTeamOperation(
 	context: IExecuteFunctions,
 	operation: TeamOperation,
 	itemIndex: number,
-): Promise<IDataObject | IDataObject[]> {
+): Promise<INodeExecutionData> {
 	switch (operation) {
 		case 'create':
 			return createTeam(context, itemIndex);
@@ -26,83 +26,93 @@ export async function executeTeamOperation(
 async function createTeam(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const name = context.getNodeParameter('name', itemIndex);
 	const additionalFields = context.getNodeParameter('additionalFields', itemIndex) as IDataObject;
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/teams`,
-		{
-      name,
-      ...additionalFields,
-    },
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/teams`,
+			{
+ 	 	    name,
+  	    ...additionalFields,
+  	  },
+		)) as IDataObject
+	};
 }
 
 async function deleteTeam(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const teamId = getTeamId.call(context, itemIndex);
 
-	return (await chatwootApiRequest.call(
-		context,
-		'DELETE',
-		`/api/v1/accounts/${accountId}/teams/${teamId}`,
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'DELETE',
+			`/api/v1/accounts/${accountId}/teams/${teamId}`,
+		)) as IDataObject
+	};
 }
 
 async function listTeams(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject[]> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 
-	return (await chatwootApiRequest.call(
-		context,
-		'GET',
-		`/api/v1/accounts/${accountId}/teams`,
-	)) as IDataObject[];
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'GET',
+			`/api/v1/accounts/${accountId}/teams`,
+		)) as IDataObject
+	};
 }
 
 async function getTeamMembers(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject[]> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const teamId = getTeamId.call(context, itemIndex);
 
-	return (await chatwootApiRequest.call(
-		context,
-		'GET',
-		`/api/v1/accounts/${accountId}/teams/${teamId}/team_members`,
-	)) as IDataObject[];
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'GET',
+			`/api/v1/accounts/${accountId}/teams/${teamId}/team_members`,
+		)) as IDataObject
+	};
 }
 
 async function assignAgentToTeam(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const teamId = getTeamId.call(context, itemIndex);
 	const agentId = getAgentId.call(context, itemIndex);
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/teams/${teamId}/team_members`,
-		{ user_ids: [agentId] },
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/teams/${teamId}/team_members`,
+			{ user_ids: [agentId] },
+		)) as IDataObject
+	};
 }
 
 async function unassignAgentFromTeam(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const teamId = getTeamId.call(context, itemIndex);
 	const teamMemberId = getTeamMemberId.call(context, itemIndex);
@@ -117,10 +127,12 @@ async function unassignAgentFromTeam(
 		.map((member) => member.id)
 		.filter((id) => id !== teamMemberId);
 
-	return (await chatwootApiRequest.call(
-		context,
-		'PATCH',
-		`/api/v1/accounts/${accountId}/teams/${teamId}/team_members`,
-		{ user_ids: remainingMemberIds },
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'PATCH',
+			`/api/v1/accounts/${accountId}/teams/${teamId}/team_members`,
+			{ user_ids: remainingMemberIds },
+		)) as IDataObject
+	};
 }

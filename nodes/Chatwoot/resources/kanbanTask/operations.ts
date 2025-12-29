@@ -1,4 +1,4 @@
-import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
+import type { IDataObject, IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 import { chatwootApiRequest, getAccountId } from '../../shared/transport';
 import type { KanbanTaskOperation } from './types';
 
@@ -20,7 +20,7 @@ export async function executeKanbanTaskOperation(
 	context: IExecuteFunctions,
 	operation: KanbanTaskOperation,
 	itemIndex: number,
-): Promise<IDataObject | IDataObject[]> {
+): Promise<INodeExecutionData> {
 	switch (operation) {
 		case 'create':
 			return createTask(context, itemIndex);
@@ -40,7 +40,7 @@ export async function executeKanbanTaskOperation(
 async function createTask(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const boardIdParam = context.getNodeParameter('boardId', itemIndex) as ResourceLocatorParam;
 	const boardId = getResourceLocatorValue(boardIdParam);
@@ -74,33 +74,37 @@ async function createTask(
 		body.insert_before_task_id = additionalFields.insert_before_task_id;
 	}
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/kanban/tasks`,
-		body,
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/kanban/tasks`,
+			body,
+		)) as IDataObject
+	};
 }
 
 async function getTask(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const taskIdParam = context.getNodeParameter('taskId', itemIndex) as ResourceLocatorParam;
 	const taskId = getResourceLocatorValue(taskIdParam);
 
-	return (await chatwootApiRequest.call(
-		context,
-		'GET',
-		`/api/v1/accounts/${accountId}/kanban/tasks/${taskId}`,
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'GET',
+			`/api/v1/accounts/${accountId}/kanban/tasks/${taskId}`,
+		)) as IDataObject
+	};
 }
 
 async function getAllTasks(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject[]> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const filters = context.getNodeParameter('taskFilters', itemIndex, {}) as IDataObject;
 
@@ -128,26 +132,21 @@ async function getAllTasks(
 		});
 	}
 
-	const response = (await chatwootApiRequest.call(
-		context,
-		'GET',
-		`/api/v1/accounts/${accountId}/kanban/tasks`,
-		undefined,
-		query,
-	)) as IDataObject;
-
-	if (Array.isArray(response)) {
-		return response as IDataObject[];
-	}
-	return (response.tasks as IDataObject[]) ||
-		(response.payload as IDataObject[]) ||
-		[];
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'GET',
+			`/api/v1/accounts/${accountId}/kanban/tasks`,
+			undefined,
+			query,
+		)) as IDataObject
+	};
 }
 
 async function updateTask(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const taskIdParam = context.getNodeParameter('taskId', itemIndex) as ResourceLocatorParam;
 	const taskId = getResourceLocatorValue(taskIdParam);
@@ -173,18 +172,20 @@ async function updateTask(
 		task.assigned_agent_ids = parseCommaSeparatedIds(updateFields.assigned_agent_ids as string);
 	}
 
-	return (await chatwootApiRequest.call(
-		context,
-		'PUT',
-		`/api/v1/accounts/${accountId}/kanban/tasks/${taskId}`,
-		{ task },
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'PUT',
+			`/api/v1/accounts/${accountId}/kanban/tasks/${taskId}`,
+			{ task },
+		)) as IDataObject
+	};
 }
 
 async function moveTask(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const taskIdParam = context.getNodeParameter('taskId', itemIndex) as ResourceLocatorParam;
 	const taskId = getResourceLocatorValue(taskIdParam);
@@ -205,27 +206,29 @@ async function moveTask(
 		body.insert_before_task_id = insertBeforeTaskId;
 	}
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/kanban/tasks/${taskId}/move`,
-		body,
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/kanban/tasks/${taskId}/move`,
+			body,
+		)) as IDataObject
+	};
 }
 
 async function deleteTask(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const taskIdParam = context.getNodeParameter('taskId', itemIndex) as ResourceLocatorParam;
 	const taskId = getResourceLocatorValue(taskIdParam);
 
-	await chatwootApiRequest.call(
-		context,
-		'DELETE',
-		`/api/v1/accounts/${accountId}/kanban/tasks/${taskId}`,
-	);
-
-	return { success: true, deleted: taskId };
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'DELETE',
+			`/api/v1/accounts/${accountId}/kanban/tasks/${taskId}`,
+		)) as IDataObject
+	};
 }

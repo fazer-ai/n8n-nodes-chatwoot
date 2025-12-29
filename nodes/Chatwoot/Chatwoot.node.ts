@@ -1,5 +1,4 @@
 import type {
-	IDataObject,
 	IExecuteFunctions,
 	INodeExecutionData,
 	INodeType,
@@ -54,8 +53,6 @@ import {
 	searchTeamMembers,
 	loadTeamMembersOptions,
 } from './listSearch';
-
-import { filterResponseFields } from './shared/utils';
 
 /**
  * Node for interacting with the Chatwoot REST API.
@@ -200,7 +197,7 @@ export class Chatwoot implements INodeType {
 
 		for (let i = 0; i < items.length; i++) {
 			try {
-				let responseData: IDataObject | IDataObject[];
+				let responseData: INodeExecutionData;
 				switch (resource) {
 					case 'profile':
 						responseData = await executeProfileOperation(this, operation as ProfileOperation);
@@ -236,45 +233,8 @@ export class Chatwoot implements INodeType {
 						responseData = await executeTeamOperation(this, operation as TeamOperation, i);
 						break;
 				}
-				const responseFilters = this.getNodeParameter(
-					'responseFilters.fieldFiltering',
-					i,
-					{},
-				) as IDataObject;
 
-				const fieldFilterMode = responseFilters.fieldFilterMode as string;
-
-				if (fieldFilterMode === 'select') {
-					const selectFields = responseFilters.selectFields as string[];
-					responseData = filterResponseFields(
-						responseData,
-						selectFields,
-						undefined,
-					) as IDataObject | IDataObject[];
-				} else if (fieldFilterMode === 'except') {
-					const exceptFields = responseFilters.exceptFields as string[];
-					responseData = filterResponseFields(
-						responseData,
-						undefined,
-						exceptFields,
-					) as IDataObject | IDataObject[];
-				}
-
-				if (Array.isArray(responseData)) {
-					returnData.push(...responseData.map((item) => {
-						if ('json' in item || 'binary' in item) {
-							return item as INodeExecutionData;
-						}
-						return { json: item };
-					}));
-				} else {
-					if ('json' in responseData || 'binary' in responseData) {
-						returnData.push(responseData as INodeExecutionData);
-					} else {
-						returnData.push({ json: responseData });
-					}
-				}
-
+				returnData.push(responseData);
 			} catch (error) {
 				if (this.continueOnFail()) {
 					returnData.push({

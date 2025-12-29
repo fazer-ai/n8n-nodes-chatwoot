@@ -1,4 +1,4 @@
-import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
+import type { IDataObject, IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 import { chatwootApiRequest, getAccountId } from '../../shared/transport';
 import type { KanbanStepOperation } from './types';
 
@@ -15,7 +15,7 @@ export async function executeKanbanStepOperation(
 	context: IExecuteFunctions,
 	operation: KanbanStepOperation,
 	itemIndex: number,
-): Promise<IDataObject | IDataObject[]> {
+): Promise<INodeExecutionData> {
 	switch (operation) {
 		case 'create':
 			return createStep(context, itemIndex);
@@ -31,7 +31,7 @@ export async function executeKanbanStepOperation(
 async function createStep(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const boardIdParam = context.getNodeParameter('boardId', itemIndex) as ResourceLocatorParam;
 	const boardId = getResourceLocatorValue(boardIdParam);
@@ -44,40 +44,37 @@ async function createStep(
 	if (additionalFields.color) step.color = additionalFields.color;
 	if (additionalFields.cancelled !== undefined) step.cancelled = additionalFields.cancelled;
 
-	return (await chatwootApiRequest.call(
-		context,
-		'POST',
-		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/steps`,
-		{ step },
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/steps`,
+			{ step },
+		)) as IDataObject
+	};
 }
 
 async function getAllSteps(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject[]> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const boardIdParam = context.getNodeParameter('boardId', itemIndex) as ResourceLocatorParam;
 	const boardId = getResourceLocatorValue(boardIdParam);
 
-	const response = (await chatwootApiRequest.call(
-		context,
-		'GET',
-		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/steps`,
-	)) as IDataObject;
-
-	if (Array.isArray(response)) {
-		return response as IDataObject[];
-	}
-	return (response.steps as IDataObject[]) ||
-		(response.payload as IDataObject[]) ||
-		[];
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'GET',
+			`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/steps`,
+		)) as IDataObject
+	};
 }
 
 async function updateStep(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const boardIdParam = context.getNodeParameter('boardId', itemIndex) as ResourceLocatorParam;
 	const boardId = getResourceLocatorValue(boardIdParam);
@@ -92,29 +89,31 @@ async function updateStep(
 	if (updateFields.color) step.color = updateFields.color;
 	if (updateFields.cancelled !== undefined) step.cancelled = updateFields.cancelled;
 
-	return (await chatwootApiRequest.call(
-		context,
-		'PUT',
-		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/steps/${stepId}`,
-		{ step },
-	)) as IDataObject;
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'PUT',
+			`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/steps/${stepId}`,
+			{ step },
+		)) as IDataObject
+	};
 }
 
 async function deleteStep(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<IDataObject> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const boardIdParam = context.getNodeParameter('boardId', itemIndex) as ResourceLocatorParam;
 	const boardId = getResourceLocatorValue(boardIdParam);
 	const stepIdParam = context.getNodeParameter('stepId', itemIndex) as ResourceLocatorParam;
 	const stepId = getResourceLocatorValue(stepIdParam);
 
-	await chatwootApiRequest.call(
-		context,
-		'DELETE',
-		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/steps/${stepId}`,
-	);
-
-	return { success: true, deleted: stepId };
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'DELETE',
+			`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/steps/${stepId}`,
+		)) as IDataObject
+	};
 }
