@@ -1,5 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { accountSelector, responseFilterFields } from '../../shared/descriptions';
+import { accountSelector } from '../../shared/descriptions';
 
 const resource = 'kanbanTask';
 
@@ -481,12 +481,6 @@ const kanbanTaskFields: INodeProperties[] = [
 				resource: [resource],
 				operation: ['move'],
 			},
-		},
-	},
-	{
-		...responseFilterFields,
-		displayOptions: {
-			show: { resource: [resource] },
 		},
 	},
 ];

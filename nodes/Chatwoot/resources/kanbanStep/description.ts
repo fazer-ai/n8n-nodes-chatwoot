@@ -1,5 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { accountSelector, responseFilterFields } from '../../shared/descriptions';
+import { accountSelector } from '../../shared/descriptions';
 
 const resource = 'kanbanStep';
 
@@ -231,12 +231,6 @@ const kanbanStepFields: INodeProperties[] = [
 				description: 'New name for the step',
 			},
 		],
-	},
-	{
-		...responseFilterFields,
-		displayOptions: {
-			show: { resource: [resource] },
-		},
 	},
 ];
 
