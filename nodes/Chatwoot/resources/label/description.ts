@@ -40,7 +40,7 @@ const labelOperations: INodeProperties[] = [
 				action: 'Update label',
 			},
 		],
-		default: 'list',
+		default: 'create',
 	},
 ];
 
