@@ -7,10 +7,8 @@ import type { KanbanBoardOperation } from './kanbanBoard/types';
 import type { KanbanStepOperation } from './kanbanStep/types';
 import type { KanbanTaskOperation } from './kanbanTask/types';
 import type { LabelOperation } from './label/types';
-import type { MessageOperation } from './message/types';
 import type { ProfileOperation } from './profile/types';
 import type { TeamOperation } from './team/types';
-import type { WebhookOperation } from './webhook/types';
 
 export type ChatwootResources =
 	| 'account'
@@ -22,10 +20,8 @@ export type ChatwootResources =
 	| 'kanbanStep'
 	| 'kanbanTask'
 	| 'label'
-	| 'message'
 	| 'profile'
-	| 'team'
-	| 'webhook';
+	| 'team';
 
 export type ChatwootOperations =
 	| AccountOperation
@@ -37,10 +33,8 @@ export type ChatwootOperations =
 	| KanbanStepOperation
 	| KanbanTaskOperation
 	| LabelOperation
-	| MessageOperation
 	| ProfileOperation
-	| TeamOperation
-	| WebhookOperation;
+	| TeamOperation;
 
 export type {
 	AccountOperation,
@@ -52,8 +46,6 @@ export type {
 	KanbanStepOperation,
 	KanbanTaskOperation,
 	LabelOperation,
-	MessageOperation,
 	ProfileOperation,
 	TeamOperation,
-	WebhookOperation,
 };

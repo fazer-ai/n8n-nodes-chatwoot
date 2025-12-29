@@ -17,10 +17,8 @@ import type {
 	KanbanStepOperation,
 	KanbanTaskOperation,
 	LabelOperation,
-	MessageOperation,
 	ProfileOperation,
 	TeamOperation,
-	WebhookOperation,
 } from './resources/types';
 
 import { profileDescription, executeProfileOperation } from './resources/profile';
@@ -28,8 +26,6 @@ import { accountDescription, executeAccountOperation } from './resources/account
 import { inboxDescription, executeInboxOperation } from './resources/inbox';
 import { contactDescription, executeContactOperation } from './resources/contact';
 import { conversationDescription, executeConversationOperation } from './resources/conversation';
-import { messageDescription, executeMessageOperation } from './resources/message';
-import { /*webhookDescription,*/ executeWebhookOperation } from './resources/webhook';
 import { customAttributeDescription, executeCustomAttributeOperation } from './resources/customAttribute';
 import { labelDescription, executeLabelOperation } from './resources/label';
 import { kanbanBoardDescription, executeKanbanBoardOperation } from './resources/kanbanBoard';
@@ -140,11 +136,6 @@ export class Chatwoot implements INodeType {
 						description: 'Manage labels',
 					},
 					{
-						name: 'Message',
-						value: 'message',
-						description: 'Send and manage messages',
-					},
-					{
 						name: 'Profile',
 						value: 'profile',
 						description: 'Access user profile and authentication info',
@@ -154,11 +145,6 @@ export class Chatwoot implements INodeType {
 						value: 'team',
 						description: 'Manage teams and team members',
 					},
-					// {
-					// 	name: 'Webhook',
-					// 	value: 'webhook',
-					// 	description: 'Manage webhooks for event subscriptions',
-					// },
 				],
 				default: 'conversation',
 			},
@@ -167,8 +153,6 @@ export class Chatwoot implements INodeType {
 			...inboxDescription,
 			...contactDescription,
 			...conversationDescription,
-			...messageDescription,
-			// ...webhookDescription,
 			...customAttributeDescription,
 			...labelDescription,
 			...kanbanBoardDescription,
@@ -232,12 +216,6 @@ export class Chatwoot implements INodeType {
 						break;
 					case 'conversation':
 						responseData = await executeConversationOperation(this, operation as ConversationOperation, i);
-						break;
-					case 'message':
-						responseData = await executeMessageOperation(this, operation as MessageOperation, i);
-						break;
-					case 'webhook':
-						responseData = await executeWebhookOperation(this, operation as WebhookOperation, i);
 						break;
 					case 'customAttribute':
 						responseData = await executeCustomAttributeOperation(this, operation as CustomAttributeOperation, i);
