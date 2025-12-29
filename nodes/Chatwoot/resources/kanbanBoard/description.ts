@@ -1,7 +1,9 @@
 import type { INodeProperties } from 'n8n-workflow';
 import { accountSelector } from '../../shared/descriptions';
 
-const resource = 'kanbanBoard';
+const showOnlyForKanbanBoard = {
+	resource: ['kanbanBoard'],
+};
 
 const kanbanBoardOperations: INodeProperties[] = [
 	{
@@ -10,7 +12,7 @@ const kanbanBoardOperations: INodeProperties[] = [
 		type: 'options',
 		noDataExpression: true,
 		displayOptions: {
-			show: { resource: [resource] },
+			show: { ...showOnlyForKanbanBoard },
 		},
 		options: [
 			{
@@ -100,28 +102,28 @@ const kanbanBoardFields: INodeProperties[] = [
 	{
 		...accountSelector,
 		displayOptions: {
-			show: { resource: [resource] },
+			show: { ...showOnlyForKanbanBoard },
 		},
 	},
 	{
 		...boardIdField,
 		displayOptions: {
 			show: {
-				resource: [resource],
+				...showOnlyForKanbanBoard,
 				operation: ['get', 'update', 'delete', 'updateAgents', 'updateInboxes'],
 			},
 		},
 	},
 	{
 		displayName: 'Name',
-		name: 'boardName',
+		name: 'name',
 		type: 'string',
 		default: '',
 		required: true,
 		description: 'Name of the board',
 		displayOptions: {
 			show: {
-				resource: [resource],
+				...showOnlyForKanbanBoard,
 				operation: ['create'],
 			},
 		},
@@ -130,11 +132,14 @@ const kanbanBoardFields: INodeProperties[] = [
 		displayName: 'Description',
 		name: 'description',
 		type: 'string',
+		typeOptions: {
+			rows: 4,
+		},
 		default: '',
 		description: 'Description of the board',
 		displayOptions: {
 			show: {
-				resource: [resource],
+				...showOnlyForKanbanBoard,
 				operation: ['create'],
 			},
 		},
@@ -147,7 +152,7 @@ const kanbanBoardFields: INodeProperties[] = [
 		default: {},
 		displayOptions: {
 			show: {
-				resource: [resource],
+				...showOnlyForKanbanBoard,
 				operation: ['update'],
 			},
 		},
@@ -191,7 +196,7 @@ const kanbanBoardFields: INodeProperties[] = [
 		default: {},
 		displayOptions: {
 			show: {
-				resource: [resource],
+				...showOnlyForKanbanBoard,
 				operation: ['list'],
 			},
 		},
@@ -229,7 +234,7 @@ const kanbanBoardFields: INodeProperties[] = [
 		placeholder: 'e.g. 1,2,3',
 		displayOptions: {
 			show: {
-				resource: [resource],
+				...showOnlyForKanbanBoard,
 				operation: ['updateAgents'],
 			},
 		},
@@ -244,7 +249,7 @@ const kanbanBoardFields: INodeProperties[] = [
 		placeholder: 'e.g. 1,2,3',
 		displayOptions: {
 			show: {
-				resource: [resource],
+				...showOnlyForKanbanBoard,
 				operation: ['updateInboxes'],
 			},
 		},

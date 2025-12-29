@@ -44,29 +44,15 @@ async function createBoard(
 	itemIndex: number,
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
-	const name = context.getNodeParameter('boardName', itemIndex) as string;
-	const additionalFields = context.getNodeParameter('boardAdditionalFields', itemIndex, {}) as IDataObject;
-
-	const board: IDataObject = { name };
-
-	if (additionalFields.description) {
-		board.description = additionalFields.description;
-	}
-	if (additionalFields.settings) {
-		board.settings = typeof additionalFields.settings === 'string'
-			? JSON.parse(additionalFields.settings)
-			: additionalFields.settings;
-	}
-	if (additionalFields.inbox_ids) {
-		board.inbox_ids = parseCommaSeparatedIds(additionalFields.inbox_ids as string);
-	}
+	const name = context.getNodeParameter('name', itemIndex);
+	const description = context.getNodeParameter('description', itemIndex, '');
 
 	return {
 		json: (await chatwootApiRequest.call(
 			context,
 			'POST',
 			`/api/v1/accounts/${accountId}/kanban/boards`,
-			{ board },
+			{ name, description },
 		)) as IDataObject
 	};
 }
