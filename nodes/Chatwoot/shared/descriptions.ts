@@ -17,396 +17,145 @@ export function createFazerAiOperationNotice(operationName: string): INodeProper
 	};
 }
 
+const resourceSelector = (displayName: string, name: string, description: string, searchListMethod: string) : INodeProperties => (
+	{
+		displayName,
+		name,
+		type: 'resourceLocator',
+		default: { mode: 'list', value: '' },
+		required: true,
+		description: description,
+		modes: [
+			{
+				displayName: 'From List',
+				name: 'list',
+				type: 'list',
+				placeholder: `Select an ${name.toLocaleLowerCase()}...`,
+				typeOptions: {
+					searchListMethod,
+					searchable: true,
+				},
+			},
+			{
+				displayName: 'By ID',
+				name: 'id',
+				type: 'string',
+				placeholder: 'e.g. 1',
+				validation: [
+					{
+						type: 'regex',
+						properties: {
+							regex: '^[0-9]+$',
+							errorMessage: 'The ID must be a number',
+						},
+					},
+				],
+			},
+		],
+	}
+);
+
+
 /**
  * Account selector using resourceLocator (From List / By ID in single field)
  */
-export const accountSelector: INodeProperties = {
-	displayName: 'Account',
-	name: 'accountId',
-	type: 'resourceLocator',
-	default: { mode: 'list', value: '' },
-	required: true,
-	description: 'Select the account to use',
-	modes: [
-		{
-			displayName: 'From List',
-			name: 'list',
-			type: 'list',
-			placeholder: 'Select an account...',
-			typeOptions: {
-				searchListMethod: 'searchAccounts',
-				searchable: true,
-			},
-		},
-		{
-			displayName: 'By ID',
-			name: 'id',
-			type: 'string',
-			placeholder: 'e.g. 1',
-			validation: [
-				{
-					type: 'regex',
-					properties: {
-						regex: '^[0-9]+$',
-						errorMessage: 'The ID must be a number',
-					},
-				},
-			],
-		},
-	],
-};
+export const accountSelector: INodeProperties = resourceSelector(
+	'Account',
+	'accountId',
+	'Select the account to use.',
+	'searchAccounts',
+);
 
 /**
  * Inbox selector using resourceLocator (From List / By ID in single field)
  */
-export const inboxSelector: INodeProperties = {
-	displayName: 'Inbox',
-	name: 'inboxId',
-	type: 'resourceLocator',
-	default: { mode: 'list', value: '' },
-	required: true,
-	description: 'Select the inbox to use',
-	modes: [
-		{
-			displayName: 'From List',
-			name: 'list',
-			type: 'list',
-			placeholder: 'Select an inbox...',
-			typeOptions: {
-				searchListMethod: 'searchInboxes',
-				searchable: true,
-			},
-		},
-		{
-			displayName: 'By ID',
-			name: 'id',
-			type: 'string',
-			placeholder: 'e.g. 1',
-			validation: [
-				{
-					type: 'regex',
-					properties: {
-						regex: '^[0-9]+$',
-						errorMessage: 'The ID must be a number',
-					},
-				},
-			],
-		},
-	],
-};
+export const inboxSelector: INodeProperties =  resourceSelector(
+	'Inbox',
+	'inboxId',
+	'Select the inbox to use',
+	'searchInboxes',
+);
 
 /**
  * WhatsApp Baileys inbox selector using resourceLocator (From List / By ID in single field)
- * Only shows inboxes with channel_type="Channel::Whatsapp" and provider="baileys"
+ * Only shows inboxes with channel_type="Channel::Whatsapp" and (provider="baileys" or provider="zapi")
  */
-export const whatsappSpecialInboxInboxSelector: INodeProperties = {
-	displayName: 'WhatsApp Inbox',
-	name: 'whatsappSpecialInboxId',
-	type: 'resourceLocator',
-	default: { mode: 'list', value: '' },
-	required: true,
-	description: 'Select the WhatsApp inbox to use (Baileys or Z-API provider)',
-	modes: [
-		{
-			displayName: 'From List',
-			name: 'list',
-			type: 'list',
-			placeholder: 'Select a WhatsApp inbox...',
-			typeOptions: {
-				searchListMethod: 'searchWhatsappSpecialProvidersInboxes',
-				searchable: true,
-			},
-		},
-		{
-			displayName: 'By ID',
-			name: 'id',
-			type: 'string',
-			placeholder: 'e.g. 1',
-			validation: [
-				{
-					type: 'regex',
-					properties: {
-						regex: '^[0-9]+$',
-						errorMessage: 'The ID must be a number',
-					},
-				},
-			],
-		},
-	],
-};
+export const whatsappSpecialInboxInboxSelector: INodeProperties = resourceSelector(
+	'WhatsApp Inbox',
+	'whatsappSpecialInboxId',
+	'Select the WhatsApp inbox to use (Baileys or Z-API provider)',
+	'searchWhatsappSpecialProvidersInboxes',
+);
 
 /**
  * Conversation selector using resourceLocator (From List / By ID in single field)
  */
-export const conversationSelector: INodeProperties = {
-	displayName: 'Conversation',
-	name: 'conversationId',
-	type: 'resourceLocator',
-	default: { mode: 'list', value: '' },
-	required: true,
-	description: 'Select the conversation to use',
-	modes: [
-		{
-			displayName: 'From List',
-			name: 'list',
-			type: 'list',
-			placeholder: 'Select a conversation...',
-			typeOptions: {
-				searchListMethod: 'searchConversations',
-				searchable: true,
-			},
-		},
-		{
-			displayName: 'By ID',
-			name: 'id',
-			type: 'string',
-			placeholder: 'e.g. 1',
-			validation: [
-				{
-					type: 'regex',
-					properties: {
-						regex: '^[0-9]+$',
-						errorMessage: 'The ID must be a number',
-					},
-				},
-			],
-		},
-	],
-};
+export const conversationSelector: INodeProperties = resourceSelector(
+	'Conversation',
+	'conversationId',
+	'Select the conversation to use',
+	'searchConversations',
+);
 
 /**
  * Contact selector using resourceLocator (From List / By ID in single field)
  */
-export const contactSelector: INodeProperties = {
-	displayName: 'Contact',
-	name: 'contactId',
-	type: 'resourceLocator',
-	default: { mode: 'list', value: '' },
-	required: true,
-	description: 'Select the contact to use',
-	modes: [
-		{
-			displayName: 'From List',
-			name: 'list',
-			type: 'list',
-			placeholder: 'Select a contact...',
-			typeOptions: {
-				searchListMethod: 'searchContacts',
-				searchable: true,
-			},
-		},
-		{
-			displayName: 'By ID',
-			name: 'id',
-			type: 'string',
-			placeholder: 'e.g. 1',
-			validation: [
-				{
-					type: 'regex',
-					properties: {
-						regex: '^[0-9]+$',
-						errorMessage: 'The ID must be a number',
-					},
-				},
-			],
-		},
-	],
-};
+export const contactSelector: INodeProperties = resourceSelector(
+	'Contact',
+	'contactId',
+	'Select the contact to use',
+	'searchContacts',
+);
 
 /**
  * Label selector using resourceLocator (From List / By ID in single field)
  */
-export const labelSelector: INodeProperties = {
-	displayName: 'Label',
-	name: 'labelId',
-	type: 'resourceLocator',
-	default: { mode: 'list', value: '' },
-	required: true,
-	description: 'Select the label to use',
-	modes: [
-		{
-			displayName: 'From List',
-			name: 'list',
-			type: 'list',
-			placeholder: 'Select a label...',
-			typeOptions: {
-				searchListMethod: 'searchLabels',
-				searchable: true,
-			},
-		},
-		{
-			displayName: 'By ID',
-			name: 'id',
-			type: 'string',
-			placeholder: 'e.g. 1',
-			validation: [
-				{
-					type: 'regex',
-					properties: {
-						regex: '^[0-9]+$',
-						errorMessage: 'The ID must be a number',
-					},
-				},
-			],
-		},
-	],
-};
+export const labelSelector: INodeProperties = resourceSelector(
+	'Label',
+	'labelId',
+	'Select the label to use',
+	'searchLabels',
+);
 
 /**
  * Agent selector using resourceLocator (From List / By ID in single field)
  */
-export const agentSelector: INodeProperties = {
-	displayName: 'Agent',
-	name: 'agentId',
-	type: 'resourceLocator',
-	default: { mode: 'list', value: '' },
-	required: true,
-	description: 'Select the agent to use',
-	modes: [
-		{
-			displayName: 'From List',
-			name: 'list',
-			type: 'list',
-			placeholder: 'Select an agent...',
-			typeOptions: {
-				searchListMethod: 'searchAgents',
-				searchable: true,
-			},
-		},
-		{
-			displayName: 'By ID',
-			name: 'id',
-			type: 'string',
-			placeholder: 'e.g. 1',
-			validation: [
-				{
-					type: 'regex',
-					properties: {
-						regex: '^[0-9]+$',
-						errorMessage: 'The ID must be a number',
-					},
-				},
-			],
-		},
-	],
-};
+export const agentSelector: INodeProperties = resourceSelector(
+	'Agent',
+	'agentId',
+	'Select the agent to use',
+	'searchAgents',
+);
 
 /**
  * Team Member selector using resourceLocator (From List / By ID in single field)
  */
-export const teamMemberSelector: INodeProperties = {
-	displayName: 'Team Member',
-	name: 'teamMemberId',
-	type: 'resourceLocator',
-	default: { mode: 'list', value: '' },
-	required: true,
-	description: 'Select the team member to use',
-	modes: [
-		{
-			displayName: 'From List',
-			name: 'list',
-			type: 'list',
-			placeholder: 'Select a team member...',
-			typeOptions: {
-				searchListMethod: 'searchTeamMembers',
-				searchable: true,
-			},
-		},
-		{
-			displayName: 'By ID',
-			name: 'id',
-			type: 'string',
-			placeholder: 'e.g. 1',
-			validation: [
-				{
-					type: 'regex',
-					properties: {
-						regex: '^[0-9]+$',
-						errorMessage: 'The ID must be a number',
-					},
-				},
-			],
-		},
-	],
-};
+export const teamMemberSelector: INodeProperties = resourceSelector(
+	'Team Member',
+	'teamMemberId',
+	'Select the team member to use',
+	'searchTeamMembers',
+);
 
 /**
  * Team selector using resourceLocator (From List / By ID in single field)
  */
-export const teamSelector: INodeProperties = {
-	displayName: 'Team',
-	name: 'teamId',
-	type: 'resourceLocator',
-	default: { mode: 'list', value: '' },
-	required: true,
-	description: 'Select the team to use',
-	modes: [
-		{
-			displayName: 'From List',
-			name: 'list',
-			type: 'list',
-			placeholder: 'Select a team...',
-			typeOptions: {
-				searchListMethod: 'searchTeams',
-				searchable: true,
-			},
-		},
-		{
-			displayName: 'By ID',
-			name: 'id',
-			type: 'string',
-			placeholder: 'e.g. 1',
-			validation: [
-				{
-					type: 'regex',
-					properties: {
-						regex: '^[0-9]+$',
-						errorMessage: 'The ID must be a number',
-					},
-				},
-			],
-		},
-	],
-};
+export const teamSelector: INodeProperties = resourceSelector(
+	'Team',
+	'teamId',
+	'Select the team to use',
+	'searchTeams',
+);
 
 /**
  * Webhook selector using resourceLocator (From List / By ID in single field)
  */
-export const webhookSelector: INodeProperties = {
-	displayName: 'Webhook',
-	name: 'webhookId',
-	type: 'resourceLocator',
-	default: { mode: 'list', value: '' },
-	required: true,
-	description: 'Select the webhook to use',
-	modes: [
-		{
-			displayName: 'From List',
-			name: 'list',
-			type: 'list',
-			placeholder: 'Select a webhook...',
-			typeOptions: {
-				searchListMethod: 'searchWebhooks',
-				searchable: true,
-			},
-		},
-		{
-			displayName: 'By ID',
-			name: 'id',
-			type: 'string',
-			placeholder: 'e.g. 1',
-			validation: [
-				{
-					type: 'regex',
-					properties: {
-						regex: '^[0-9]+$',
-						errorMessage: 'The ID must be a number',
-					},
-				},
-			],
-		},
-	],
-};
+export const webhookSelector: INodeProperties = resourceSelector(
+	'Webhook',
+	'webhookId',
+	'Select the webhook to use',
+	'searchWebhooks',
+);
 
 /**
  * Webhook events multi-select

@@ -118,10 +118,14 @@ export async function chatwootApiRequestAllItems(
 }
 
 /**
- * Helper to get the account ID from parameters (handles resourceLocator)
+ * Helper to get the ID from a resourceLocator parameter
  */
-export function getAccountId(this: IExecuteFunctions, itemIndex: number): number {
-	const param = this.getNodeParameter('accountId', itemIndex) as
+export function getResourceId(
+	this: IExecuteFunctions,
+	itemIndex: number,
+	parameterName: string,
+): number {
+	const param = this.getNodeParameter(parameterName, itemIndex) as
 		| string
 		| number
 		| { mode: string; value: string };
@@ -133,166 +137,74 @@ export function getAccountId(this: IExecuteFunctions, itemIndex: number): number
 		return Number(param);
 	}
 	return param as number;
+}
+
+/**
+ * Helper to get the account ID from parameters (handles resourceLocator)
+ */
+export function getAccountId(this: IExecuteFunctions, itemIndex: number): number {
+	return getResourceId.call(this, itemIndex, 'accountId');
 }
 
 /**
  * Helper to get the inbox ID from parameters (handles resourceLocator)
  */
 export function getInboxId(this: IExecuteFunctions, itemIndex: number): number {
-	const param = this.getNodeParameter('inboxId', itemIndex) as
-		| string
-		| number
-		| { mode: string; value: string };
-
-	if (typeof param === 'object' && param.value !== undefined) {
-		return Number(param.value);
-	}
-	if (typeof param === 'string') {
-		return Number(param);
-	}
-	return param as number;
+	return getResourceId.call(this, itemIndex, 'inboxId');
 }
 
 /**
  * Helper to get the inbox ID from parameters (handles resourceLocator)
  */
 export function getWhatsappSpecialProviderInboxId(this: IExecuteFunctions, itemIndex: number): number {
-	const param = this.getNodeParameter('whatsappSpecialInboxId', itemIndex) as
-		| string
-		| number
-		| { mode: string; value: string };
-
-	if (typeof param === 'object' && param.value !== undefined) {
-		return Number(param.value);
-	}
-	if (typeof param === 'string') {
-		return Number(param);
-	}
-	return param as number;
+	return getResourceId.call(this, itemIndex, 'whatsappSpecialInboxId');
 }
 
 /**
  * Helper to get the conversation ID from parameters (handles resourceLocator)
  */
 export function getConversationId(this: IExecuteFunctions, itemIndex: number): number {
-	const param = this.getNodeParameter('conversationId', itemIndex) as
-		| string
-		| number
-		| { mode: string; value: string };
-
-	if (typeof param === 'object' && param.value !== undefined) {
-		return Number(param.value);
-	}
-	if (typeof param === 'string') {
-		return Number(param);
-	}
-	return param as number;
+	return getResourceId.call(this, itemIndex, 'conversationId');
 }
 
 /**
  * Helper to get the contact ID from parameters (handles resourceLocator)
  */
 export function getContactId(this: IExecuteFunctions, itemIndex: number): number {
-	const param = this.getNodeParameter('contactId', itemIndex) as
-		| string
-		| number
-		| { mode: string; value: string };
-
-	if (typeof param === 'object' && param.value !== undefined) {
-		return Number(param.value);
-	}
-	if (typeof param === 'string') {
-		return Number(param);
-	}
-	return param as number;
+	return getResourceId.call(this, itemIndex, 'contactId');
 }
 
 /**
  * Helper to get the label ID from parameters (handles resourceLocator)
  */
 export function getLabelId(this: IExecuteFunctions, itemIndex: number): number {
-	const param = this.getNodeParameter('labelId', itemIndex) as
-		| string
-		| number
-		| { mode: string; value: string };
-
-	if (typeof param === 'object' && param.value !== undefined) {
-		return Number(param.value);
-	}
-	if (typeof param === 'string') {
-		return Number(param);
-	}
-	return param as number;
+	return getResourceId.call(this, itemIndex, 'labelId');
 }
 
 /**
  * Helper to get the webhook ID from parameters (handles resourceLocator)
  */
 export function getWebhookId(this: IExecuteFunctions, itemIndex: number): number {
-	const param = this.getNodeParameter('webhookId', itemIndex) as
-		| string
-		| number
-		| { mode: string; value: string };
-
-	if (typeof param === 'object' && param.value !== undefined) {
-		return Number(param.value);
-	}
-	if (typeof param === 'string') {
-		return Number(param);
-	}
-	return param as number;
+	return getResourceId.call(this, itemIndex, 'webhookId');
 }
 
 /**
  * Helper to get the team ID from parameters (handles resourceLocator)
  */
 export function getTeamId(this: IExecuteFunctions, itemIndex: number): number {
-	const param = this.getNodeParameter('teamId', itemIndex) as
-		| string
-		| number
-		| { mode: string; value: string };
-
-	if (typeof param === 'object' && param.value !== undefined) {
-		return Number(param.value);
-	}
-	if (typeof param === 'string') {
-		return Number(param);
-	}
-	return param as number;
+	return getResourceId.call(this, itemIndex, 'teamId');
 }
 
 /**
  * Helper to get the agent ID from parameters (handles resourceLocator)
  */
 export function getAgentId(this: IExecuteFunctions, itemIndex: number): number {
-	const param = this.getNodeParameter('agentId', itemIndex) as
-		| string
-		| number
-		| { mode: string; value: string };
-
-	if (typeof param === 'object' && param.value !== undefined) {
-		return Number(param.value);
-	}
-	if (typeof param === 'string') {
-		return Number(param);
-	}
-	return param as number;
+	return getResourceId.call(this, itemIndex, 'agentId');
 }
 
 /**
  * Helper to get the team member ID from parameters (handles resourceLocator)
  */
 export function getTeamMemberId(this: IExecuteFunctions, itemIndex: number): number {
-	const param = this.getNodeParameter('teamMemberId', itemIndex) as
-		| string
-		| number
-		| { mode: string; value: string };
-
-	if (typeof param === 'object' && param.value !== undefined) {
-		return Number(param.value);
-	}
-	if (typeof param === 'string') {
-		return Number(param);
-	}
-	return param as number;
+	return getResourceId.call(this, itemIndex, 'teamMemberId');
 }
