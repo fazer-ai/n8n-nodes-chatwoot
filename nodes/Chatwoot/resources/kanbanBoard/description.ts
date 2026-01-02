@@ -88,7 +88,7 @@ const kanbanBoardFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				...showOnlyForKanbanBoard,
-				operation: ['create'],
+				operation: ['create', 'update'],
 			},
 		},
 	},
@@ -104,89 +104,42 @@ const kanbanBoardFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				...showOnlyForKanbanBoard,
-				operation: ['create'],
+				operation: ['create', 'update'],
 			},
 		},
 	},
 	{
-		displayName: 'Update Fields',
-		name: 'updateBoardFields',
-		type: 'collection',
-		placeholder: 'Add Field',
-		default: {},
-		displayOptions: {
-			show: {
-				...showOnlyForKanbanBoard,
-				operation: ['update'],
-			},
-		},
+		displayName: 'Sort By',
+		name: 'sort',
+		type: 'options',
+		default: 'updated_at',
 		options: [
-			{
-				displayName: 'Description',
-				name: 'description',
-				type: 'string',
-				default: '',
-				description: 'New description for the board',
-			},
-			{
-				displayName: 'Inbox IDs',
-				name: 'inbox_ids',
-				type: 'string',
-				default: '',
-				description: 'Comma-separated list of inbox IDs',
-				placeholder: 'e.g. 1,2,3',
-			},
-			{
-				displayName: 'Name',
-				name: 'name',
-				type: 'string',
-				default: '',
-				description: 'New name for the board',
-			},
-			{
-				displayName: 'Settings (JSON)',
-				name: 'settings',
-				type: 'json',
-				default: '{}',
-				description: 'Custom settings as JSON',
-			},
+			{ name: 'Created At', value: 'created_at' },
+			{ name: 'Name', value: 'name' },
+			{ name: 'Updated At', value: 'updated_at' },
 		],
-	},
-	{
-		displayName: 'Filters',
-		name: 'boardFilters',
-		type: 'collection',
-		placeholder: 'Add Filter',
-		default: {},
 		displayOptions: {
 			show: {
 				...showOnlyForKanbanBoard,
 				operation: ['list'],
 			},
 		},
+	},
+	{
+		displayName: 'Order',
+		name: 'order',
+		type: 'options',
+		default: 'desc',
 		options: [
-			{
-				displayName: 'Order',
-				name: 'order',
-				type: 'options',
-				default: 'desc',
-				options: [
-					{ name: 'Ascending', value: 'asc' },
-					{ name: 'Descending', value: 'desc' },
-				],
-			},
-			{
-				displayName: 'Sort By',
-				name: 'sort',
-				type: 'options',
-				default: 'updated_at',
-				options: [
-					{ name: 'Created At', value: 'created_at' },
-					{ name: 'Name', value: 'name' },
-					{ name: 'Updated At', value: 'updated_at' },
-				],
-			},
+			{ name: 'Ascending', value: 'asc' },
+			{ name: 'Descending', value: 'desc' },
 		],
+		displayOptions: {
+			show: {
+				...showOnlyForKanbanBoard,
+				operation: ['list'],
+			},
+		},
 	},
 	{
 		...agentSelector,
