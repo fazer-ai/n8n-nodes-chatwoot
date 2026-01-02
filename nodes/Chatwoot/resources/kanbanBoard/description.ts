@@ -1,5 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { accountSelector, agentSelector, inboxSelector, kanbanBoardSelector } from '../../shared/descriptions';
+import { accountSelector, kanbanBoardSelector } from '../../shared/descriptions';
 
 const showOnlyForKanbanBoard = {
 	resource: ['kanbanBoard'],
@@ -142,7 +142,15 @@ const kanbanBoardFields: INodeProperties[] = [
 		},
 	},
 	{
-		...agentSelector,
+		displayName: 'Agents to Assign',
+		name: 'agentIds',
+		type: 'multiOptions',
+		default: [],
+		required: true,
+		description: 'Select the agents to assign to this board. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+		typeOptions: {
+			loadOptionsMethod: 'loadAgentsOptions',
+		},
 		displayOptions: {
 			show: {
 				...showOnlyForKanbanBoard,
@@ -151,7 +159,15 @@ const kanbanBoardFields: INodeProperties[] = [
 		},
 	},
 	{
-		...inboxSelector,
+		displayName: 'Inboxes to Link',
+		name: 'inboxIds',
+		type: 'multiOptions',
+		default: [],
+		required: true,
+		description: 'Select the inboxes to link to this board. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+		typeOptions: {
+			loadOptionsMethod: 'loadInboxesOptions',
+		},
 		displayOptions: {
 			show: {
 				...showOnlyForKanbanBoard,

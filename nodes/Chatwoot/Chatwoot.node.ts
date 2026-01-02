@@ -35,6 +35,7 @@ import { teamDescription, executeTeamOperation } from './resources/team';
 import {
 	searchAccounts,
 	searchInboxes,
+	loadInboxesOptions,
 	searchWhatsappSpecialProvidersInboxes,
 	searchConversations,
 	searchContacts,
@@ -179,6 +180,7 @@ export class Chatwoot implements INodeType {
 		},
 		loadOptions: {
 			loadAgentsOptions,
+			loadInboxesOptions,
 			loadTeamsOptions,
 			loadLabelsOptions,
 			loadResponseFieldsOptions,

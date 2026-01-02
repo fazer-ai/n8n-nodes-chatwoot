@@ -1,20 +1,6 @@
 import type { IDataObject, IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
-import { chatwootApiRequest, getAccountId } from '../../shared/transport';
+import { chatwootApiRequest, getAccountId, getKanbanBoardId } from '../../shared/transport';
 import type { KanbanBoardOperation } from './types';
-
-type ResourceLocatorParam = string | number | { mode: string; value: string };
-
-function getResourceLocatorValue(param: ResourceLocatorParam): number {
-	if (typeof param === 'object' && param.value !== undefined) {
-		return Number(param.value);
-	}
-	return Number(param);
-}
-
-function parseCommaSeparatedIds(value: string): number[] {
-	if (!value || value.trim() === '') return [];
-	return value.split(',').map((id) => Number(id.trim())).filter((id) => !isNaN(id));
-}
 
 export async function executeKanbanBoardOperation(
 	context: IExecuteFunctions,
@@ -62,8 +48,7 @@ async function getBoard(
 	itemIndex: number,
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
-	const boardIdParam = context.getNodeParameter('boardId', itemIndex) as ResourceLocatorParam;
-	const boardId = getResourceLocatorValue(boardIdParam);
+	const boardId = getKanbanBoardId.call(context, itemIndex);
 
 	return {
 		json: (await chatwootApiRequest.call(
@@ -79,11 +64,8 @@ async function listBoards(
 	itemIndex: number,
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
-	const filters = context.getNodeParameter('boardFilters', itemIndex, {}) as IDataObject;
-
-	const query: IDataObject = {};
-	if (filters.sort) query.sort = filters.sort;
-	if (filters.order) query.order = filters.order;
+	const sort = context.getNodeParameter('sort', itemIndex);
+	const order = context.getNodeParameter('order', itemIndex);
 
 	return {
 		json: (await chatwootApiRequest.call(
@@ -91,7 +73,7 @@ async function listBoards(
 			'GET',
 			`/api/v1/accounts/${accountId}/kanban/boards`,
 			undefined,
-			query,
+			{sort, order},
 		)) as IDataObject
 	};
 }
@@ -101,29 +83,16 @@ async function updateBoard(
 	itemIndex: number,
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
-	const boardIdParam = context.getNodeParameter('boardId', itemIndex) as ResourceLocatorParam;
-	const boardId = getResourceLocatorValue(boardIdParam);
-	const updateFields = context.getNodeParameter('updateBoardFields', itemIndex, {}) as IDataObject;
-
-	const board: IDataObject = {};
-
-	if (updateFields.name) board.name = updateFields.name;
-	if (updateFields.description) board.description = updateFields.description;
-	if (updateFields.settings) {
-		board.settings = typeof updateFields.settings === 'string'
-			? JSON.parse(updateFields.settings)
-			: updateFields.settings;
-	}
-	if (updateFields.inbox_ids) {
-		board.inbox_ids = parseCommaSeparatedIds(updateFields.inbox_ids as string);
-	}
+	const boardId = getKanbanBoardId.call(context, itemIndex);
+	const name = context.getNodeParameter('name', itemIndex);
+	const description = context.getNodeParameter('description', itemIndex, '');
 
 	return {
 		json: (await chatwootApiRequest.call(
 			context,
 			'PUT',
 			`/api/v1/accounts/${accountId}/kanban/boards/${boardId}`,
-			{ board },
+			{ name, description },
 		)) as IDataObject
 	};
 }
@@ -133,8 +102,7 @@ async function deleteBoard(
 	itemIndex: number,
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
-	const boardIdParam = context.getNodeParameter('boardId', itemIndex) as ResourceLocatorParam;
-	const boardId = getResourceLocatorValue(boardIdParam);
+	const boardId = getKanbanBoardId.call(context, itemIndex);
 
 	return {
 		json: (await chatwootApiRequest.call(
@@ -150,10 +118,8 @@ async function updateBoardAgents(
 	itemIndex: number,
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
-	const boardIdParam = context.getNodeParameter('boardId', itemIndex) as ResourceLocatorParam;
-	const boardId = getResourceLocatorValue(boardIdParam);
-	const agentIdsStr = context.getNodeParameter('agentIds', itemIndex) as string;
-	const agentIds = parseCommaSeparatedIds(agentIdsStr);
+	const boardId = getKanbanBoardId.call(context, itemIndex);
+	const agentIds = context.getNodeParameter('agentIds', itemIndex) as number[];
 
 	return {
 		json: (await chatwootApiRequest.call(
@@ -170,10 +136,8 @@ async function updateBoardInboxes(
 	itemIndex: number,
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
-	const boardIdParam = context.getNodeParameter('boardId', itemIndex) as ResourceLocatorParam;
-	const boardId = getResourceLocatorValue(boardIdParam);
-	const inboxIdsStr = context.getNodeParameter('inboxIds', itemIndex) as string;
-	const inboxIds = parseCommaSeparatedIds(inboxIdsStr);
+	const boardId = getKanbanBoardId.call(context, itemIndex);
+	const inboxIds = context.getNodeParameter('inboxIds', itemIndex) as number[];
 
 	return {
 		json: (await chatwootApiRequest.call(

@@ -238,8 +238,8 @@ export async function searchConversations(
 	}
 
 	const response = (await chatwootApiRequest.call(this, 'GET', endpoint)) as
-		| ChatwootPayloadResponse<ChatwootConversation>
-		| ChatwootConversation[];
+	| ChatwootPayloadResponse<ChatwootConversation>
+	| ChatwootConversation[];
 	const responseObj = response as ChatwootPayloadResponse<ChatwootConversation>;
 	const conversations =
 		responseObj.data?.payload ||
@@ -328,6 +328,30 @@ export async function loadAgentsOptions(
 	return agents.map((agent: ChatwootAgent) => ({
 		name: agent.name || agent.email || `Agent ${agent.id}`,
 		value: agent.id,
+	}));
+}
+
+/**
+ * Get all inboxes for the selected account (for loadOptions)
+ */
+export async function loadInboxesOptions(
+	this: ILoadOptionsFunctions,
+): Promise<INodePropertyOptions[]> {
+	const accountId = extractResourceLocatorValue(this, 'accountId');
+	if (!accountId) {
+		return [];
+	}
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/inboxes`,
+	)) as ChatwootPayloadResponse<ChatwootInbox>;
+	const inboxes = response.payload ||[];
+
+	return (inboxes as ChatwootInbox[]).map((inbox: ChatwootInbox) => ({
+		name: inbox.name,
+		value: inbox.id,
 	}));
 }
 
