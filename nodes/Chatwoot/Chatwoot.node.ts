@@ -124,7 +124,7 @@ export class Chatwoot implements INodeType {
 					{
 						name: 'Kanban Step',
 						value: 'kanbanStep',
-						description: 'Manage Kanban steps (columns)',
+						description: 'Manage Kanban steps',
 					},
 					{
 						name: 'Kanban Task',
