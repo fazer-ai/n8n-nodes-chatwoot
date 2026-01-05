@@ -167,12 +167,6 @@ export async function searchInboxes(
 		);
 	}
 
-	// FIXME: Add "All Inboxes" option only for webhook triggers.
-	results.unshift({
-		name: 'All Inboxes',
-		value: '',
-	})
-
 	return { results };
 }
 
