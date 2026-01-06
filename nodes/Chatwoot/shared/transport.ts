@@ -120,7 +120,7 @@ export async function chatwootApiRequestAllItems(
 /**
  * Helper to get the ID from a resourceLocator parameter
  */
-export function getResourceId(
+function getResourceId(
 	this: IExecuteFunctions,
 	itemIndex: number,
 	parameterName: string,
