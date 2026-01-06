@@ -28,6 +28,8 @@ export async function executeConversationOperation(
       return assignConversationTeam(context, itemIndex);
     case 'updateLabels':
       return setConversationLabels(context, itemIndex);
+		case 'sendMessage':
+			return sendMessageToConversation(context, itemIndex);
     case 'setCustomAttributes':
       return setConversationCustomAttributes(context, itemIndex);
     case 'setPriority':
@@ -233,4 +235,107 @@ async function setConversationPriority(
 			{ priority },
 		)) as IDataObject
 	};
+}
+
+async function sendMessageToConversation(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const conversationId = getConversationId.call(context, itemIndex);
+	const content = context.getNodeParameter('content', itemIndex) as string;
+	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {}) as IDataObject;
+
+	let contentAttributes: IDataObject | undefined;
+	if (additionalFields.content_attributes) {
+		const contentAttrsConfig = additionalFields.content_attributes as IDataObject;
+		const values = contentAttrsConfig.values as IDataObject;
+
+		if (values) {
+			const inputMethod = values.inputMethod as string;
+
+			if (inputMethod === 'json') {
+				// JSON mode - parse the JSON string
+				const jsonString = values.json as string;
+				if (jsonString && jsonString.trim() !== '{}' && jsonString.trim() !== '') {
+					try {
+						contentAttributes = JSON.parse(jsonString);
+					} catch (error) {
+						throw new NodeOperationError(
+							context.getNode(),
+							`Invalid JSON in content attributes: ${(error as Error).message}`,
+						);
+					}
+				}
+			} else if (inputMethod === 'pairs') {
+				// Key-Value Pairs mode
+				const attributes = values.attributes as IDataObject;
+				if (attributes && attributes.attribute) {
+					const pairs = attributes.attribute as Array<{ name: string; value: string }>;
+					if (Array.isArray(pairs) && pairs.length > 0) {
+						contentAttributes = {};
+						for (const pair of pairs) {
+							if (pair.name && pair.name.trim() !== '') {
+								contentAttributes[pair.name] = pair.value;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if (additionalFields.is_reaction) {
+		if (!contentAttributes) {
+			contentAttributes = {};
+		}
+		contentAttributes.is_reaction = true;
+	}
+
+	if(additionalFields.split_message) {
+		const splitChar = (additionalFields.split_character as string) ?? '\n\n';
+		const messages = content.split(splitChar).filter((msg: string) => msg.trim() !== '');
+		const responses: IDataObject[] = [];
+
+		for(const message of messages) {
+			const body: IDataObject = {
+				content: message,
+			};
+			if(additionalFields.private){
+				body.private = additionalFields.private;
+			}
+			if (contentAttributes && Object.keys(contentAttributes).length > 0) {
+				body.content_attributes = contentAttributes;
+			}
+			responses.push((await chatwootApiRequest.call(
+				context,
+				'POST',
+				`/api/v1/accounts/${accountId}/conversations/${conversationId}/messages`,
+				body,
+			)) as IDataObject);
+		}
+		return {
+			json: {requests: responses},
+		};
+	}
+	else {
+		const body: IDataObject = {
+			content,
+		};
+		if(additionalFields.private){
+			body.private = additionalFields.private;
+		}
+		if (contentAttributes && Object.keys(contentAttributes).length > 0) {
+			body.content_attributes = contentAttributes;
+		}
+
+		return {
+			json: (await chatwootApiRequest.call(
+				context,
+				'POST',
+				`/api/v1/accounts/${accountId}/conversations/${conversationId}/messages`,
+				body,
+			)) as IDataObject
+		};
+	}
 }

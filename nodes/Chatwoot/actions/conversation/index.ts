@@ -140,7 +140,7 @@ const conversationFields: INodeProperties[] = [
     displayOptions: {
       show: {
         ...showOnlyForConversation,
-        operation: ['list', 'get', 'toggleStatus', 'assignAgent', 'assignTeam', 'updateLabels', 'setCustomAttribute', 'setPriority'],
+        operation: ['list', 'get', 'toggleStatus', 'assignAgent', 'assignTeam', 'updateLabels', 'setCustomAttribute', 'setPriority', 'sendMessage'],
       },
     },
   },
@@ -149,7 +149,7 @@ const conversationFields: INodeProperties[] = [
     displayOptions: {
       show: {
         ...showOnlyForConversation,
-        operation: ['get', 'toggleStatus', 'assignAgent', 'assignTeam', 'updateLabels', 'setCustomAttribute', 'setPriority'],
+        operation: ['get', 'toggleStatus', 'assignAgent', 'assignTeam', 'updateLabels', 'setCustomAttribute', 'setPriority', 'sendMessage'],
       },
     },
   },
@@ -270,8 +270,6 @@ const conversationFields: INodeProperties[] = [
   },
   {
     ...inboxSelector,
-    required: false,
-    description: 'Inbox to create the conversation in (optional)',
     displayOptions: {
       show: {
         ...showOnlyForConversation,
@@ -287,35 +285,6 @@ const conversationFields: INodeProperties[] = [
         operation: ['create'],
       },
     },
-  },
-  {
-    displayName: 'Additional Fields',
-    name: 'additionalFields',
-    type: 'collection',
-    placeholder: 'Add Field',
-    default: {},
-    displayOptions: {
-      show: {
-        ...showOnlyForConversation,
-        operation: [],
-      },
-    },
-    options: [
-      {
-        displayName: 'Custom Attributes',
-        name: 'customAttributes',
-        type: 'json',
-        default: '{}',
-        description: 'Custom attributes as JSON object',
-      },
-      {
-        displayName: 'Source ID',
-        name: 'source_id',
-        type: 'string',
-        default: '',
-        description: 'Source ID for the conversation',
-      },
-    ],
   },
   {
     displayName: 'Custom Attributes',
@@ -366,7 +335,165 @@ const conversationFields: INodeProperties[] = [
         status: ['snoozed'],
       },
     },
-  }
+  },
+  {
+    displayName: 'Message Text',
+    name: 'content',
+    type: 'string',
+    default: '',
+    required: true,
+    description: 'Text content of the message to send',
+    displayOptions: {
+      show: {
+        ...showOnlyForConversation,
+        operation: ['sendMessage'],
+      },
+    },
+    typeOptions: {
+      rows: 4,
+    },
+  },
+  {
+    displayName: 'Additional Fields',
+    name: 'additionalFields',
+    type: 'collection',
+    placeholder: 'Add Field',
+    default: {},
+    displayOptions: {
+      show: {
+        ...showOnlyForConversation,
+        operation: ['sendMessage'],
+      },
+    },
+    // eslint-disable-next-line n8n-nodes-base/node-param-collection-type-unsorted-items
+    options: [
+      {
+        displayName: 'Private Note',
+        name: 'private',
+        type: 'boolean',
+        default: false,
+        description: 'Whether this is a private note (not visible to customer)',
+      },
+      {
+        displayName: 'Is Reaction',
+        name: 'is_reaction',
+        type: 'boolean',
+        default: false,
+        description: 'Whether this message is a reaction to another message',
+      },
+      {
+        displayName: 'Content Attributes',
+        name: 'content_attributes',
+        type: 'fixedCollection',
+        placeholder: 'Add Content Attribute',
+        default: {},
+        description: 'Additional content attributes for the message',
+        options: [
+          {
+            displayName: 'Specify Content Attributes',
+            name: 'values',
+            values: [
+              {
+                displayName: 'Input Method',
+                name: 'inputMethod',
+                type: 'options',
+                default: 'pairs',
+                options: [
+                  {
+                    name: 'Using Fields Below',
+                    value: 'pairs',
+                  },
+                  {
+                    name: 'JSON',
+                    value: 'json',
+                  },
+                ],
+              },
+              {
+                displayName: 'Attributes',
+                name: 'attributes',
+                type: 'fixedCollection',
+                typeOptions: {
+                  multipleValues: true,
+                },
+                default: {},
+                displayOptions: {
+                  show: {
+                    inputMethod: ['pairs'],
+                  },
+                },
+                options: [
+                  {
+                    displayName: 'Attribute',
+                    name: 'attribute',
+                    values: [
+                      {
+                        displayName: 'Name',
+                        name: 'name',
+                        type: 'string',
+                        default: '',
+                        description: 'Name of the attribute',
+                        placeholder: 'e.g. email',
+                      },
+                      {
+                        displayName: 'Value',
+                        name: 'value',
+                        type: 'string',
+                        default: '',
+                        description: 'Value of the attribute',
+                        placeholder: 'e.g. user@example.com',
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                displayName: 'JSON',
+                name: 'json',
+                type: 'json',
+                default: '{}',
+                displayOptions: {
+                  show: {
+                    inputMethod: ['json'],
+                  },
+                },
+                description: 'Content attributes as JSON object',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        displayName: 'Split Message',
+        name: 'split_message',
+        type: 'boolean',
+        default: true,
+        description: 'Whether to split the message into multiple messages. Default is double newline.',
+      },
+      {
+        displayName: 'Split Character',
+        name: 'split_character',
+        type: 'string',
+        default: '\n\n',
+        description: 'Character(s) to split the message on. Default is double newline.',
+        displayOptions: {
+          show: {
+            split_message: [true],
+          },
+        },
+      },
+      // {
+      //   displayName: 'Wait Before Sending (Seconds)',
+      //   name: 'wait_before_sending',
+      //   type: 'number',
+      //   typeOptions: {
+      //     minValue: 0,
+      //   },
+      //   default: 0,
+      //   description: 'Time to wait before sending the message, in seconds',
+      // },
+    ],
+  },
 ];
 
 export const conversationDescription: INodeProperties[] = [
