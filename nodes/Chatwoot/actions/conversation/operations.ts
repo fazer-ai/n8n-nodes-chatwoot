@@ -1,4 +1,4 @@
-import type { IDataObject, IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
+import { NodeOperationError, type IDataObject, type IExecuteFunctions, type INodeExecutionData } from 'n8n-workflow';
 import {
 	chatwootApiRequest,
 	getAccountId,
@@ -33,7 +33,7 @@ export async function executeConversationOperation(
     case 'setPriority':
       return setConversationPriority(context, itemIndex);
 		default:
-			throw new Error(`The operation "${operation}" is not implemented yet!`);
+			throw new NodeOperationError(context.getNode(), `The operation "${operation}" is not implemented yet!`);
   }
 }
 
