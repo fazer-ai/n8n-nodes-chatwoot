@@ -137,12 +137,10 @@ const conversationFields: INodeProperties[] = [
   },
   {
     ...inboxSelector,
-    required: false,
-    description: 'Optionally filter by inbox',
     displayOptions: {
       show: {
         ...showOnlyForConversation,
-        operation: ['list'],
+        operation: ['list', 'get', 'toggleStatus', 'assignAgent', 'assignTeam', 'updateLabels', 'setCustomAttribute', 'setPriority'],
       },
     },
   },
