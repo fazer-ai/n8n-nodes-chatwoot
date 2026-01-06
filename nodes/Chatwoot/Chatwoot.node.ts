@@ -56,7 +56,7 @@ import {
 	loadCustomAttributeDefinitionsOptions,
 	searchTeamMembers,
 	loadTeamMembersOptions,
-} from './listSearch';
+} from './methods/listSearch';
 
 /**
  * Node for interacting with the Chatwoot REST API.

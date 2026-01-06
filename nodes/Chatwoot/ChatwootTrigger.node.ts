@@ -12,7 +12,7 @@ import {
 } from 'n8n-workflow';
 
 import { accountSelector, webhookEventsSelector } from './shared/descriptions';
-import { ChatwootInbox, ChatwootPayloadResponse, extractResourceLocatorValue, searchAccounts } from './listSearch';
+import { ChatwootInbox, ChatwootPayloadResponse, extractResourceLocatorValue, searchAccounts } from './methods/listSearch';
 import {
 	fetchWebhooks,
 	createWebhook,
