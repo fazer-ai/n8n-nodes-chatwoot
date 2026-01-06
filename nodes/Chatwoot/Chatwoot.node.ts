@@ -150,6 +150,7 @@ export class Chatwoot implements INodeType {
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
+
 		const resource = this.getNodeParameter('resource', 0) as ChatwootResources;
 		const operation = this.getNodeParameter('operation', 0);
 
