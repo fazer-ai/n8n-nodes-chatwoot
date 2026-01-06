@@ -1,11 +1,11 @@
 import type { IDataObject, IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 import { chatwootApiRequest, getAccountId } from '../../shared/transport';
-import { AccountOperation } from './types';
+import { AccountOperation } from '../node.type';
 
 export async function executeAccountOperation(
-	context: IExecuteFunctions,
-	operation: AccountOperation,
-	itemIndex: number,
+  context: IExecuteFunctions,
+  operation: AccountOperation,
+  itemIndex: number,
 ): Promise<INodeExecutionData> {
   switch (operation) {
   case 'get':
