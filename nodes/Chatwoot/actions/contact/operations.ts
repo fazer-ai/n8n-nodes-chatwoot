@@ -103,7 +103,7 @@ async function updateContact(
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const contactId = getContactId.call(context, itemIndex);
-	const name = context.getNodeParameter('nameOptional', itemIndex, '');
+	const name = context.getNodeParameter('name', itemIndex, '');
 	const phoneNumber = context.getNodeParameter('phoneNumber', itemIndex, '');
 	const email = context.getNodeParameter('email', itemIndex, '');
 	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {});

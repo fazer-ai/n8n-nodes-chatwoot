@@ -93,6 +93,7 @@ const contactFields: INodeProperties[] = [
     name: 'name',
     type: 'string',
     default: '',
+    placeholder: 'John Doe',
     required: true,
     description: 'Name of the contact',
     displayOptions: {
@@ -104,9 +105,10 @@ const contactFields: INodeProperties[] = [
   },
   {
     displayName: 'Name',
-    name: 'nameOptional',
+    name: 'name',
     type: 'string',
     default: '',
+    placeholder: 'John Doe',
     description: 'Name of the contact',
     displayOptions: {
       show: {
