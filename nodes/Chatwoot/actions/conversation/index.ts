@@ -100,16 +100,22 @@ const conversationOperations: INodeProperties[] = [
         action: 'Set conversation priority',
       },
       {
-        name: 'Set Custom Attributes',
-        value: 'setCustomAttributes',
-        description: 'Set custom attributes on conversation',
-        action: 'Set custom attributes on conversation',
+        name: 'Add Custom Attributes',
+        value: 'addCustomAttributes',
+        description: 'Add custom attributes on conversation keeping existing attributes intact',
+        action: 'Add custom attributes on conversation',
       },
       {
-        name: 'Destroy Custom Attributes',
-        value: 'destroyCustomAttributes',
-        description: 'Reset custom attributes in conversation',
-        action: 'Reset custom attributes in conversation',
+        name: 'Remove Custom Attributes',
+        value: 'removeCustomAttributes',
+        description: 'Remove custom attributes from conversation',
+        action: 'Remove custom attributes from conversation',
+      },
+      {
+        name: 'Set Custom Attributes',
+        value: 'setCustomAttributes',
+        description: 'Set custom attributes on conversation overriding existing attributes',
+        action: 'Set custom attributes on conversation',
       },
       {
         name: 'Update Last Seen',
@@ -140,7 +146,7 @@ const conversationFields: INodeProperties[] = [
     displayOptions: {
       show: {
         ...showOnlyForConversation,
-        operation: ['list', 'get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'setCustomAttribute', 'setPriority', 'sendMessage'],
+        operation: ['list', 'get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'addCustomAttributes', 'removeCustomAttributes', 'setCustomAttributes', 'setPriority', 'sendMessage'],
       },
     },
   },
@@ -149,7 +155,7 @@ const conversationFields: INodeProperties[] = [
     displayOptions: {
       show: {
         ...showOnlyForConversation,
-        operation: ['get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'setCustomAttribute', 'setPriority', 'sendMessage'],
+        operation: ['get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'addCustomAttributes', 'removeCustomAttributes', 'setCustomAttributes', 'setPriority', 'sendMessage'],
       },
     },
   },
@@ -287,16 +293,150 @@ const conversationFields: INodeProperties[] = [
     },
   },
   {
-    displayName: 'Custom Attributes',
-    name: 'customAttributes',
-    type: 'json',
-    default: '{}',
-    required: true,
-    description: 'Custom attributes as JSON object (key-value pairs)',
+    displayName: 'Specify Custom Attributes',
+    name: 'specifyCustomAttributes',
+    type: 'options',
     displayOptions: {
       show: {
         ...showOnlyForConversation,
-        operation: ['setCustomAttribute'],
+        operation: ['addCustomAttributes', 'setCustomAttributes'],
+      },
+    },
+    options: [
+      {
+        name: 'From Definitions',
+        value: 'definition',
+        description: 'Select from pre-defined conversation attributes',
+      },
+      {
+        name: 'Using Fields Below',
+        value: 'keypair',
+      },
+      {
+        name: 'JSON',
+        value: 'json',
+      },
+    ],
+    default: 'definition',
+  },
+  {
+    displayName: 'Custom Attributes',
+    name: 'customAttributesDefinition',
+    type: 'fixedCollection',
+    displayOptions: {
+      show: {
+        ...showOnlyForConversation,
+        operation: ['addCustomAttributes', 'setCustomAttributes'],
+        specifyCustomAttributes: ['definition'],
+      },
+    },
+    typeOptions: {
+      multipleValues: true,
+    },
+    placeholder: 'Add Attribute',
+    default: {
+      attributes: [],
+    },
+    options: [
+      {
+        name: 'attributes',
+        displayName: 'Attribute',
+        values: [
+          {
+            // eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-options
+            displayName: 'Attribute',
+            name: 'key',
+            type: 'options',
+            default: '',
+            description: 'Select the custom attribute. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+            typeOptions: {
+              loadOptionsMethod: 'loadConversationCustomAttributeDefinitionsOptions',
+            },
+          },
+          {
+            displayName: 'Value',
+            name: 'value',
+            type: 'string',
+            default: '',
+            description: 'Value of the custom attribute',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    displayName: 'Custom Attributes',
+    name: 'customAttributesKeypair',
+    type: 'fixedCollection',
+    displayOptions: {
+      show: {
+        ...showOnlyForConversation,
+        operation: ['addCustomAttributes', 'setCustomAttributes'],
+        specifyCustomAttributes: ['keypair'],
+      },
+    },
+    typeOptions: {
+      multipleValues: true,
+    },
+    placeholder: 'Add Attribute',
+    default: {
+      attributes: [
+        {
+          name: '',
+          value: '',
+        },
+      ],
+    },
+    options: [
+      {
+        name: 'attributes',
+        displayName: 'Attribute',
+        values: [
+          {
+            displayName: 'Name',
+            name: 'name',
+            type: 'string',
+            default: '',
+            description: 'Name of the custom attribute',
+          },
+          {
+            displayName: 'Value',
+            name: 'value',
+            type: 'string',
+            default: '',
+            description: 'Value of the custom attribute',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    displayName: 'JSON',
+    name: 'customAttributesJson',
+    type: 'json',
+    default: '{}',
+    displayOptions: {
+      show: {
+        ...showOnlyForConversation,
+        operation: ['addCustomAttributes', 'setCustomAttributes'],
+        specifyCustomAttributes: ['json'],
+      },
+    },
+  },
+  {
+    displayName: 'Attributes to Remove',
+    name: 'customAttributeKeysToRemove',
+    type: 'multiOptions',
+    default: [],
+    required: true,
+    description: 'Select the custom attributes to remove. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+    typeOptions: {
+      loadOptionsMethod: 'loadConversationCustomAttributeDefinitionsOptions',
+    },
+    displayOptions: {
+      show: {
+        ...showOnlyForConversation,
+        operation: ['removeCustomAttributes'],
       },
     },
   },

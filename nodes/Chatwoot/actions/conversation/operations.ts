@@ -8,6 +8,43 @@ import {
 } from '../../shared/transport';
 import { ConversationOperation } from './types';
 
+function parseCustomAttributes(context: IExecuteFunctions, itemIndex: number): IDataObject {
+	const specifyMode = context.getNodeParameter('specifyCustomAttributes', itemIndex) as string;
+
+	if (specifyMode === 'definition') {
+		const attributes = context.getNodeParameter(
+			'customAttributesDefinition.attributes',
+			itemIndex,
+			[],
+		) as Array<{ key: string; value: string }>;
+
+		const customAttributes: IDataObject = {};
+		for (const attr of attributes) {
+			if (attr.key) {
+				customAttributes[attr.key] = attr.value;
+			}
+		}
+		return customAttributes;
+	} else if (specifyMode === 'keypair') {
+		const attributes = context.getNodeParameter(
+			'customAttributesKeypair.attributes',
+			itemIndex,
+			[],
+		) as Array<{ name: string; value: string }>;
+
+		const customAttributes: IDataObject = {};
+		for (const attr of attributes) {
+			if (attr.name) {
+				customAttributes[attr.name] = attr.value;
+			}
+		}
+		return customAttributes;
+	} else {
+		const jsonValue = context.getNodeParameter('customAttributesJson', itemIndex) as string;
+		return JSON.parse(jsonValue) as IDataObject;
+	}
+}
+
 export async function executeConversationOperation(
 	context: IExecuteFunctions,
 	operation: ConversationOperation,
@@ -46,13 +83,12 @@ export async function executeConversationOperation(
       return toggleConversationStatus(context, itemIndex);
     case 'setPriority':
       return setConversationPriority(context, itemIndex);
+		case 'addCustomAttributes':
+			return addCustomAttributesToConversation(context, itemIndex);
+		case 'removeCustomAttributes':
+			return removeCustomAttributesFromConversation(context, itemIndex);
     case 'setCustomAttributes':
       return setConversationCustomAttributes(context, itemIndex);
-		case 'destroyCustomAttributes':
-			throw new NodeOperationError(
-				context.getNode(),
-				'The "Destroy Custom Attributes" operation is not implemented yet.',
-			);
 		case 'updateLastSeen':
 			throw new NodeOperationError(
 				context.getNode(),
@@ -285,9 +321,7 @@ async function setConversationCustomAttributes(
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const conversationId = getConversationId.call(context, itemIndex);
-	const customAttributes = JSON.parse(
-		context.getNodeParameter('customAttributes', itemIndex) as string,
-	);
+	const customAttributes = parseCustomAttributes(context, itemIndex);
 
 	return {
 		json: (await chatwootApiRequest.call(
@@ -295,6 +329,67 @@ async function setConversationCustomAttributes(
 			'POST',
 			`/api/v1/accounts/${accountId}/conversations/${conversationId}/custom_attributes`,
 			{ custom_attributes: customAttributes },
+		)) as IDataObject
+	};
+}
+
+async function addCustomAttributesToConversation(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const conversationId = getConversationId.call(context, itemIndex);
+	const attributesToAdd = parseCustomAttributes(context, itemIndex);
+
+	const conversation = (await chatwootApiRequest.call(
+		context,
+		'GET',
+		`/api/v1/accounts/${accountId}/conversations/${conversationId}`,
+	)) as IDataObject;
+
+	const currentAttributes = (conversation.custom_attributes as IDataObject) || {};
+	const mergedAttributes = { ...currentAttributes, ...attributesToAdd };
+
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/conversations/${conversationId}/custom_attributes`,
+			{ custom_attributes: mergedAttributes },
+		)) as IDataObject
+	};
+}
+
+async function removeCustomAttributesFromConversation(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const conversationId = getConversationId.call(context, itemIndex);
+	const attributeKeysToRemove = context.getNodeParameter('customAttributeKeysToRemove', itemIndex) as string[];
+
+	const conversation = (await chatwootApiRequest.call(
+		context,
+		'GET',
+		`/api/v1/accounts/${accountId}/conversations/${conversationId}`,
+	)) as IDataObject;
+
+	const currentAttributes = (conversation.custom_attributes as IDataObject) || {};
+	const keysToRemoveSet = new Set(attributeKeysToRemove);
+	const newAttributes: IDataObject = {};
+
+	for (const [key, value] of Object.entries(currentAttributes)) {
+		if (!keysToRemoveSet.has(key)) {
+			newAttributes[key] = value;
+		}
+	}
+
+	return {
+		json: (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/conversations/${conversationId}/custom_attributes`,
+			{ custom_attributes: newAttributes },
 		)) as IDataObject
 	};
 }

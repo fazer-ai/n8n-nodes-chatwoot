@@ -93,5 +93,7 @@ export interface ChatwootCustomAttributeDefinition {
 	id: number;
 	attribute_key: string;
 	attribute_display_name: string;
+	attribute_display_type: string;
+	attribute_description: string;
 	attribute_model: number;
 }

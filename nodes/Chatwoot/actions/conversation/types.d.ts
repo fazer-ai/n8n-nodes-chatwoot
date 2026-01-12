@@ -12,7 +12,8 @@ export type ConversationOperation =
   | 'updateLabels'
   | 'toggleStatus'
   | 'setPriority'
+  | 'addCustomAttributes'
+  | 'removeCustomAttributes'
   | 'setCustomAttributes'
-  | 'destroyCustomAttributes'
   | 'updateLastSeen'
   | 'updatePresence';

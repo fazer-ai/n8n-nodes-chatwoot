@@ -294,7 +294,7 @@ const contactFields: INodeProperties[] = [
         value: 'keypair',
       },
       {
-        name: 'Using JSON',
+        name: 'JSON',
         value: 'json',
       },
     ],
@@ -351,7 +351,6 @@ const contactFields: INodeProperties[] = [
     name: 'customAttributesJson',
     type: 'json',
     default: '{}',
-    description: 'Custom attributes as JSON object (key-value pairs)',
     displayOptions: {
       show: {
         ...showOnlyForContact,
