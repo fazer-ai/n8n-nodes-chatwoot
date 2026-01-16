@@ -107,7 +107,7 @@ export class ChatwootTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Chatwoot fazer.ai Trigger',
 		name: 'chatwootTrigger',
-		icon: 'file:../../icons/fazer-ai.svg',
+		icon: { light: 'file:../../icons/fazer-ai.svg', dark: 'file:../../icons/fazer-ai-dark.svg' },
 		group: ['trigger'],
 		version: 1,
 		description: 'Handle Chatwoot events via webhooks',
