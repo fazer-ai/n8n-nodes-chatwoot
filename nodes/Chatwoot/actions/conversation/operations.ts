@@ -95,10 +95,7 @@ export async function executeConversationOperation(
 				'The "Update Last Seen" operation is not implemented yet.',
 			);
 		case 'updatePresence':
-			throw new NodeOperationError(
-				context.getNode(),
-				'The "Update Presence" operation is not implemented yet.',
-			);
+			return updateConversationPresence(context, itemIndex);
   }
 }
 
@@ -411,6 +408,59 @@ async function setConversationPriority(
 			`/api/v1/accounts/${accountId}/conversations/${conversationId}/toggle_priority`,
 			{ priority },
 		)) as IDataObject
+	};
+}
+
+async function updateConversationPresence(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const inboxId = getInboxId.call(context, itemIndex);
+	const conversationId = getConversationId.call(context, itemIndex);
+	const typingStatus = context.getNodeParameter('typingStatus', itemIndex) as string;
+	const isPrivate = context.getNodeParameter('isPrivate', itemIndex) as boolean;
+
+	// Fetch inbox details to check if presence will have an effect
+	const inbox = (await chatwootApiRequest.call(
+		context,
+		'GET',
+		`/api/v1/accounts/${accountId}/inboxes/${inboxId}`,
+	)) as IDataObject;
+
+	const channelType = inbox.channel_type as string;
+	const provider = (inbox.provider as string) ?? '';
+	const supportedProviders = ['whatsapp_cloud', 'baileys'];
+	const isWhatsApp = channelType === 'Channel::Whatsapp';
+	const isSupportedProvider = supportedProviders.includes(provider);
+	const willHaveEffect = isWhatsApp && isSupportedProvider;
+
+	const body = {
+		typing_status: typingStatus,
+		is_private: isPrivate,
+	};
+
+	await chatwootApiRequest.call(
+		context,
+		'POST',
+		`/api/v1/accounts/${accountId}/conversations/${conversationId}/toggle_typing_status`,
+		body,
+	);
+
+	if (!willHaveEffect) {
+		context.addExecutionHints({
+			message: `Presence status was set, but will not be visible to the contact. This feature only works for WhatsApp inboxes with 'whatsapp_cloud' or 'baileys' providers. Current inbox: channel_type="${channelType}", provider="${provider || 'none'}".`,
+			type: 'warning',
+			location: 'outputPane',
+		});
+	}
+
+	return {
+		json: {
+			success: true,
+			typing_status: typingStatus,
+			is_private: isPrivate,
+		},
 	};
 }
 

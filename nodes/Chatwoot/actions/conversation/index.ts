@@ -134,6 +134,41 @@ const conversationOperations: INodeProperties[] = [
   },
 ];
 
+const updatePresenceFields: INodeProperties[] = [
+  {
+    displayName: 'Typing Status',
+    name: 'typingStatus',
+    type: 'options',
+    default: 'on',
+    required: true,
+    options: [
+      { name: 'Typing', value: 'on' },
+      { name: 'Recording', value: 'recording' },
+      { name: 'Off', value: 'off' },
+    ],
+    description: 'The presence/typing status to set',
+    displayOptions: {
+      show: {
+        ...showOnlyForConversation,
+        operation: ['updatePresence'],
+      },
+    },
+  },
+  {
+    displayName: 'Private',
+    name: 'isPrivate',
+    type: 'boolean',
+    default: false,
+    description: 'Whether the presence indicator is for a private note',
+    displayOptions: {
+      show: {
+        ...showOnlyForConversation,
+        operation: ['updatePresence'],
+      },
+    },
+  },
+];
+
 const conversationFields: INodeProperties[] = [
   {
     ...accountSelector,
@@ -146,7 +181,7 @@ const conversationFields: INodeProperties[] = [
     displayOptions: {
       show: {
         ...showOnlyForConversation,
-        operation: ['list', 'get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'addCustomAttributes', 'removeCustomAttributes', 'setCustomAttributes', 'setPriority', 'sendMessage'],
+        operation: ['list', 'get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'addCustomAttributes', 'removeCustomAttributes', 'setCustomAttributes', 'setPriority', 'sendMessage', 'updateLastSeen', 'updatePresence'],
       },
     },
   },
@@ -155,7 +190,7 @@ const conversationFields: INodeProperties[] = [
     displayOptions: {
       show: {
         ...showOnlyForConversation,
-        operation: ['get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'addCustomAttributes', 'removeCustomAttributes', 'setCustomAttributes', 'setPriority', 'sendMessage'],
+        operation: ['get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'addCustomAttributes', 'removeCustomAttributes', 'setCustomAttributes', 'setPriority', 'sendMessage', 'updateLastSeen', 'updatePresence'],
       },
     },
   },
@@ -639,6 +674,7 @@ const conversationFields: INodeProperties[] = [
 export const conversationDescription: INodeProperties[] = [
   ...conversationOperations,
   ...conversationFields,
+  ...updatePresenceFields,
 ];
 
 export { executeConversationOperation } from './operations';
