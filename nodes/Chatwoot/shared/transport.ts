@@ -184,3 +184,20 @@ export function getKanbanTaskId(this: IExecuteFunctions | ILoadOptionsFunctions,
 export function getMessageId(this: IExecuteFunctions | ILoadOptionsFunctions, itemIndex: number): string {
 	return getResourceId.call(this, itemIndex, 'messageId');
 }
+
+/**
+ * Helper to get the Chatwoot base URL from credentials (for building external links)
+ */
+export async function getChatwootBaseUrl(
+	this: IExecuteFunctions | ILoadOptionsFunctions | IHookFunctions,
+): Promise<string> {
+	const credentials = await this.getCredentials('fazerAiChatwootApi');
+	let baseURL = credentials.url as string;
+
+	// Remove trailing slash if present
+	if (baseURL.endsWith('/')) {
+		baseURL = baseURL.slice(0, -1);
+	}
+
+	return baseURL;
+}
