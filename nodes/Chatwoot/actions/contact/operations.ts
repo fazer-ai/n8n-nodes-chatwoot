@@ -10,6 +10,111 @@ import { ContactOperation } from './types';
 const E164_REGEX = /^\+[1-9]\d{1,14}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+interface AdditionalFieldsInput {
+	identifier?: string;
+	avatarUrl?: string;
+	blocked?: boolean;
+	socialProfiles?: { profiles?: IDataObject };
+	extraAdditionalAttributes?: { attributes?: Array<{ key: string; value: string }> };
+	[key: string]: unknown;
+}
+
+interface ParsedContactFields {
+	identifier?: string;
+	avatarUrl?: string;
+	blocked?: boolean;
+	additionalAttributes?: IDataObject;
+}
+
+function parseContactAdditionalFields(additionalFields: IDataObject): ParsedContactFields {
+	const {
+		identifier,
+		avatarUrl,
+		blocked,
+		socialProfiles,
+		extraAdditionalAttributes,
+		...restAdditionalFields
+	} = additionalFields as AdditionalFieldsInput;
+
+	let additionalAttributes: IDataObject | undefined = undefined;
+	if (Object.keys(restAdditionalFields).length > 0 || socialProfiles || extraAdditionalAttributes?.attributes?.length) {
+		additionalAttributes = { ...restAdditionalFields } as IDataObject;
+		if (socialProfiles?.profiles) {
+			additionalAttributes.social_profiles = socialProfiles.profiles;
+		}
+		if (extraAdditionalAttributes?.attributes) {
+			for (const attr of extraAdditionalAttributes.attributes) {
+				if (attr.key) {
+					additionalAttributes[attr.key] = attr.value;
+				}
+			}
+		}
+	}
+
+	return {
+		identifier: identifier as string | undefined,
+		avatarUrl: avatarUrl as string | undefined,
+		blocked: blocked as boolean | undefined,
+		additionalAttributes,
+	};
+}
+
+function parseContactCustomAttributes(
+	context: IExecuteFunctions,
+	itemIndex: number,
+	paramSuffix: string = '',
+): IDataObject | undefined {
+	const specifyParamName = paramSuffix ? `specifyCustomAttributes${paramSuffix}` : 'specifyCustomAttributes';
+	const specifyMode = context.getNodeParameter(specifyParamName, itemIndex, 'none') as string;
+
+	if (specifyMode === 'none') {
+		return undefined;
+	}
+
+	if (specifyMode === 'definition') {
+		const definitionParamName = paramSuffix ? `customAttributesDefinition${paramSuffix}.attributes` : 'customAttributesDefinition.attributes';
+		const attributes = context.getNodeParameter(
+			definitionParamName,
+			itemIndex,
+			[],
+		) as Array<{ key: string; value: string }>;
+
+		const customAttributes: IDataObject = {};
+		for (const attr of attributes) {
+			if (attr.key) {
+				customAttributes[attr.key] = attr.value;
+			}
+		}
+		return Object.keys(customAttributes).length > 0 ? customAttributes : undefined;
+	}
+
+	if (specifyMode === 'keypair') {
+		const keypairParamName = paramSuffix ? `customAttributesParameters${paramSuffix}.attributes` : 'customAttributesParameters.attributes';
+		const attributes = context.getNodeParameter(
+			keypairParamName,
+			itemIndex,
+			[],
+		) as Array<{ name: string; value: string }>;
+
+		const customAttributes: IDataObject = {};
+		for (const attr of attributes) {
+			if (attr.name) {
+				customAttributes[attr.name] = attr.value;
+			}
+		}
+		return Object.keys(customAttributes).length > 0 ? customAttributes : undefined;
+	}
+
+	if (specifyMode === 'json') {
+		const jsonParamName = paramSuffix ? `customAttributesJson${paramSuffix}` : 'customAttributesJson';
+		const jsonValue = context.getNodeParameter(jsonParamName, itemIndex, '{}') as string;
+		const parsed = JSON.parse(jsonValue) as IDataObject;
+		return Object.keys(parsed).length > 0 ? parsed : undefined;
+	}
+
+	return undefined;
+}
+
 export async function executeContactOperation(
   context: IExecuteFunctions,
   operation: ContactOperation,
@@ -28,6 +133,18 @@ export async function executeContactOperation(
       return listContacts(context, itemIndex);
     case 'search':
       return searchContacts(context, itemIndex);
+    case 'listConversations':
+      return listContactConversations(context, itemIndex);
+    case 'merge':
+      return mergeContacts(context, itemIndex);
+    case 'listLabels':
+      return listContactLabels(context, itemIndex);
+    case 'addLabels':
+      return addLabelsToContact(context, itemIndex);
+    case 'updateLabels':
+      return updateContactLabels(context, itemIndex);
+    case 'removeLabels':
+      return removeLabelsFromContact(context, itemIndex);
     case 'setCustomAttributes':
       return setCustomAttributes(context, itemIndex);
     case 'destroyCustomAttributes':
@@ -44,7 +161,7 @@ async function createContact(
 	const name = context.getNodeParameter('name', itemIndex, '');
 	const phoneNumber = context.getNodeParameter('phoneNumber', itemIndex, '');
 	const email = context.getNodeParameter('email', itemIndex, '');
-	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {});
+	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {}) as IDataObject;
 
 	if (!name) {
 		throw new NodeOperationError(
@@ -70,20 +187,18 @@ async function createContact(
 		);
 	}
 
-	let additionalAttributes: IDataObject | undefined = undefined;
-	if (additionalFields && Object.keys(additionalFields).length > 0) {
-		const { socialProfiles, ...rest } = additionalFields as IDataObject & { socialProfiles?: IDataObject };
-		additionalAttributes = { ...rest };
-		if (socialProfiles?.profiles) {
-			additionalAttributes.social_profiles = socialProfiles.profiles;
-		}
-	}
+	const { identifier, avatarUrl, blocked, additionalAttributes } = parseContactAdditionalFields(additionalFields);
+	const customAttributes = parseContactCustomAttributes(context, itemIndex, 'Create');
 
 	const body: IDataObject = {
 		name,
-		phone_number: phoneNumber,
-		email,
+		phone_number: phoneNumber || undefined,
+		email: email || undefined,
 		additional_attributes: additionalAttributes,
+		identifier: identifier || undefined,
+		avatar_url: avatarUrl || undefined,
+		blocked: blocked !== undefined ? blocked : undefined,
+		custom_attributes: customAttributes,
 	};
 
 	const result = await chatwootApiRequest.call(
@@ -92,6 +207,14 @@ async function createContact(
 		`/api/v1/accounts/${accountId}/contacts`,
 		body,
 	) as IDataObject;
+
+	if (!phoneNumber && !email && !identifier) {
+		context.addExecutionHints({
+			message: 'Contact created without phone number, email, or identifier. The contact will not appear in search results until at least one of these fields is set.',
+			type: 'warning',
+			location: 'outputPane',
+		});
+	}
 
 	return { json: result };
 }
@@ -106,7 +229,7 @@ async function updateContact(
 	const name = context.getNodeParameter('name', itemIndex, '');
 	const phoneNumber = context.getNodeParameter('phoneNumber', itemIndex, '');
 	const email = context.getNodeParameter('email', itemIndex, '');
-	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {});
+	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {}) as IDataObject;
 
 	if (phoneNumber && !E164_REGEX.test(String(phoneNumber))) {
 		throw new NodeOperationError(
@@ -124,20 +247,18 @@ async function updateContact(
 		);
 	}
 
-	let additionalAttributes: IDataObject | undefined = undefined;
-	if (additionalFields && Object.keys(additionalFields).length > 0) {
-		const { socialProfiles, ...rest } = additionalFields as IDataObject & { socialProfiles?: IDataObject };
-		additionalAttributes = { ...rest };
-		if (socialProfiles?.profiles) {
-			additionalAttributes.social_profiles = socialProfiles.profiles;
-		}
-	}
+	const { identifier, avatarUrl, blocked, additionalAttributes } = parseContactAdditionalFields(additionalFields);
+	const customAttributes = parseContactCustomAttributes(context, itemIndex, 'Update');
 
 	const body: IDataObject = {
 		name: name || undefined,
 		phone_number: phoneNumber || undefined,
 		email: email || undefined,
 		additional_attributes: additionalAttributes,
+		identifier: identifier || undefined,
+		avatar_url: avatarUrl || undefined,
+		blocked: blocked !== undefined ? blocked : undefined,
+		custom_attributes: customAttributes,
 	};
 
 	const result = await chatwootApiRequest.call(
@@ -188,13 +309,22 @@ async function listContacts(
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const page = context.getNodeParameter('page', itemIndex, 1);
+	const sort = context.getNodeParameter('sort', itemIndex, 'last_activity_at') as string;
+	const sortOrder = context.getNodeParameter('sortOrder', itemIndex, 'asc') as string;
+	const includeContactInboxes = context.getNodeParameter('includeContactInboxes', itemIndex, false) as boolean;
+
+	const sortValue = sortOrder === 'desc' ? `-${sort}` : sort;
 
 	const result = await chatwootApiRequest.call(
 		context,
 		'GET',
 		`/api/v1/accounts/${accountId}/contacts`,
 		undefined,
-		{ page },
+		{
+			page,
+			sort: sortValue,
+			include_contact_inboxes: includeContactInboxes,
+		},
 	) as IDataObject;
 
 	return { json: result };
@@ -227,40 +357,7 @@ async function setCustomAttributes(
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const contactId = getContactId.call(context, itemIndex);
-	const specifyMode = context.getNodeParameter('specifyCustomAttributes', itemIndex) as string;
-
-	let customAttributes: IDataObject;
-
-	if (specifyMode === 'definition') {
-		const attributes = context.getNodeParameter(
-			'customAttributesDefinition.attributes',
-			itemIndex,
-			[],
-		) as Array<{ key: string; value: string }>;
-
-		customAttributes = {};
-		for (const attr of attributes) {
-			if (attr.key) {
-				customAttributes[attr.key] = attr.value;
-			}
-		}
-	} else if (specifyMode === 'keypair') {
-		const attributeParameters = context.getNodeParameter(
-			'customAttributesParameters.attributes',
-			itemIndex,
-			[],
-		) as Array<{ name: string; value: string }>;
-
-		customAttributes = {};
-		for (const attr of attributeParameters) {
-			if (attr.name) {
-				customAttributes[attr.name] = attr.value;
-			}
-		}
-	} else {
-		const jsonValue = context.getNodeParameter('customAttributesJson', itemIndex) as string;
-		customAttributes = JSON.parse(jsonValue);
-	}
+	const customAttributes = parseContactCustomAttributes(context, itemIndex) || {};
 
 	const result = await chatwootApiRequest.call(
 		context,
@@ -288,6 +385,144 @@ async function destroyCustomAttributes(
 		'POST',
 		`/api/v1/accounts/${accountId}/contacts/${contactId}/destroy_custom_attributes`,
 		{ custom_attributes: customAttributesToDestroy },
+	) as IDataObject;
+
+	return { json: result };
+}
+
+async function listContactConversations(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const contactId = getContactId.call(context, itemIndex);
+
+	const result = await chatwootApiRequest.call(
+		context,
+		'GET',
+		`/api/v1/accounts/${accountId}/contacts/${contactId}/conversations`,
+	) as IDataObject;
+
+	return { json: result };
+}
+
+async function mergeContacts(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const accountId = getAccountId.call(context, itemIndex);
+
+	const baseContactIdParam = context.getNodeParameter('baseContactId', itemIndex) as { value: string } | string;
+	const baseContactId = typeof baseContactIdParam === 'object' ? baseContactIdParam.value : baseContactIdParam;
+
+	const mergeeContactIdParam = context.getNodeParameter('mergeeContactId', itemIndex) as { value: string } | string;
+	const mergeeContactId = typeof mergeeContactIdParam === 'object' ? mergeeContactIdParam.value : mergeeContactIdParam;
+
+	if (baseContactId === mergeeContactId) {
+		throw new NodeOperationError(
+			context.getNode(),
+			'Base contact and mergee contact cannot be the same',
+			{ itemIndex },
+		);
+	}
+
+	const result = await chatwootApiRequest.call(
+		context,
+		'POST',
+		`/api/v1/accounts/${accountId}/actions/contact_merge`,
+		{
+			base_contact_id: Number(baseContactId),
+			mergee_contact_id: Number(mergeeContactId),
+		},
+	) as IDataObject;
+
+	return { json: result };
+}
+
+async function listContactLabels(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const contactId = getContactId.call(context, itemIndex);
+
+	const result = await chatwootApiRequest.call(
+		context,
+		'GET',
+		`/api/v1/accounts/${accountId}/contacts/${contactId}/labels`,
+	) as IDataObject;
+
+	return { json: result };
+}
+
+async function updateContactLabels(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const contactId = getContactId.call(context, itemIndex);
+	const labels = context.getNodeParameter('labels', itemIndex) as string[];
+
+	const result = await chatwootApiRequest.call(
+		context,
+		'POST',
+		`/api/v1/accounts/${accountId}/contacts/${contactId}/labels`,
+		{ labels },
+	) as IDataObject;
+
+	return { json: result };
+}
+
+async function addLabelsToContact(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const contactId = getContactId.call(context, itemIndex);
+	const labelsToAdd = context.getNodeParameter('labels', itemIndex) as string[];
+
+	const existingLabels = (await chatwootApiRequest.call(
+		context,
+		'GET',
+		`/api/v1/accounts/${accountId}/contacts/${contactId}/labels`,
+	)) as { payload: string[] };
+
+	const currentLabels = existingLabels.payload || [];
+	const newLabels = [...new Set([...currentLabels, ...labelsToAdd])];
+
+	const result = await chatwootApiRequest.call(
+		context,
+		'POST',
+		`/api/v1/accounts/${accountId}/contacts/${contactId}/labels`,
+		{ labels: newLabels },
+	) as IDataObject;
+
+	return { json: result };
+}
+
+async function removeLabelsFromContact(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const contactId = getContactId.call(context, itemIndex);
+	const labelsToRemove = context.getNodeParameter('labels', itemIndex) as string[];
+
+	const existingLabels = (await chatwootApiRequest.call(
+		context,
+		'GET',
+		`/api/v1/accounts/${accountId}/contacts/${contactId}/labels`,
+	)) as { payload: string[] };
+
+	const currentLabels = existingLabels.payload || [];
+	const labelsToRemoveSet = new Set(labelsToRemove);
+	const newLabels = currentLabels.filter((label) => !labelsToRemoveSet.has(label));
+
+	const result = await chatwootApiRequest.call(
+		context,
+		'POST',
+		`/api/v1/accounts/${accountId}/contacts/${contactId}/labels`,
+		{ labels: newLabels },
 	) as IDataObject;
 
 	return { json: result };
