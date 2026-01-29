@@ -1,6 +1,6 @@
 {
 	"name": "@fazer-ai/n8n-nodes-chatwoot",
-	"version": "0.1.0",
+	"version": "0.0.0",
 	"description": "fazer.ai Chatwoot integration with n8n",
 	"license": "MIT",
 	"homepage": "https://fazer.ai",
@@ -11,6 +11,7 @@
 	],
 	"author": {
 		"name": "Cayo Oliveira",
+		"url": "https://github.com/cayopoliveira",
 		"email": "contato@fazer.ai"
 	},
 	"repository": {
@@ -38,7 +39,8 @@
 			"dist/credentials/ChatwootApi.credentials.js"
 		],
 		"nodes": [
-			"dist/nodes/Chatwoot/Chatwoot.node.js"
+			"dist/nodes/Chatwoot/Chatwoot.node.js",
+			"dist/nodes/Chatwoot/ChatwootTrigger.node.js"
 		]
 	},
 	"devDependencies": {
@@ -52,7 +54,7 @@
 	"peerDependencies": {
 		"n8n-workflow": "*"
 	},
-	"dependencies": {
-		"Buffer": "^0.0.0"
+	"engines": {
+		"node": ">=18.10"
 	}
 }
