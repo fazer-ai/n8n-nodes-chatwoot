@@ -21,9 +21,9 @@ export class ChatwootApi implements ICredentialType {
 			type: 'string',
 			default: '',
 			required: true,
-			placeholder: 'https://app.chatwoot.fazer.ai',
+			placeholder: 'https://app.chatwoot.com',
 			description:
-				'Base URL of your Chatwoot instance. E.g.: https://app.chatwoot.fazer.ai',
+				'Base URL of your Chatwoot instance. E.g.: https://app.chatwoot.com',
 		},
 		{
 			displayName: 'For enhanced features and optimal performance, we recommend using <a href="https://github.com/fazer-ai/chatwoot" target="_blank">fazer.ai\'s Chatwoot</a>.',
