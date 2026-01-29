@@ -19,7 +19,6 @@
 		"url": "https://github.com/fazer-ai/n8n-nodes-fazer-ai-chatwoot.git"
 	},
 	"publishConfig": {
-		"provenance": true,
 		"access": "public",
 		"registry": "https://registry.npmjs.org/"
 	},
