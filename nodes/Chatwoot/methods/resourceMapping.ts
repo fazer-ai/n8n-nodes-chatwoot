@@ -104,3 +104,23 @@ export interface ChatwootCustomAttributeDefinition {
 	attribute_description: string;
 	attribute_model: number;
 }
+
+export interface ChatwootAttachment {
+	id: number;
+	message_id: number;
+	file_type: string;
+	data_url: string;
+	thumb_url?: string;
+	file_size?: number;
+	extension?: string | null;
+	width?: number;
+	height?: number;
+	created_at?: number;
+	sender?: {
+		id: number;
+		name: string;
+		available_name?: string;
+		avatar_url?: string;
+		type: string;
+	};
+}

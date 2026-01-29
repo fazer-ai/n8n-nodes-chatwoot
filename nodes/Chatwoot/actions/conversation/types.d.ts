@@ -5,6 +5,7 @@ export type ConversationOperation =
   | 'sendMessage'
   | 'sendFile'
   | 'listMessages'
+  | 'listAttachments'
   | 'assignAgent'
   | 'assignTeam'
   | 'addLabels'
@@ -17,4 +18,5 @@ export type ConversationOperation =
   | 'setCustomAttributes'
   | 'updateLastSeen'
   | 'updatePresence'
-  | 'markUnread';
+  | 'markUnread'
+  | 'updateAttachmentMeta';

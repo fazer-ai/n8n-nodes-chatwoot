@@ -58,6 +58,12 @@ const conversationOperations: INodeProperties[] = [
         action: 'List messages in conversation',
       },
       {
+        name: 'List Attachments',
+        value: 'listAttachments',
+        description: 'List attachments in conversation',
+        action: 'List attachments in conversation',
+      },
+      {
         name: 'Assign Agent',
         value: 'assignAgent',
         description: 'Assign an agent to conversation',
@@ -135,6 +141,12 @@ const conversationOperations: INodeProperties[] = [
         description: 'Mark conversation as unread',
         action: 'Mark conversation as unread',
       },
+      {
+        name: 'Update Attachment Metadata',
+        value: 'updateAttachmentMeta',
+        description: 'Update metadata on an existing attachment (e.g., transcription, description)',
+        action: 'Update attachment metadata',
+      },
     ],
     default: 'list',
   },
@@ -187,7 +199,7 @@ const conversationFields: INodeProperties[] = [
     displayOptions: {
       show: {
         ...showOnlyForConversation,
-        operation: ['list', 'get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'addCustomAttributes', 'removeCustomAttributes', 'setCustomAttributes', 'setPriority', 'sendMessage', 'updateLastSeen', 'updatePresence', 'markUnread', 'listMessages'],
+        operation: ['list', 'get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'addCustomAttributes', 'removeCustomAttributes', 'setCustomAttributes', 'setPriority', 'sendMessage', 'sendFile', 'updateLastSeen', 'updatePresence', 'markUnread', 'listMessages', 'listAttachments', 'updateAttachmentMeta'],
       },
     },
   },
@@ -196,7 +208,7 @@ const conversationFields: INodeProperties[] = [
     displayOptions: {
       show: {
         ...showOnlyForConversation,
-        operation: ['get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'addCustomAttributes', 'removeCustomAttributes', 'setCustomAttributes', 'setPriority', 'sendMessage', 'updateLastSeen', 'updatePresence', 'markUnread', 'listMessages'],
+        operation: ['get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'addCustomAttributes', 'removeCustomAttributes', 'setCustomAttributes', 'setPriority', 'sendMessage', 'sendFile', 'updateLastSeen', 'updatePresence', 'markUnread', 'listMessages', 'listAttachments', 'updateAttachmentMeta'],
       },
     },
   },
@@ -735,7 +747,7 @@ const conversationFields: INodeProperties[] = [
         name: 'wait_time_seconds',
         type: 'number',
         default: 5,
-        description: 'Fixed time to wait between messages, in seconds',
+        description: 'Fixed time to wait between messages, in seconds (5s default)',
         typeOptions: {
           minValue: 0,
           maxValue: 60,
@@ -763,6 +775,266 @@ const conversationFields: INodeProperties[] = [
     ],
   },
 ];
+
+const sendFileFields: INodeProperties[] = [
+  {
+    displayName: 'Input Data Field Name',
+    name: 'binaryPropertyName',
+    type: 'string',
+    default: 'data',
+    required: true,
+    placeholder: 'e.g. data',
+    hint: 'The name of the input field containing the binary file data to be uploaded',
+    displayOptions: {
+      show: {
+        resource: ['conversation'],
+        operation: ['sendFile'],
+      },
+    },
+  },
+  {
+    displayName: 'Is Recorded Audio (PTT)',
+    name: 'isRecordedAudio',
+    type: 'boolean',
+    default: false,
+    description: 'Whether this is a recorded audio message (Push-To-Talk on WhatsApp). When enabled, shows "recording" indicator instead of "typing".',
+    displayOptions: {
+      show: {
+        resource: ['conversation'],
+        operation: ['sendFile'],
+      },
+    },
+  },
+  {
+    displayName: 'Caption',
+    name: 'fileCaption',
+    type: 'string',
+    default: '',
+    description: 'Caption/content for the file message. Ignored for audio files.',
+    typeOptions: {
+      rows: 2,
+    },
+    displayOptions: {
+      show: {
+        resource: ['conversation'],
+        operation: ['sendFile'],
+        isRecordedAudio: [false],
+      },
+    },
+  },
+  {
+    displayName: 'Options',
+    name: 'sendFileOptions',
+    type: 'collection',
+    placeholder: 'Add Option',
+    default: {},
+    displayOptions: {
+      show: {
+        resource: ['conversation'],
+        operation: ['sendFile'],
+      },
+    },
+    options: [
+      {
+        displayName: 'Attachment Metadata',
+        name: 'attachments_metadata',
+        type: 'fixedCollection',
+        typeOptions: {
+          multipleValues: true,
+        },
+        default: {},
+        description: 'Custom metadata to attach to the file (e.g., transcribed_text, image_description)',
+        options: [
+          {
+            name: 'metadata',
+            displayName: 'Metadata',
+            values: [
+              {
+                displayName: 'Key',
+                name: 'key',
+                type: 'string',
+                default: '',
+                placeholder: 'e.g., transcribed_text',
+                description: 'The metadata key (e.g., transcribed_text, image_description)',
+              },
+              {
+                displayName: 'Value',
+                name: 'value',
+                type: 'string',
+                default: '',
+                description: 'The metadata value',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        displayName: 'Private Note',
+        name: 'private',
+        type: 'boolean',
+        default: false,
+        description: 'Whether this is a private note (not visible to customer)',
+      },
+      {
+        displayName: 'Show Status While Waiting',
+        name: 'status_while_waiting',
+        type: 'boolean',
+        default: true,
+        description: 'Whether to show typing/recording indicator while waiting before sending',
+        displayOptions: {
+          show: {
+            wait_before_sending: ['fixed'],
+          },
+        },
+      },
+      {
+        displayName: 'Wait Before Sending',
+        name: 'wait_before_sending',
+        type: 'options',
+        default: 'none',
+        description: 'Add a delay before sending the file',
+        options: [
+          {
+            name: 'No Delay',
+            value: 'none',
+          },
+          {
+            name: 'Fixed Time',
+            value: 'fixed',
+            description: 'Wait a fixed amount of time before sending',
+          },
+        ],
+      },
+      {
+        displayName: 'Wait Time (Seconds)',
+        name: 'wait_time_seconds',
+        type: 'number',
+        default: 5,
+        description: 'Time to wait before sending, in seconds (5s default)',
+        typeOptions: {
+          minValue: 0,
+          maxValue: 60,
+        },
+        displayOptions: {
+          show: {
+            wait_before_sending: ['fixed'],
+          },
+        },
+      },
+    ],
+  },
+];
+
+const updateAttachmentMetaFields: INodeProperties[] = [
+  {
+    displayName: 'Message',
+    name: 'messageId',
+    type: 'resourceLocator',
+    default: { mode: 'list', value: '' },
+    required: true,
+    description: 'The message containing the attachment',
+    modes: [
+      {
+        displayName: 'From List',
+        name: 'list',
+        type: 'list',
+        placeholder: 'Select a message...',
+        typeOptions: {
+          searchListMethod: 'searchMessages',
+          searchable: true,
+        },
+      },
+      {
+        displayName: 'By ID',
+        name: 'id',
+        type: 'string',
+        placeholder: '12345',
+        validation: [{ type: 'regex', properties: { regex: '^[0-9]+$', errorMessage: 'Must be a number' } }],
+      },
+    ],
+    displayOptions: {
+      show: {
+        resource: ['conversation'],
+        operation: ['updateAttachmentMeta'],
+      },
+    },
+  },
+  {
+    displayName: 'Attachment',
+    name: 'attachmentId',
+    type: 'resourceLocator',
+    default: { mode: 'list', value: '' },
+    required: true,
+    description: 'The attachment to update',
+    modes: [
+      {
+        displayName: 'From List',
+        name: 'list',
+        type: 'list',
+        placeholder: 'Select an attachment...',
+        typeOptions: {
+          searchListMethod: 'searchAttachments',
+          searchable: true,
+        },
+      },
+      {
+        displayName: 'By ID',
+        name: 'id',
+        type: 'string',
+        placeholder: '12345',
+        validation: [{ type: 'regex', properties: { regex: '^[0-9]+$', errorMessage: 'Must be a number' } }],
+      },
+    ],
+    displayOptions: {
+      show: {
+        resource: ['conversation'],
+        operation: ['updateAttachmentMeta'],
+      },
+    },
+  },
+  {
+    displayName: 'Metadata',
+    name: 'attachmentMeta',
+    type: 'fixedCollection',
+    typeOptions: {
+      multipleValues: true,
+    },
+    default: {},
+    required: true,
+    description: 'Metadata to set on the attachment',
+    displayOptions: {
+      show: {
+        resource: ['conversation'],
+        operation: ['updateAttachmentMeta'],
+      },
+    },
+    options: [
+      {
+        name: 'metadata',
+        displayName: 'Metadata',
+        values: [
+          {
+            displayName: 'Key',
+            name: 'key',
+            type: 'string',
+            default: '',
+            placeholder: 'e.g., transcribed_text',
+            description: 'The metadata key (e.g., transcribed_text, image_description)',
+          },
+          {
+            displayName: 'Value',
+            name: 'value',
+            type: 'string',
+            default: '',
+            description: 'The metadata value',
+          },
+        ],
+      },
+    ],
+  },
+];
+
+const listAttachmentsFields: INodeProperties[] = [];
 
 const listMessagesFields: INodeProperties[] = [
   {
@@ -809,6 +1081,9 @@ export const conversationDescription: INodeProperties[] = [
   ...conversationOperations,
   ...conversationFields,
   ...updatePresenceFields,
+  ...sendFileFields,
+  ...updateAttachmentMetaFields,
+  ...listAttachmentsFields,
   ...listMessagesFields,
 ];
 

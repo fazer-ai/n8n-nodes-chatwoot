@@ -177,3 +177,10 @@ export function getKanbanStepId(this: IExecuteFunctions | ILoadOptionsFunctions,
 export function getKanbanTaskId(this: IExecuteFunctions | ILoadOptionsFunctions, itemIndex: number): string {
 	return getResourceId.call(this, itemIndex, 'kanbanTaskId');
 }
+
+/**
+ * Helper to get the message ID from parameters (handles resourceLocator)
+ */
+export function getMessageId(this: IExecuteFunctions | ILoadOptionsFunctions, itemIndex: number): string {
+	return getResourceId.call(this, itemIndex, 'messageId');
+}

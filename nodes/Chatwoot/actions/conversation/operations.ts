@@ -61,12 +61,11 @@ export async function executeConversationOperation(
 		case 'sendMessage':
 			return sendMessageToConversation(context, itemIndex);
 		case 'sendFile':
-			throw new NodeOperationError(
-				context.getNode(),
-				'The "Send File" operation is not implemented yet.',
-			);
+			return sendFileToConversation(context, itemIndex);
 		case 'listMessages':
 			return listConversationMessages(context, itemIndex);
+		case 'listAttachments':
+			return listConversationAttachments(context, itemIndex);
 		case 'assignAgent':
 			return assignConversationAgent(context, itemIndex);
 		case 'assignTeam':
@@ -93,6 +92,8 @@ export async function executeConversationOperation(
 			return updateConversationPresence(context, itemIndex);
 		case 'markUnread':
 			return markConversationUnread(context, itemIndex);
+		case 'updateAttachmentMeta':
+			return updateAttachmentMeta(context, itemIndex);
 	}
 }
 
@@ -541,6 +542,87 @@ function calculateDynamicWait(messageContent: string): number {
 	return Math.min(waitTime, maxWaitTime);
 }
 
+interface WaitOptions {
+	accountId: string;
+	conversationId: string;
+	waitSeconds: number;
+	showStatusWhileWaiting: boolean;
+	isZapiInbox: boolean;
+	statusType?: 'typing' | 'recording';
+}
+
+async function waitWithStatusIndicator(
+	context: IExecuteFunctions,
+	options: WaitOptions,
+): Promise<void> {
+	const {
+		accountId,
+		conversationId,
+		waitSeconds,
+		showStatusWhileWaiting,
+		isZapiInbox,
+		statusType = 'typing',
+	} = options;
+
+	if (waitSeconds <= 0) return;
+
+	if (isZapiInbox) {
+		await asyncSleep(waitSeconds * 1000);
+		return;
+	}
+
+	if (!showStatusWhileWaiting) {
+		await asyncSleep(waitSeconds * 1000);
+		return;
+	}
+
+	const setStatus = async (active: boolean) => {
+		let typingStatus: 'on' | 'off' | 'recording';
+		if (!active) {
+			typingStatus = 'off';
+		} else {
+			typingStatus = statusType === 'recording' ? 'recording' : 'on';
+		}
+		await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/conversations/${conversationId}/toggle_typing_status`,
+			{ typing_status: typingStatus },
+		);
+	};
+
+	const refreshInterval = 20000;
+	let remaining = waitSeconds * 1000;
+
+	await setStatus(true);
+	while (remaining > 0) {
+		const sleepTime = Math.min(remaining, refreshInterval);
+		await asyncSleep(sleepTime);
+		remaining -= sleepTime;
+		if (remaining > 0) {
+			await setStatus(true);
+		}
+	}
+	await setStatus(false);
+}
+
+async function detectZapiInbox(
+	context: IExecuteFunctions,
+	itemIndex: number,
+	accountId: string,
+): Promise<boolean> {
+	const inboxId = getInboxId.call(context, itemIndex);
+	if (!inboxId) return false;
+
+	const inbox = (await chatwootApiRequest.call(
+		context,
+		'GET',
+		`/api/v1/accounts/${accountId}/inboxes/${inboxId}`,
+	)) as IDataObject;
+
+	return inbox.provider === 'zapi';
+}
+
 function parseContentAttributesFromInput(
 	context: IExecuteFunctions,
 	itemIndex: number,
@@ -616,39 +698,17 @@ async function sendSingleMessage(
 		isZapiInbox = false,
 	} = options;
 
-	const setTypingStatus = async (status: 'on' | 'off') => {
-		await chatwootApiRequest.call(
-			context,
-			'POST',
-			`/api/v1/accounts/${accountId}/conversations/${conversationId}/toggle_typing_status`,
-			{ typing_status: status },
-		);
-	};
-
-	const waitWithTypingRefresh = async (totalMs: number) => {
-		const typingRefreshInterval = 20000;
-		let remaining = totalMs;
-
-		await setTypingStatus('on');
-		while (remaining > 0) {
-			const sleepTime = Math.min(remaining, typingRefreshInterval);
-			await asyncSleep(sleepTime);
-			remaining -= sleepTime;
-			if (remaining > 0) {
-				await setTypingStatus('on');
-			}
-		}
-		await setTypingStatus('off');
-	};
-
 	if (isZapiInbox && waitSeconds > 0 && showTypingWhileWaiting) {
-		const body: IDataObject = { content };
+		const msgContentAttrs: IDataObject = contentAttributes ? { ...contentAttributes } : {};
+		msgContentAttrs.zapi_args = { delayTyping: Math.round(waitSeconds) };
+
+		const body: IDataObject = {
+			content,
+			content_attributes: msgContentAttrs,
+		};
 		if (isPrivate) {
 			body.private = isPrivate;
 		}
-		const msgContentAttrs: IDataObject = contentAttributes ? { ...contentAttributes } : {};
-		msgContentAttrs.zapi_args = { delayTyping: Math.round(waitSeconds) };
-		body.content_attributes = msgContentAttrs;
 
 		const result = (await chatwootApiRequest.call(
 			context,
@@ -661,13 +721,14 @@ async function sendSingleMessage(
 		return result;
 	}
 
-	if (waitSeconds > 0) {
-		if (showTypingWhileWaiting) {
-			await waitWithTypingRefresh(waitSeconds * 1000);
-		} else {
-			await asyncSleep(waitSeconds * 1000);
-		}
-	}
+	await waitWithStatusIndicator(context, {
+		accountId,
+		conversationId,
+		waitSeconds,
+		showStatusWhileWaiting: showTypingWhileWaiting,
+		isZapiInbox,
+		statusType: 'typing',
+	});
 
 	const body: IDataObject = { content };
 	if (isPrivate) {
@@ -707,18 +768,9 @@ async function sendSplitMessages(
 	const fixedWaitTime = (additionalFields.wait_time_seconds as number) ?? 2;
 	const showTypingWhileWaiting = (additionalFields.typing_while_waiting as boolean) ?? true;
 
-	let isZapiInbox = false;
-	if (waitMode !== 'none' && showTypingWhileWaiting) {
-		const inboxId = getInboxId.call(context, itemIndex);
-		if (inboxId) {
-			const inbox = (await chatwootApiRequest.call(
-				context,
-				'GET',
-				`/api/v1/accounts/${accountId}/inboxes/${inboxId}`,
-			)) as IDataObject;
-			isZapiInbox = inbox.provider === 'zapi';
-		}
-	}
+	const isZapiInbox = waitMode !== 'none' && showTypingWhileWaiting
+		? await detectZapiInbox(context, itemIndex, accountId)
+		: false;
 
 	for (const message of messages) {
 		let waitSeconds = 0;
@@ -802,6 +854,165 @@ async function sendMessageToConversation(
 		isPrivate: additionalFields.private as boolean,
 		contentAttributes,
 	});
+
+	return { json: result };
+}
+
+async function sendFileToConversation(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const conversationId = getConversationId.call(context, itemIndex);
+	const binaryPropertyName = context.getNodeParameter('binaryPropertyName', itemIndex) as string;
+	const isRecordedAudio = context.getNodeParameter('isRecordedAudio', itemIndex, false) as boolean;
+	const caption = context.getNodeParameter('fileCaption', itemIndex, '') as string;
+	const options = context.getNodeParameter('sendFileOptions', itemIndex, {}) as IDataObject;
+
+	const binaryData = context.helpers.assertBinaryData(itemIndex, binaryPropertyName);
+	const fileName = binaryData.fileName || 'file';
+
+	const waitMode = (options.wait_before_sending as string) ?? 'none';
+	const waitSeconds = (options.wait_time_seconds as number) ?? 5;
+	const showStatusWhileWaiting = (options.status_while_waiting as boolean) ?? true;
+	const statusType = isRecordedAudio ? 'recording' : 'typing';
+
+	const isZapiInbox = await detectZapiInbox(context, itemIndex, accountId);
+
+	let contentAttributes: IDataObject | undefined;
+
+	if (waitMode !== 'none' && waitSeconds > 0) {
+		if (isZapiInbox && showStatusWhileWaiting) {
+			contentAttributes = {
+				zapi_args: {
+					delayTyping: waitSeconds,
+				},
+			};
+		} else {
+			await waitWithStatusIndicator(context, {
+				accountId,
+				conversationId,
+				waitSeconds,
+				showStatusWhileWaiting,
+				isZapiInbox,
+				statusType,
+			});
+		}
+	}
+
+	const credentials = await context.getCredentials('chatwootApi');
+	let baseURL = credentials.url as string;
+	if (baseURL.endsWith('/')) {
+		baseURL = baseURL.slice(0, -1);
+	}
+
+	const buffer = await context.helpers.getBinaryDataBuffer(itemIndex, binaryPropertyName);
+
+	const formData: IDataObject = {
+		'attachments[]': {
+			value: buffer,
+			options: {
+				filename: fileName,
+				contentType: binaryData.mimeType,
+			},
+		},
+	};
+
+	if (caption && !isRecordedAudio) {
+		formData.content = caption;
+	}
+
+	if (options.private) {
+		formData.private = 'true';
+	}
+
+	if (isRecordedAudio) {
+		formData.is_recorded_audio = JSON.stringify([fileName]);
+	}
+
+	if (contentAttributes && Object.keys(contentAttributes).length > 0) {
+		formData.content_attributes = JSON.stringify(contentAttributes);
+	}
+
+	// Add attachments metadata if provided
+	const attachmentsMetadataConfig = options.attachments_metadata as IDataObject | undefined;
+	if (attachmentsMetadataConfig?.metadata) {
+		const metadataItems = attachmentsMetadataConfig.metadata as Array<{ key: string; value: string }>;
+		for (const item of metadataItems) {
+			if (item.key) {
+				formData[`attachments_metadata[${fileName}][${item.key}]`] = item.value;
+			}
+		}
+	}
+
+	const result = await context.helpers.requestWithAuthentication.call(
+		context,
+		'chatwootApi',
+		{
+			method: 'POST',
+			uri: `${baseURL}/api/v1/accounts/${accountId}/conversations/${conversationId}/messages`,
+			formData,
+			json: true,
+		},
+	);
+
+	if (isZapiInbox && waitMode !== 'none' && waitSeconds > 0 && showStatusWhileWaiting) {
+		await asyncSleep(waitSeconds * 1000);
+	}
+
+	return { json: result as IDataObject };
+}
+
+async function listConversationAttachments(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const conversationId = getConversationId.call(context, itemIndex);
+
+	const result = await chatwootApiRequest.call(
+		context,
+		'GET',
+		`/api/v1/accounts/${accountId}/conversations/${conversationId}/attachments`,
+	) as IDataObject[];
+
+	return {
+		json: {
+			attachments: result,
+			total: result.length,
+		},
+	};
+}
+
+async function updateAttachmentMeta(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const conversationId = getConversationId.call(context, itemIndex);
+
+	const messageIdParam = context.getNodeParameter('messageId', itemIndex) as { mode: string; value: string };
+	const messageId = messageIdParam.value;
+
+	const attachmentIdParam = context.getNodeParameter('attachmentId', itemIndex) as { mode: string; value: string };
+	const attachmentId = attachmentIdParam.value;
+
+	const metadataConfig = context.getNodeParameter('attachmentMeta', itemIndex, {}) as IDataObject;
+	const metadataItems = (metadataConfig.metadata as Array<{ key: string; value: string }>) || [];
+
+	const meta: IDataObject = {};
+	for (const item of metadataItems) {
+		if (item.key) {
+			meta[item.key] = item.value;
+		}
+	}
+
+	const result = await chatwootApiRequest.call(
+		context,
+		'PATCH',
+		`/api/v1/accounts/${accountId}/conversations/${conversationId}/messages/${messageId}/attachments/${attachmentId}`,
+		{ meta },
+	) as IDataObject;
 
 	return { json: result };
 }

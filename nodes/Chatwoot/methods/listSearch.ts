@@ -2,10 +2,11 @@ import type {
 	ILoadOptionsFunctions,
 	INodeListSearchResult,
 } from 'n8n-workflow';
-import { chatwootApiRequest, getAccountId, getConversationId, getInboxId, getKanbanBoardId, getTeamId } from '../shared/transport';
+import { chatwootApiRequest, getAccountId, getConversationId, getInboxId, getKanbanBoardId, getMessageId, getTeamId } from '../shared/transport';
 import {
 	ChatwootAccount,
 	ChatwootAgent,
+	ChatwootAttachment,
 	ChatwootContact,
 	ChatwootConversation,
 	ChatwootInbox,
@@ -524,6 +525,59 @@ export async function searchMessages(
 		return {
 			name: `Message #${message.id} - ${preview}`,
 			value: String(message.id),
+		};
+	});
+
+	if (filter) {
+		const filterLower = filter.toLowerCase();
+		results = results.filter(
+			(item) =>
+				item.name.toLowerCase().includes(filterLower) ||
+				item.value.includes(filter),
+		);
+	}
+
+	return { results };
+}
+
+/**
+ * Get attachments for the selected conversation (for resourceLocator)
+ */
+export async function searchAttachments(
+	this: ILoadOptionsFunctions,
+	filter?: string,
+): Promise<INodeListSearchResult> {
+	const accountId = getAccountId.call(this, 0);
+	const conversationId = getConversationId.call(this, 0);
+	let messageId: string | undefined;
+	try {
+		messageId = getMessageId.call(this, 0);
+	} catch {
+		// Message not selected yet
+	}
+
+	if (!accountId || !conversationId) {
+		return { results: [] };
+	}
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/conversations/${conversationId}/attachments`,
+	)) as ChatwootAttachment[] | { payload?: ChatwootAttachment[] };
+
+	let attachments = ((response as { payload?: ChatwootAttachment[] }).payload || []).reverse();
+
+	if (messageId) {
+		attachments = attachments.filter((a) => String(a.message_id) === messageId);
+	}
+
+	let results = attachments.map((attachment: ChatwootAttachment) => {
+		const fileName = decodeURIComponent(attachment.data_url?.split('/').pop() || 'attachment');
+		const type = attachment.file_type || 'file';
+		return {
+			name: `#${attachment.id} - ${type}: ${fileName}`,
+			value: String(attachment.id),
 		};
 	});
 
