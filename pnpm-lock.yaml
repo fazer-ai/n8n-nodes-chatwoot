@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      Buffer:
-        specifier: ^0.0.0
-        version: 0.0.0
       n8n-workflow:
         specifier: '*'
         version: 1.119.1
@@ -561,10 +558,6 @@ packages:
     resolution: {integrity: sha512-lrW200hZdbfRtztbygyaq/6jP6AKE8qQN2KvPcJ+x7wiD038YtnYtZ82IMNJ69GJibV7bwL3y9FgK+5w/pYt6g==}
     cpu: [x64]
     os: [win32]
-
-  Buffer@0.0.0:
-    resolution: {integrity: sha512-+zdncl8lI5TCkARStn9F1BwcuJYofYmD0oEHe5FNfCvGfeDJwf6+dSikCdQN6BMXXmHMhNNUagBN367WST1AIQ==}
-    engines: {node: '>= 0.2.0'}
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -2617,8 +2610,6 @@ snapshots:
 
   '@unrs/resolver-binding-win32-x64-msvc@1.11.1':
     optional: true
-
-  Buffer@0.0.0: {}
 
   acorn-jsx@5.3.2(acorn@8.15.0):
     dependencies:
