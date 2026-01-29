@@ -149,6 +149,7 @@ export class ChatwootTrigger implements INodeType {
 						events: [
 							'kanban_task_created',
 							'kanban_task_deleted',
+							'kanban_task_overdue',
 							'kanban_task_updated',
 							'provider_event_received',
 							'message_incoming',
