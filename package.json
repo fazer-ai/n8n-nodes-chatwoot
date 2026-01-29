@@ -1,6 +1,6 @@
 {
 	"name": "@fazer-ai/n8n-nodes-chatwoot",
-	"version": "0.0.0",
+	"version": "0.0.1",
 	"description": "fazer.ai Chatwoot integration with n8n",
 	"license": "MIT",
 	"homepage": "https://fazer.ai",
