@@ -10,6 +10,111 @@ import { ContactOperation } from './types';
 const E164_REGEX = /^\+[1-9]\d{1,14}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+interface AdditionalFieldsInput {
+	identifier?: string;
+	avatarUrl?: string;
+	blocked?: boolean;
+	socialProfiles?: { profiles?: IDataObject };
+	extraAdditionalAttributes?: { attributes?: Array<{ key: string; value: string }> };
+	[key: string]: unknown;
+}
+
+interface ParsedContactFields {
+	identifier?: string;
+	avatarUrl?: string;
+	blocked?: boolean;
+	additionalAttributes?: IDataObject;
+}
+
+function parseContactAdditionalFields(additionalFields: IDataObject): ParsedContactFields {
+	const {
+		identifier,
+		avatarUrl,
+		blocked,
+		socialProfiles,
+		extraAdditionalAttributes,
+		...restAdditionalFields
+	} = additionalFields as AdditionalFieldsInput;
+
+	let additionalAttributes: IDataObject | undefined = undefined;
+	if (Object.keys(restAdditionalFields).length > 0 || socialProfiles || extraAdditionalAttributes?.attributes?.length) {
+		additionalAttributes = { ...restAdditionalFields } as IDataObject;
+		if (socialProfiles?.profiles) {
+			additionalAttributes.social_profiles = socialProfiles.profiles;
+		}
+		if (extraAdditionalAttributes?.attributes) {
+			for (const attr of extraAdditionalAttributes.attributes) {
+				if (attr.key) {
+					additionalAttributes[attr.key] = attr.value;
+				}
+			}
+		}
+	}
+
+	return {
+		identifier: identifier as string | undefined,
+		avatarUrl: avatarUrl as string | undefined,
+		blocked: blocked as boolean | undefined,
+		additionalAttributes,
+	};
+}
+
+function parseContactCustomAttributes(
+	context: IExecuteFunctions,
+	itemIndex: number,
+	paramSuffix: string = '',
+): IDataObject | undefined {
+	const specifyParamName = paramSuffix ? `specifyCustomAttributes${paramSuffix}` : 'specifyCustomAttributes';
+	const specifyMode = context.getNodeParameter(specifyParamName, itemIndex, 'none') as string;
+
+	if (specifyMode === 'none') {
+		return undefined;
+	}
+
+	if (specifyMode === 'definition') {
+		const definitionParamName = paramSuffix ? `customAttributesDefinition${paramSuffix}.attributes` : 'customAttributesDefinition.attributes';
+		const attributes = context.getNodeParameter(
+			definitionParamName,
+			itemIndex,
+			[],
+		) as Array<{ key: string; value: string }>;
+
+		const customAttributes: IDataObject = {};
+		for (const attr of attributes) {
+			if (attr.key) {
+				customAttributes[attr.key] = attr.value;
+			}
+		}
+		return Object.keys(customAttributes).length > 0 ? customAttributes : undefined;
+	}
+
+	if (specifyMode === 'keypair') {
+		const keypairParamName = paramSuffix ? `customAttributesParameters${paramSuffix}.attributes` : 'customAttributesParameters.attributes';
+		const attributes = context.getNodeParameter(
+			keypairParamName,
+			itemIndex,
+			[],
+		) as Array<{ name: string; value: string }>;
+
+		const customAttributes: IDataObject = {};
+		for (const attr of attributes) {
+			if (attr.name) {
+				customAttributes[attr.name] = attr.value;
+			}
+		}
+		return Object.keys(customAttributes).length > 0 ? customAttributes : undefined;
+	}
+
+	if (specifyMode === 'json') {
+		const jsonParamName = paramSuffix ? `customAttributesJson${paramSuffix}` : 'customAttributesJson';
+		const jsonValue = context.getNodeParameter(jsonParamName, itemIndex, '{}') as string;
+		const parsed = JSON.parse(jsonValue) as IDataObject;
+		return Object.keys(parsed).length > 0 ? parsed : undefined;
+	}
+
+	return undefined;
+}
+
 export async function executeContactOperation(
   context: IExecuteFunctions,
   operation: ContactOperation,
@@ -82,56 +187,8 @@ async function createContact(
 		);
 	}
 
-	const { identifier, avatarUrl, blocked, socialProfiles, extraAdditionalAttributes, ...restAdditionalFields } = additionalFields as IDataObject & { socialProfiles?: IDataObject; extraAdditionalAttributes?: { attributes?: Array<{ key: string; value: string }> } };
-
-	let additionalAttributes: IDataObject | undefined = undefined;
-	if (Object.keys(restAdditionalFields).length > 0 || socialProfiles || extraAdditionalAttributes?.attributes?.length) {
-		additionalAttributes = { ...restAdditionalFields };
-		if (socialProfiles?.profiles) {
-			additionalAttributes.social_profiles = socialProfiles.profiles;
-		}
-		if (extraAdditionalAttributes?.attributes) {
-			for (const attr of extraAdditionalAttributes.attributes) {
-				if (attr.key) {
-					additionalAttributes[attr.key] = attr.value;
-				}
-			}
-		}
-	}
-
-	let customAttributes: IDataObject | undefined = undefined;
-	const specifyMode = context.getNodeParameter('specifyCustomAttributesCreate', itemIndex, 'none') as string;
-
-	if (specifyMode === 'definition') {
-		const attributes = context.getNodeParameter(
-			'customAttributesDefinitionCreate.attributes',
-			itemIndex,
-			[],
-		) as Array<{ key: string; value: string }>;
-
-		customAttributes = {};
-		for (const attr of attributes) {
-			if (attr.key) {
-				customAttributes[attr.key] = attr.value;
-			}
-		}
-	} else if (specifyMode === 'keypair') {
-		const attributeParameters = context.getNodeParameter(
-			'customAttributesParametersCreate.attributes',
-			itemIndex,
-			[],
-		) as Array<{ name: string; value: string }>;
-
-		customAttributes = {};
-		for (const attr of attributeParameters) {
-			if (attr.name) {
-				customAttributes[attr.name] = attr.value;
-			}
-		}
-	} else if (specifyMode === 'json') {
-		const jsonValue = context.getNodeParameter('customAttributesJsonCreate', itemIndex, '{}') as string;
-		customAttributes = JSON.parse(jsonValue);
-	}
+	const { identifier, avatarUrl, blocked, additionalAttributes } = parseContactAdditionalFields(additionalFields);
+	const customAttributes = parseContactCustomAttributes(context, itemIndex, 'Create');
 
 	const body: IDataObject = {
 		name,
@@ -141,7 +198,7 @@ async function createContact(
 		identifier: identifier || undefined,
 		avatar_url: avatarUrl || undefined,
 		blocked: blocked !== undefined ? blocked : undefined,
-		custom_attributes: customAttributes && Object.keys(customAttributes).length > 0 ? customAttributes : undefined,
+		custom_attributes: customAttributes,
 	};
 
 	const result = await chatwootApiRequest.call(
@@ -190,57 +247,8 @@ async function updateContact(
 		);
 	}
 
-	const { identifier, avatarUrl, blocked, socialProfiles, extraAdditionalAttributes, ...restAdditionalFields } = additionalFields as IDataObject & { socialProfiles?: IDataObject; extraAdditionalAttributes?: { attributes?: Array<{ key: string; value: string }> } };
-
-	let additionalAttributes: IDataObject | undefined = undefined;
-	if (Object.keys(restAdditionalFields).length > 0 || socialProfiles || extraAdditionalAttributes?.attributes?.length) {
-		additionalAttributes = { ...restAdditionalFields };
-		if (socialProfiles?.profiles) {
-			additionalAttributes.social_profiles = socialProfiles.profiles;
-		}
-		if (extraAdditionalAttributes?.attributes) {
-			for (const attr of extraAdditionalAttributes.attributes) {
-				if (attr.key) {
-					additionalAttributes[attr.key] = attr.value;
-				}
-			}
-		}
-	}
-
-	// Handle custom_attributes
-	let customAttributes: IDataObject | undefined = undefined;
-	const specifyMode = context.getNodeParameter('specifyCustomAttributesUpdate', itemIndex, 'none') as string;
-
-	if (specifyMode === 'definition') {
-		const attributes = context.getNodeParameter(
-			'customAttributesDefinitionUpdate.attributes',
-			itemIndex,
-			[],
-		) as Array<{ key: string; value: string }>;
-
-		customAttributes = {};
-		for (const attr of attributes) {
-			if (attr.key) {
-				customAttributes[attr.key] = attr.value;
-			}
-		}
-	} else if (specifyMode === 'keypair') {
-		const attributeParameters = context.getNodeParameter(
-			'customAttributesParametersUpdate.attributes',
-			itemIndex,
-			[],
-		) as Array<{ name: string; value: string }>;
-
-		customAttributes = {};
-		for (const attr of attributeParameters) {
-			if (attr.name) {
-				customAttributes[attr.name] = attr.value;
-			}
-		}
-	} else if (specifyMode === 'json') {
-		const jsonValue = context.getNodeParameter('customAttributesJsonUpdate', itemIndex, '{}') as string;
-		customAttributes = JSON.parse(jsonValue);
-	}
+	const { identifier, avatarUrl, blocked, additionalAttributes } = parseContactAdditionalFields(additionalFields);
+	const customAttributes = parseContactCustomAttributes(context, itemIndex, 'Update');
 
 	const body: IDataObject = {
 		name: name || undefined,
@@ -250,7 +258,7 @@ async function updateContact(
 		identifier: identifier || undefined,
 		avatar_url: avatarUrl || undefined,
 		blocked: blocked !== undefined ? blocked : undefined,
-		custom_attributes: customAttributes && Object.keys(customAttributes).length > 0 ? customAttributes : undefined,
+		custom_attributes: customAttributes,
 	};
 
 	const result = await chatwootApiRequest.call(
@@ -349,40 +357,7 @@ async function setCustomAttributes(
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const contactId = getContactId.call(context, itemIndex);
-	const specifyMode = context.getNodeParameter('specifyCustomAttributes', itemIndex) as string;
-
-	let customAttributes: IDataObject;
-
-	if (specifyMode === 'definition') {
-		const attributes = context.getNodeParameter(
-			'customAttributesDefinition.attributes',
-			itemIndex,
-			[],
-		) as Array<{ key: string; value: string }>;
-
-		customAttributes = {};
-		for (const attr of attributes) {
-			if (attr.key) {
-				customAttributes[attr.key] = attr.value;
-			}
-		}
-	} else if (specifyMode === 'keypair') {
-		const attributeParameters = context.getNodeParameter(
-			'customAttributesParameters.attributes',
-			itemIndex,
-			[],
-		) as Array<{ name: string; value: string }>;
-
-		customAttributes = {};
-		for (const attr of attributeParameters) {
-			if (attr.name) {
-				customAttributes[attr.name] = attr.value;
-			}
-		}
-	} else {
-		const jsonValue = context.getNodeParameter('customAttributesJson', itemIndex) as string;
-		customAttributes = JSON.parse(jsonValue);
-	}
+	const customAttributes = parseContactCustomAttributes(context, itemIndex) || {};
 
 	const result = await chatwootApiRequest.call(
 		context,

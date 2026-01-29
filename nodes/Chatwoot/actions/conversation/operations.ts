@@ -9,12 +9,18 @@ import {
 } from '../../shared/transport';
 import { ConversationOperation } from './types';
 
-function parseCustomAttributes(context: IExecuteFunctions, itemIndex: number): IDataObject {
-	const specifyMode = context.getNodeParameter('specifyCustomAttributes', itemIndex) as string;
+function parseCustomAttributes(
+	context: IExecuteFunctions,
+	itemIndex: number,
+	paramSuffix: string = '',
+): IDataObject {
+	const specifyParamName = paramSuffix ? `specifyCustomAttributes${paramSuffix}` : 'specifyCustomAttributes';
+	const specifyMode = context.getNodeParameter(specifyParamName, itemIndex) as string;
 
 	if (specifyMode === 'definition') {
+		const definitionParamName = paramSuffix ? `customAttributesDefinition${paramSuffix}.attributes` : 'customAttributesDefinition.attributes';
 		const attributes = context.getNodeParameter(
-			'customAttributesDefinition.attributes',
+			definitionParamName,
 			itemIndex,
 			[],
 		) as Array<{ key: string; value: string }>;
@@ -27,8 +33,9 @@ function parseCustomAttributes(context: IExecuteFunctions, itemIndex: number): I
 		}
 		return customAttributes;
 	} else if (specifyMode === 'keypair') {
+		const keypairParamName = paramSuffix ? `customAttributesKeypair${paramSuffix}.attributes` : 'customAttributesKeypair.attributes';
 		const attributes = context.getNodeParameter(
-			'customAttributesKeypair.attributes',
+			keypairParamName,
 			itemIndex,
 			[],
 		) as Array<{ name: string; value: string }>;
@@ -41,7 +48,8 @@ function parseCustomAttributes(context: IExecuteFunctions, itemIndex: number): I
 		}
 		return customAttributes;
 	} else {
-		const jsonValue = context.getNodeParameter('customAttributesJson', itemIndex) as string;
+		const jsonParamName = paramSuffix ? `customAttributesJson${paramSuffix}` : 'customAttributesJson';
+		const jsonValue = context.getNodeParameter(jsonParamName, itemIndex) as string;
 		return JSON.parse(jsonValue) as IDataObject;
 	}
 }
