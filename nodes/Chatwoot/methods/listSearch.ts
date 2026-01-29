@@ -2,7 +2,7 @@ import type {
 	ILoadOptionsFunctions,
 	INodeListSearchResult,
 } from 'n8n-workflow';
-import { chatwootApiRequest, getAccountId, getConversationId, getInboxId, getKanbanBoardId, getMessageId, getTeamId } from '../shared/transport';
+import { chatwootApiRequest, getAccountId, getChatwootBaseUrl, getConversationId, getInboxId, getKanbanBoardId, getMessageId, getTeamId } from '../shared/transport';
 import {
 	ChatwootAccount,
 	ChatwootAgent,
@@ -30,6 +30,8 @@ export async function searchAccounts(
 	this: ILoadOptionsFunctions,
 	filter?: string,
 ): Promise<INodeListSearchResult> {
+	const baseUrl = await getChatwootBaseUrl.call(this);
+
 	const response = (await chatwootApiRequest.call(
 		this,
 		'GET',
@@ -40,6 +42,7 @@ export async function searchAccounts(
 	let results = accounts.map((account: ChatwootAccount) => ({
 		name: `#${account.id} - ${account.name}`,
 		value: String(account.id),
+		url: `${baseUrl}/app/accounts/${account.id}/dashboard`,
 	}));
 
 	if (filter) {
@@ -66,6 +69,8 @@ export async function searchInboxes(
 		return { results: [] };
 	}
 
+	const baseUrl = await getChatwootBaseUrl.call(this);
+
 	const response = (await chatwootApiRequest.call(
 		this,
 		'GET',
@@ -79,6 +84,7 @@ export async function searchInboxes(
 	let results = (inboxes as ChatwootInbox[]).map((inbox: ChatwootInbox) => ({
 		name: `#${inbox.id} - ${inbox.name}`,
 		value: String(inbox.id),
+		url: `${baseUrl}/app/accounts/${accountId}/settings/inboxes/${inbox.id}`,
 	}));
 
 	if (filter) {
@@ -105,6 +111,8 @@ export async function searchWhatsappSpecialProvidersInboxes(
 		return { results: [] };
 	}
 
+	const baseUrl = await getChatwootBaseUrl.call(this);
+
 	const response = (await chatwootApiRequest.call(
 		this,
 		'GET',
@@ -123,6 +131,7 @@ export async function searchWhatsappSpecialProvidersInboxes(
 	let results = filteredInboxes.map((inbox: ChatwootInbox) => ({
 		name: `#${inbox.id} - ${inbox.name}`,
 		value: String(inbox.id),
+		url: `${baseUrl}/app/accounts/${accountId}/settings/inboxes/${inbox.id}`,
 	}));
 
 	if (filter) {
@@ -151,6 +160,7 @@ export async function searchConversations(
 		return { results: [] };
 	}
 
+	const baseUrl = await getChatwootBaseUrl.call(this);
 	const page = paginationToken ? Number(paginationToken) : 1;
 
 	const response = (await chatwootApiRequest.call(
@@ -167,6 +177,7 @@ export async function searchConversations(
 			return {
 				name: `#${id} - ${name || email || phone_number || 'Unknown'}`,
 				value: String(id),
+				url: `${baseUrl}/app/accounts/${accountId}/conversations/${id}`,
 			};
 		},
 	);
@@ -186,6 +197,8 @@ export async function searchContacts(
 	if (accountId === '') {
 		return { results: [] };
 	}
+
+	const baseUrl = await getChatwootBaseUrl.call(this);
 
 	let endpoint = `/api/v1/accounts/${accountId}/contacts`;
 	if (filter) {
@@ -210,6 +223,7 @@ export async function searchContacts(
 		(contact: ChatwootContact) => ({
 			name: `#${contact.id} - ${contact.name || contact.email || 'Contact'}`,
 			value: String(contact.id),
+			url: `${baseUrl}/app/accounts/${accountId}/contacts/${contact.id}`,
 		}),
 	);
 
@@ -416,6 +430,8 @@ export async function searchKanbanBoards(
 		return { results: [] };
 	}
 
+	const baseUrl = await getChatwootBaseUrl.call(this);
+
 	const response = (await chatwootApiRequest.call(
 		this,
 		'GET',
@@ -430,6 +446,7 @@ export async function searchKanbanBoards(
 	const results = boards.map((board: ChatwootKanbanBoard) => ({
 		name: `#${board.id} - ${board.name}`,
 		value: String(board.id),
+		url: `${baseUrl}/app/accounts/${accountId}/kanban/boards/${board.id}`,
 	}));
 
 	return { results };
@@ -448,6 +465,8 @@ export async function searchKanbanSteps(
 		return { results: [] };
 	}
 
+	const baseUrl = await getChatwootBaseUrl.call(this);
+
 	const response = (await chatwootApiRequest.call(
 		this,
 		'GET',
@@ -462,6 +481,7 @@ export async function searchKanbanSteps(
 	const results = steps.map((step: ChatwootKanbanStep) => ({
 		name: `#${step.id} - ` + (step.cancelled ? `(Cancelled) ` : '') + step.name + (step.description ? `: ${step.description}` : ''),
 		value: String(step.id),
+		url: `${baseUrl}/app/accounts/${accountId}/kanban/boards/${boardId}`,
 	}));
 
 	return { results };
@@ -480,6 +500,8 @@ export async function searchKanbanTasks(
 		return { results: [] };
 	}
 
+	const baseUrl = await getChatwootBaseUrl.call(this);
+
 	const response = (await chatwootApiRequest.call(
 		this,
 		'GET',
@@ -496,6 +518,7 @@ export async function searchKanbanTasks(
 	const results = tasks.map((task: ChatwootKanbanTask) => ({
 		name: `#${task.id} - ${task.title}`,
 		value: String(task.id),
+		url: `${baseUrl}/app/accounts/${accountId}/kanban/boards/${boardId}`,
 	}));
 
 	return { results };
@@ -515,6 +538,8 @@ export async function searchMessages(
 		return { results: [] };
 	}
 
+	const baseUrl = await getChatwootBaseUrl.call(this);
+
 	const response = (await chatwootApiRequest.call(
 		this,
 		'GET',
@@ -530,6 +555,7 @@ export async function searchMessages(
 		return {
 			name: `Message #${message.id} - ${preview}`,
 			value: String(message.id),
+			url: `${baseUrl}/app/accounts/${accountId}/conversations/${conversationId}?messageId=${message.id}`,
 		};
 	});
 
