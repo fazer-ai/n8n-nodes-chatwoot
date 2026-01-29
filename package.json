@@ -18,6 +18,11 @@
 		"type": "git",
 		"url": "https://github.com/fazer-ai/n8n-nodes-fazer-ai-chatwoot.git"
 	},
+	"publishConfig": {
+		"provenance": true,
+		"access": "public",
+		"registry": "https://registry.npmjs.org/"
+	},
 	"scripts": {
 		"build": "n8n-node build",
 		"build:watch": "tsc --watch",
