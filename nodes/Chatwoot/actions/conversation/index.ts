@@ -518,12 +518,11 @@ const conversationFields: INodeProperties[] = [
     },
   },
   {
-    displayName: 'Message Text',
+    displayName: 'Content',
     name: 'content',
     type: 'string',
     default: '',
-    required: true,
-    description: 'Text content of the message to send',
+    description: 'Text content of the message to send. Can be empty when sending a reaction.',
     displayOptions: {
       show: {
         ...showOnlyForConversation,
@@ -533,6 +532,45 @@ const conversationFields: INodeProperties[] = [
     typeOptions: {
       rows: 4,
     },
+  },
+  {
+    displayName: 'Reply To',
+    name: 'replyToMessageId',
+    type: 'resourceLocator',
+    default: { mode: 'list', value: '' },
+    description: 'Message to reply to (will set in_reply_to in content attributes)',
+    displayOptions: {
+      show: {
+        ...showOnlyForConversation,
+        operation: ['sendMessage'],
+      },
+    },
+    modes: [
+      {
+        displayName: 'From List',
+        name: 'list',
+        type: 'list',
+        typeOptions: {
+          searchListMethod: 'searchMessages',
+          searchable: true,
+        },
+      },
+      {
+        displayName: 'By ID',
+        name: 'id',
+        type: 'string',
+        placeholder: 'e.g. 12345',
+        validation: [
+          {
+            type: 'regex',
+            properties: {
+              regex: '^[0-9]+$',
+              errorMessage: 'Message ID must be a number',
+            },
+          },
+        ],
+      },
+    ],
   },
   {
     displayName: 'Additional Fields',
@@ -649,30 +687,79 @@ const conversationFields: INodeProperties[] = [
         name: 'split_message',
         type: 'boolean',
         default: true,
-        description: 'Whether to split the message into multiple messages. Default is double newline.',
+        description: 'Whether to split the message into multiple messages. Default is double newline (\\n\\n).',
       },
       {
         displayName: 'Split Character',
         name: 'split_character',
         type: 'string',
-        default: '\n\n',
-        description: 'Character(s) to split the message on. Default is double newline.',
+        default: '\\n\\n',
+        placeholder: 'e.g. \\n\\n',
+        description: 'Character(s) to split the message on',
         displayOptions: {
           show: {
             split_message: [true],
           },
         },
       },
-      // {
-      //   displayName: 'Wait Before Sending (Seconds)',
-      //   name: 'wait_before_sending',
-      //   type: 'number',
-      //   typeOptions: {
-      //     minValue: 0,
-      //   },
-      //   default: 0,
-      //   description: 'Time to wait before sending the message, in seconds',
-      // },
+      {
+        displayName: 'Wait Before Sending',
+        name: 'wait_before_sending',
+        type: 'options',
+        default: 'none',
+        description: 'Add a delay between messages when splitting. Also applies to first message.',
+        displayOptions: {
+          show: {
+            split_message: [true],
+          },
+        },
+        options: [
+          {
+            name: 'No Delay',
+            value: 'none',
+          },
+          {
+            name: 'Fixed Time',
+            value: 'fixed',
+            description: 'Wait a fixed amount of time between each message',
+          },
+          {
+            name: 'Dynamic (Based on Message Length)',
+            value: 'dynamic',
+            description: 'Wait time calculated from message length (max 12s)',
+          },
+        ],
+      },
+      {
+        displayName: 'Wait Time (Seconds)',
+        name: 'wait_time_seconds',
+        type: 'number',
+        default: 5,
+        description: 'Fixed time to wait between messages, in seconds',
+        typeOptions: {
+          minValue: 0,
+          maxValue: 60,
+        },
+        displayOptions: {
+          show: {
+            split_message: [true],
+            wait_before_sending: ['fixed'],
+          },
+        },
+      },
+      {
+        displayName: 'Show Typing While Waiting',
+        name: 'typing_while_waiting',
+        type: 'boolean',
+        default: true,
+        description: 'Whether to show typing indicator while waiting before sending each message',
+        displayOptions: {
+          show: {
+            split_message: [true],
+            wait_before_sending: ['fixed', 'dynamic'],
+          },
+        },
+      },
     ],
   },
 ];

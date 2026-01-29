@@ -2,7 +2,7 @@ import type {
 	ILoadOptionsFunctions,
 	INodeListSearchResult,
 } from 'n8n-workflow';
-import { chatwootApiRequest, getAccountId, getInboxId, getKanbanBoardId, getTeamId } from '../shared/transport';
+import { chatwootApiRequest, getAccountId, getConversationId, getInboxId, getKanbanBoardId, getTeamId } from '../shared/transport';
 import {
 	ChatwootAccount,
 	ChatwootAgent,
@@ -13,6 +13,7 @@ import {
 	ChatwootKanbanStep,
 	ChatwootKanbanTask,
 	ChatwootLabel,
+	ChatwootMessage,
 	ChatwootPayloadResponse,
 	ChatwootPayloadResponseWithData,
 	ChatwootProfileResponse,
@@ -490,6 +491,50 @@ export async function searchKanbanTasks(
 		name: `#${task.id} - ${task.title}`,
 		value: String(task.id),
 	}));
+
+	return { results };
+}
+
+/**
+ * Get messages for the selected conversation (for resourceLocator)
+ */
+export async function searchMessages(
+	this: ILoadOptionsFunctions,
+	filter?: string,
+): Promise<INodeListSearchResult> {
+	const accountId = getAccountId.call(this, 0);
+	const conversationId = getConversationId.call(this, 0);
+
+	if (!accountId || !conversationId) {
+		return { results: [] };
+	}
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/conversations/${conversationId}/messages`,
+	)) as { payload?: ChatwootMessage[] };
+
+	const messages = (response.payload || []).reverse();
+
+	let results = messages.map((message: ChatwootMessage) => {
+		const preview = message.content
+			? message.content.substring(0, 50) + (message.content.length > 50 ? '...' : '')
+			: '(no content)';
+		return {
+			name: `Message #${message.id} - ${preview}`,
+			value: String(message.id),
+		};
+	});
+
+	if (filter) {
+		const filterLower = filter.toLowerCase();
+		results = results.filter(
+			(item) =>
+				item.name.toLowerCase().includes(filterLower) ||
+				item.value.includes(filter),
+		);
+	}
 
 	return { results };
 }

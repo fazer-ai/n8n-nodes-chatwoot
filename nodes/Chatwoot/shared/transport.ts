@@ -44,6 +44,16 @@ export async function chatwootApiRequest(
 }
 
 /**
+ * Async sleep helper for adding delays between operations.
+ * NOTE: Uses setTimeout which is restricted on n8n Cloud.
+ * This feature only works on self-hosted n8n installations.
+ */
+export function asyncSleep(ms: number): Promise<void> {
+	// eslint-disable-next-line @n8n/community-nodes/no-restricted-globals
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
  * Helper to get the ID from a resourceLocator parameter
  */
 function getResourceId(

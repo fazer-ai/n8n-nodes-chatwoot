@@ -83,6 +83,13 @@ export interface ChatwootKanbanTask {
   title: string;
 }
 
+export interface ChatwootMessage {
+  id: number;
+  content?: string;
+  message_type?: string;
+  created_at?: string;
+}
+
 export interface ChatwootTeamMember {
 	id: number;
 	name?: string;

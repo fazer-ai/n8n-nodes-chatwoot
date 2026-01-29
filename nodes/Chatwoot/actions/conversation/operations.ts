@@ -1,5 +1,6 @@
 import { NodeOperationError, type IDataObject, type IExecuteFunctions, type INodeExecutionData } from 'n8n-workflow';
 import {
+	asyncSleep,
 	chatwootApiRequest,
 	getAccountId,
 	getInboxId,
@@ -533,105 +534,274 @@ async function updateConversationPresence(
 	return { json: result };
 }
 
+function calculateDynamicWait(messageContent: string): number {
+	const charsPerSecond = 18.75; // 250 WPM
+	const maxWaitTime = 12;
+	const waitTime = messageContent.length / charsPerSecond;
+	return Math.min(waitTime, maxWaitTime);
+}
+
+function parseContentAttributesFromInput(
+	context: IExecuteFunctions,
+	itemIndex: number,
+	additionalFields: IDataObject,
+): IDataObject | undefined {
+	if (!additionalFields.content_attributes) {
+		return undefined;
+	}
+
+	const contentAttrsConfig = additionalFields.content_attributes as IDataObject;
+	const values = contentAttrsConfig.values as IDataObject;
+
+	if (!values) {
+		return undefined;
+	}
+
+	const inputMethod = values.inputMethod as string;
+
+	if (inputMethod === 'json') {
+		const jsonString = values.json as string;
+		if (jsonString && jsonString.trim() !== '{}' && jsonString.trim() !== '') {
+			try {
+				return JSON.parse(jsonString);
+			} catch (error) {
+				throw new NodeOperationError(
+					context.getNode(),
+					`Invalid JSON in content attributes: ${(error as Error).message}`,
+				);
+			}
+		}
+	} else if (inputMethod === 'pairs') {
+		const attributes = values.attributes as IDataObject;
+		if (attributes && attributes.attribute) {
+			const pairs = attributes.attribute as Array<{ name: string; value: string }>;
+			if (Array.isArray(pairs) && pairs.length > 0) {
+				const contentAttributes: IDataObject = {};
+				for (const pair of pairs) {
+					if (pair.name && pair.name.trim() !== '') {
+						contentAttributes[pair.name] = pair.value;
+					}
+				}
+				return contentAttributes;
+			}
+		}
+	}
+
+	return undefined;
+}
+
+interface SendMessageOptions {
+	accountId: string;
+	conversationId: string;
+	content: string;
+	isPrivate?: boolean;
+	contentAttributes?: IDataObject;
+	waitSeconds?: number;
+	showTypingWhileWaiting?: boolean;
+	isZapiInbox?: boolean;
+}
+
+async function sendSingleMessage(
+	context: IExecuteFunctions,
+	options: SendMessageOptions,
+): Promise<IDataObject> {
+	const {
+		accountId,
+		conversationId,
+		content,
+		isPrivate,
+		contentAttributes,
+		waitSeconds = 0,
+		showTypingWhileWaiting = false,
+		isZapiInbox = false,
+	} = options;
+
+	const setTypingStatus = async (status: 'on' | 'off') => {
+		await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/conversations/${conversationId}/toggle_typing_status`,
+			{ typing_status: status },
+		);
+	};
+
+	const waitWithTypingRefresh = async (totalMs: number) => {
+		const typingRefreshInterval = 20000;
+		let remaining = totalMs;
+
+		await setTypingStatus('on');
+		while (remaining > 0) {
+			const sleepTime = Math.min(remaining, typingRefreshInterval);
+			await asyncSleep(sleepTime);
+			remaining -= sleepTime;
+			if (remaining > 0) {
+				await setTypingStatus('on');
+			}
+		}
+		await setTypingStatus('off');
+	};
+
+	if (isZapiInbox && waitSeconds > 0 && showTypingWhileWaiting) {
+		const body: IDataObject = { content };
+		if (isPrivate) {
+			body.private = isPrivate;
+		}
+		const msgContentAttrs: IDataObject = contentAttributes ? { ...contentAttributes } : {};
+		msgContentAttrs.zapi_args = { delayTyping: Math.round(waitSeconds) };
+		body.content_attributes = msgContentAttrs;
+
+		const result = (await chatwootApiRequest.call(
+			context,
+			'POST',
+			`/api/v1/accounts/${accountId}/conversations/${conversationId}/messages`,
+			body,
+		)) as IDataObject;
+
+		await asyncSleep(waitSeconds * 1000);
+		return result;
+	}
+
+	if (waitSeconds > 0) {
+		if (showTypingWhileWaiting) {
+			await waitWithTypingRefresh(waitSeconds * 1000);
+		} else {
+			await asyncSleep(waitSeconds * 1000);
+		}
+	}
+
+	const body: IDataObject = { content };
+	if (isPrivate) {
+		body.private = isPrivate;
+	}
+	if (contentAttributes && Object.keys(contentAttributes).length > 0) {
+		body.content_attributes = contentAttributes;
+	}
+
+	return (await chatwootApiRequest.call(
+		context,
+		'POST',
+		`/api/v1/accounts/${accountId}/conversations/${conversationId}/messages`,
+		body,
+	)) as IDataObject;
+}
+
+async function sendSplitMessages(
+	context: IExecuteFunctions,
+	itemIndex: number,
+	accountId: string,
+	conversationId: string,
+	content: string,
+	additionalFields: IDataObject,
+	contentAttributes: IDataObject | undefined,
+): Promise<INodeExecutionData> {
+	let splitChar = (additionalFields.split_character as string) ?? '\\n\\n';
+	splitChar = splitChar
+		.replace(/\\n/g, '\n')
+		.replace(/\\t/g, '\t')
+		.replace(/\\r/g, '\r');
+
+	const messages = content.split(splitChar).filter((msg: string) => msg.trim() !== '');
+	const responses: IDataObject[] = [];
+
+	const waitMode = (additionalFields.wait_before_sending as string) ?? 'none';
+	const fixedWaitTime = (additionalFields.wait_time_seconds as number) ?? 2;
+	const showTypingWhileWaiting = (additionalFields.typing_while_waiting as boolean) ?? true;
+
+	let isZapiInbox = false;
+	if (waitMode !== 'none' && showTypingWhileWaiting) {
+		const inboxId = getInboxId.call(context, itemIndex);
+		if (inboxId) {
+			const inbox = (await chatwootApiRequest.call(
+				context,
+				'GET',
+				`/api/v1/accounts/${accountId}/inboxes/${inboxId}`,
+			)) as IDataObject;
+			isZapiInbox = inbox.provider === 'zapi';
+		}
+	}
+
+	for (const message of messages) {
+		let waitSeconds = 0;
+		if (waitMode !== 'none') {
+			waitSeconds = waitMode === 'fixed' ? fixedWaitTime : calculateDynamicWait(message);
+		}
+
+		const result = await sendSingleMessage(context, {
+			accountId,
+			conversationId,
+			content: message,
+			isPrivate: additionalFields.private as boolean,
+			contentAttributes,
+			waitSeconds,
+			showTypingWhileWaiting,
+			isZapiInbox,
+		});
+
+		responses.push(result);
+	}
+
+	return { json: { requests: responses } };
+}
+
 async function sendMessageToConversation(
 	context: IExecuteFunctions,
 	itemIndex: number,
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const conversationId = getConversationId.call(context, itemIndex);
-	const content = context.getNodeParameter('content', itemIndex) as string;
+	const content = context.getNodeParameter('content', itemIndex, '') as string;
 	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {}) as IDataObject;
 
-	let contentAttributes: IDataObject | undefined;
-	if (additionalFields.content_attributes) {
-		const contentAttrsConfig = additionalFields.content_attributes as IDataObject;
-		const values = contentAttrsConfig.values as IDataObject;
+	const replyToParam = context.getNodeParameter('replyToMessageId', itemIndex, { mode: 'list', value: '' }) as { mode: string; value: string };
+	const replyToMessageId = replyToParam.value ? Number(replyToParam.value) : undefined;
 
-		if (values) {
-			const inputMethod = values.inputMethod as string;
-
-			if (inputMethod === 'json') {
-				// JSON mode - parse the JSON string
-				const jsonString = values.json as string;
-				if (jsonString && jsonString.trim() !== '{}' && jsonString.trim() !== '') {
-					try {
-						contentAttributes = JSON.parse(jsonString);
-					} catch (error) {
-						throw new NodeOperationError(
-							context.getNode(),
-							`Invalid JSON in content attributes: ${(error as Error).message}`,
-						);
-					}
-				}
-			} else if (inputMethod === 'pairs') {
-				// Key-Value Pairs mode
-				const attributes = values.attributes as IDataObject;
-				if (attributes && attributes.attribute) {
-					const pairs = attributes.attribute as Array<{ name: string; value: string }>;
-					if (Array.isArray(pairs) && pairs.length > 0) {
-						contentAttributes = {};
-						for (const pair of pairs) {
-							if (pair.name && pair.name.trim() !== '') {
-								contentAttributes[pair.name] = pair.value;
-							}
-						}
-					}
-				}
-			}
-		}
+	const isReaction = additionalFields.is_reaction as boolean;
+	if (!content && !isReaction) {
+		throw new NodeOperationError(
+			context.getNode(),
+			'Content is required.',
+			{ itemIndex },
+		);
 	}
 
-	if (additionalFields.is_reaction) {
-		if (!contentAttributes) {
-			contentAttributes = {};
+	let contentAttributes = parseContentAttributesFromInput(context, itemIndex, additionalFields);
+
+	if (replyToMessageId) {
+		contentAttributes = contentAttributes ?? {};
+		contentAttributes.in_reply_to = replyToMessageId;
+	}
+
+	if (isReaction) {
+		if (!replyToMessageId) {
+			throw new NodeOperationError(
+				context.getNode(),
+				'Reply To is required when Is Reaction is enabled. A reaction must be in response to a specific message.',
+				{ itemIndex },
+			);
 		}
+		contentAttributes = contentAttributes ?? {};
 		contentAttributes.is_reaction = true;
 	}
 
 	if (additionalFields.split_message) {
-		const splitChar = (additionalFields.split_character as string) ?? '\n\n';
-		const messages = content.split(splitChar).filter((msg: string) => msg.trim() !== '');
-		const responses: IDataObject[] = [];
-
-		for (const message of messages) {
-			const body: IDataObject = {
-				content: message,
-			};
-			if (additionalFields.private) {
-				body.private = additionalFields.private;
-			}
-			if (contentAttributes && Object.keys(contentAttributes).length > 0) {
-				body.content_attributes = contentAttributes;
-			}
-			responses.push((await chatwootApiRequest.call(
-				context,
-				'POST',
-				`/api/v1/accounts/${accountId}/conversations/${conversationId}/messages`,
-				body,
-			)) as IDataObject);
-		}
-		return {
-			json: { requests: responses },
-		};
-	}
-	else {
-		const body: IDataObject = {
+		return sendSplitMessages(
+			context,
+			itemIndex,
+			accountId,
+			conversationId,
 			content,
-		};
-		if (additionalFields.private) {
-			body.private = additionalFields.private;
-		}
-		if (contentAttributes && Object.keys(contentAttributes).length > 0) {
-			body.content_attributes = contentAttributes;
-		}
-
-		return {
-			json: (await chatwootApiRequest.call(
-				context,
-				'POST',
-				`/api/v1/accounts/${accountId}/conversations/${conversationId}/messages`,
-				body,
-			)) as IDataObject
-		};
+			additionalFields,
+			contentAttributes,
+		);
 	}
+
+	const result = await sendSingleMessage(context, {
+		accountId,
+		conversationId,
+		content,
+		isPrivate: additionalFields.private as boolean,
+		contentAttributes,
+	});
+
+	return { json: result };
 }
