@@ -100,11 +100,11 @@ async function whatsappGetQrCode(context: IExecuteFunctions, itemIndex: number):
 			`/api/v1/accounts/${accountId}/inboxes/${inboxId}`
 		)) as IDataObject;
 
-		const provider_connection = response.provider_connection as IDataObject;
-		const connectionStatus = provider_connection?.connection as string;
+		const providerConnection = response.provider_connection as IDataObject;
+		const connectionStatus = providerConnection?.connection as string;
 
-		if (connectionStatus === 'connecting' && provider_connection.qr_data_url) {
-			const qrDataUrl = provider_connection.qr_data_url as string;
+		if (connectionStatus === 'connecting' && providerConnection.qr_data_url) {
+			const qrDataUrl = providerConnection.qr_data_url as string;
 
 			const dataUrlMatch = qrDataUrl.match(/^data:(image\/\w+);base64,(.+)$/);
 
@@ -161,10 +161,7 @@ async function whatsappGetQrCode(context: IExecuteFunctions, itemIndex: number):
 		}
 
 		if (attempt < maxAttempts - 1) {
-			const waitUntil = Date.now() + pollInterval;
-			while (Date.now() < waitUntil) {
-				await asyncSleep(100);
-			}
+			await asyncSleep(pollInterval);
 		}
 	}
 
