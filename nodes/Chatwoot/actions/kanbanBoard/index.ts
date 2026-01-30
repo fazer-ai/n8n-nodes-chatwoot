@@ -40,6 +40,18 @@ const kanbanBoardOperations: INodeProperties[] = [
 				action: 'List kanban boards',
 			},
 			{
+				name: 'List Conversations',
+				value: 'listConversations',
+				description: "List conversations associated with a board's inboxes",
+				action: 'List kanban board conversations',
+			},
+			{
+				name: 'Toggle Favorite',
+				value: 'toggleFavorite',
+				description: 'Toggle the favorite status of a board for the current user',
+				action: 'Toggle kanban board favorite',
+			},
+			{
 				name: 'Update',
 				value: 'update',
 				description: 'Update a Kanban board',
@@ -74,7 +86,36 @@ const kanbanBoardFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				...showOnlyForKanbanBoard,
-				operation: ['get', 'update', 'delete', 'updateAgents', 'updateInboxes'],
+				operation: ['get', 'update', 'delete', 'updateAgents', 'updateInboxes', 'toggleFavorite', 'listConversations'],
+			},
+		},
+	},
+	{
+		displayName: 'Search Query',
+		name: 'searchQuery',
+		type: 'string',
+		default: '',
+		description: 'Search query (searches display_id, contact name, email, phone, identifier)',
+		displayOptions: {
+			show: {
+				...showOnlyForKanbanBoard,
+				operation: ['listConversations'],
+			},
+		},
+	},
+	{
+		displayName: 'Page',
+		name: 'page',
+		type: 'number',
+		default: 1,
+		typeOptions: {
+			minValue: 1,
+		},
+		description: 'Page number',
+		displayOptions: {
+			show: {
+				...showOnlyForKanbanBoard,
+				operation: ['listConversations'],
 			},
 		},
 	},
@@ -130,37 +171,37 @@ const kanbanBoardFields: INodeProperties[] = [
 				name: 'settings',
 				values: [
 					{
-						displayName: 'Auto-Assign Conversation to Agent',
-						name: 'auto_assign_agent_to_conversation',
-						description: 'Whether to automatically assign an agent to all unassigned conversations linked to a task when that agent is assigned to the task',
-						type: 'boolean',
-						default: true,
-					},
-					{
 						displayName: 'Auto-Assign Task to Agent',
 						name: 'auto_assign_task_to_agent',
-						description: 'Whether to automatically assign a task to an available online agent when the task is created without an assigned agent',
+						description: 'Whether to automatically assign tasks to agents',
 						type: 'boolean',
 						default: true,
 					},
 					{
 						displayName: 'Auto-Complete Task on Conversation Resolve',
 						name: 'auto_complete_task_on_conversation_resolve',
-						description: 'Whether to automatically move a task to the completed step when its linked conversation is resolved',
+						description: 'Whether to automatically complete tasks when conversation is resolved',
 						type: 'boolean',
 						default: true,
 					},
 					{
 						displayName: 'Auto-Create Task for New Conversations',
 						name: 'auto_create_task_for_conversation',
-						description: 'Whether to automatically create a task when a new conversation is created in any of the board\'s assigned inboxes',
+						description: 'Whether to automatically create tasks for new conversations',
 						type: 'boolean',
 						default: true,
 					},
 					{
 						displayName: 'Auto-Resolve Conversations on Task End',
 						name: 'auto_resolve_conversation_on_task_end',
-						description: 'Whether to automatically resolve all linked conversations when a task is moved to a completed or cancelled step',
+						description: 'Whether to automatically resolve conversations when task reaches the end step',
+						type: 'boolean',
+						default: true,
+					},
+					{
+						displayName: 'Sync Task and Conversation Agents',
+						name: 'sync_task_and_conversation_agents',
+						description: 'Whether to keep task and conversation agents in sync (assigning/unassigning agents on one will update the other)',
 						type: 'boolean',
 						default: true,
 					},

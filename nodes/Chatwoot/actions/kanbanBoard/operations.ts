@@ -6,7 +6,7 @@ export async function executeKanbanBoardOperation(
 	context: IExecuteFunctions,
 	operation: KanbanBoardOperation,
 	itemIndex: number,
-): Promise<INodeExecutionData> {
+): Promise<INodeExecutionData | INodeExecutionData[]> {
 	switch (operation) {
 		case 'create':
 			return createBoard(context, itemIndex);
@@ -16,6 +16,10 @@ export async function executeKanbanBoardOperation(
 			return getBoard(context, itemIndex);
 		case 'list':
 			return listBoards(context, itemIndex);
+		case 'listConversations':
+			return listBoardConversations(context, itemIndex);
+		case 'toggleFavorite':
+			return toggleBoardFavorite(context, itemIndex);
 		case 'update':
 			return updateBoard(context, itemIndex);
 		case 'updateAgents':
@@ -68,7 +72,7 @@ async function getBoard(
 async function listBoards(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<INodeExecutionData> {
+): Promise<INodeExecutionData[]> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const sort = context.getNodeParameter('sort', itemIndex);
 	const order = context.getNodeParameter('order', itemIndex);
@@ -79,9 +83,9 @@ async function listBoards(
 		`/api/v1/accounts/${accountId}/kanban/boards`,
 		undefined,
 		{sort, order},
-	) as IDataObject;
+	) as { boards: IDataObject[] };
 
-	return { json: result };
+	return result.boards.map((board) => ({ json: board }));
 }
 
 async function updateBoard(
@@ -116,13 +120,13 @@ async function deleteBoard(
 	const accountId = getAccountId.call(context, itemIndex);
 	const boardId = getKanbanBoardId.call(context, itemIndex);
 
-	const result = await chatwootApiRequest.call(
+	await chatwootApiRequest.call(
 		context,
 		'DELETE',
 		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}`,
-	) as IDataObject;
+	);
 
-	return { json: result };
+	return { json: {} };
 }
 
 async function updateBoardAgents(
@@ -159,4 +163,45 @@ async function updateBoardInboxes(
 	) as IDataObject;
 
 	return { json: result };
+}
+
+async function toggleBoardFavorite(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const boardId = getKanbanBoardId.call(context, itemIndex);
+
+	const result = await chatwootApiRequest.call(
+		context,
+		'POST',
+		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/toggle_favorite`,
+	) as IDataObject;
+
+	return { json: result };
+}
+
+async function listBoardConversations(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData[]> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const boardId = getKanbanBoardId.call(context, itemIndex);
+	const searchQuery = context.getNodeParameter('searchQuery', itemIndex, '') as string;
+	const page = context.getNodeParameter('page', itemIndex, 1) as number;
+
+	const query: IDataObject = { page };
+	if (searchQuery) {
+		query.q = searchQuery;
+	}
+
+	const result = await chatwootApiRequest.call(
+		context,
+		'GET',
+		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/conversations`,
+		undefined,
+		query,
+	) as { payload: IDataObject[] };
+
+	return result.payload.map((conversation) => ({ json: conversation }));
 }

@@ -58,7 +58,7 @@ export async function executeConversationOperation(
 	context: IExecuteFunctions,
 	operation: ConversationOperation,
 	itemIndex: number,
-): Promise<INodeExecutionData> {
+): Promise<INodeExecutionData | INodeExecutionData[]> {
 	switch (operation) {
 		case 'create':
 			return createConversation(context, itemIndex);
@@ -86,6 +86,8 @@ export async function executeConversationOperation(
 			return removeLabelsFromConversation(context, itemIndex);
 		case 'updateLabels':
 			return updateConversationLabels(context, itemIndex);
+		case 'listLabels':
+			return listConversationLabels(context, itemIndex);
 		case 'toggleStatus':
 			return toggleConversationStatus(context, itemIndex);
 		case 'setPriority':
@@ -104,20 +106,23 @@ export async function executeConversationOperation(
 			return markConversationUnread(context, itemIndex);
 		case 'updateAttachmentMeta':
 			return updateAttachmentMeta(context, itemIndex);
+		case 'deleteMessage':
+			return deleteMessage(context, itemIndex);
 	}
 }
 
 async function listConversationMessages(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<INodeExecutionData> {
+): Promise<INodeExecutionData[]> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const conversationId = getConversationId.call(context, itemIndex);
 	const fetchAtLeast = context.getNodeParameter('fetchAtLeast', itemIndex, 20) as number;
 	const options = context.getNodeParameter('listMessagesOptions', itemIndex, {}) as IDataObject;
 
 	const allMessages: IDataObject[] = [];
-	let beforeId = options.before as number | undefined;
+	const beforeParam = options.before as { mode: string; value: string } | undefined;
+	let beforeId = beforeParam?.value ? Number(beforeParam.value) : undefined;
 	let hasMore = true;
 
 	while (hasMore && allMessages.length < fetchAtLeast) {
@@ -146,12 +151,7 @@ async function listConversationMessages(
 		}
 	}
 
-	return {
-		json: {
-			messages: allMessages,
-			total: allMessages.length,
-		},
-	};
+	return allMessages.map((msg) => ({ json: msg }));
 }
 
 async function createConversation(
@@ -215,6 +215,11 @@ async function listConversations(
 	if (filters.status) query.status = filters.status;
 	if (filters.assignee_type) query.assignee_type = filters.assignee_type;
 	if (filters.page) query.page = filters.page;
+	if (filters.q) query.q = filters.q;
+	if (filters.team_id) query.team_id = filters.team_id;
+	if (filters.labels && (filters.labels as string[]).length > 0) {
+		query.labels = (filters.labels as string[]).join(',');
+	}
 
 	const inboxId = getInboxId.call(context, itemIndex);
 	if (inboxId) {
@@ -310,6 +315,23 @@ async function updateConversationLabels(
 	) as IDataObject;
 
 	return { json: result };
+}
+
+async function listConversationLabels(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData[]> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const conversationId = getConversationId.call(context, itemIndex);
+
+	const result = await chatwootApiRequest.call(
+		context,
+		'GET',
+		`/api/v1/accounts/${accountId}/conversations/${conversationId}/labels`,
+	) as { payload?: string[] } | string[];
+
+	const labels = Array.isArray(result) ? result : (result.payload || []);
+	return labels.map((label) => ({ json: { label } }));
 }
 
 async function addLabelsToConversation(
@@ -857,12 +879,28 @@ async function sendMessageToConversation(
 		);
 	}
 
+	const waitMode = (additionalFields.wait_before_sending as string) ?? 'none';
+	const fixedWaitTime = (additionalFields.wait_time_seconds as number) ?? 5;
+	const showTypingWhileWaiting = (additionalFields.typing_while_waiting as boolean) ?? true;
+
+	let waitSeconds = 0;
+	if (waitMode !== 'none') {
+		waitSeconds = waitMode === 'fixed' ? fixedWaitTime : calculateDynamicWait(content);
+	}
+
+	const isZapiInbox = waitMode !== 'none' && showTypingWhileWaiting
+		? await detectZapiInbox(context, itemIndex, accountId)
+		: false;
+
 	const result = await sendSingleMessage(context, {
 		accountId,
 		conversationId,
 		content,
 		isPrivate: additionalFields.private as boolean,
 		contentAttributes,
+		waitSeconds,
+		showTypingWhileWaiting,
+		isZapiInbox,
 	});
 
 	return { json: result };
@@ -976,7 +1014,7 @@ async function sendFileToConversation(
 async function listConversationAttachments(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<INodeExecutionData> {
+): Promise<INodeExecutionData[]> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const conversationId = getConversationId.call(context, itemIndex);
 
@@ -988,12 +1026,7 @@ async function listConversationAttachments(
 
 	const attachments = response.payload || [];
 
-	return {
-		json: {
-			attachments,
-			total: attachments.length,
-		},
-	};
+	return attachments.map((attachment) => ({ json: attachment }));
 }
 
 async function updateAttachmentMeta(
@@ -1151,5 +1184,30 @@ async function downloadAttachment(
 	return {
 		json: attachment ?? { url: fileUrl },
 		binary: { [binaryPropertyName]: binaryData },
+	};
+}
+
+async function deleteMessage(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const conversationId = getConversationId.call(context, itemIndex);
+
+	const messageIdParam = context.getNodeParameter('messageId', itemIndex) as { mode: string; value: string };
+	const messageId = messageIdParam.value;
+
+	await chatwootApiRequest.call(
+		context,
+		'DELETE',
+		`/api/v1/accounts/${accountId}/conversations/${conversationId}/messages/${messageId}`,
+	);
+
+	return {
+		json: {
+			success: true,
+			messageId: Number(messageId),
+			deleted: true,
+		},
 	};
 }

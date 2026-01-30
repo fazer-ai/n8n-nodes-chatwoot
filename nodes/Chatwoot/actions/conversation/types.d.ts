@@ -12,6 +12,7 @@ export type ConversationOperation =
   | 'addLabels'
   | 'removeLabels'
   | 'updateLabels'
+  | 'listLabels'
   | 'toggleStatus'
   | 'setPriority'
   | 'addCustomAttributes'
@@ -20,4 +21,5 @@ export type ConversationOperation =
   | 'updateLastSeen'
   | 'updatePresence'
   | 'markUnread'
-  | 'updateAttachmentMeta';
+  | 'updateAttachmentMeta'
+  | 'deleteMessage';
