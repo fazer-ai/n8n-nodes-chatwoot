@@ -507,7 +507,7 @@ export async function searchKanbanTasks(
 		'GET',
 		`/api/v1/accounts/${accountId}/kanban/tasks`,
 		undefined,
-		{ board_id: boardId },
+		{ board_id: boardId, sort: 'updated_at', order: 'desc' },
 	)) as { tasks?: ChatwootKanbanTask[] } | ChatwootKanbanTask[];
 
 	const tasks =
@@ -515,11 +515,26 @@ export async function searchKanbanTasks(
 		(response as ChatwootKanbanTask[]) ||
 		[];
 
-	const results = tasks.map((task: ChatwootKanbanTask) => ({
-		name: `#${task.id} - ${task.title}`,
-		value: String(task.id),
-		url: `${baseUrl}/app/accounts/${accountId}/kanban/boards/${boardId}`,
-	}));
+	const results = tasks.map((task: ChatwootKanbanTask) => {
+		let suffix = '';
+		// Always show step name if available
+		if (task.board?.steps && task.board_step_id) {
+			const stepIndex = task.board.steps.findIndex((s) => s.id === task.board_step_id);
+			if (stepIndex !== -1) {
+				const step = task.board.steps[stepIndex];
+				suffix = ` (Step ${stepIndex + 1}: ${step.name})`;
+			}
+		}
+		// Append status if cancelled/completed
+		if (task.status === 'cancelled' || task.status === 'completed') {
+			suffix += ` [${task.status}]`;
+		}
+		return {
+			name: `#${task.id} - ${task.title}${suffix}`,
+			value: String(task.id),
+			url: `${baseUrl}/app/accounts/${accountId}/kanban/boards/${boardId}`,
+		};
+	});
 
 	return { results };
 }

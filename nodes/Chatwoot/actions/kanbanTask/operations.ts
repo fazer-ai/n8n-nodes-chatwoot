@@ -31,7 +31,11 @@ async function createTask(
 	const boardId = getKanbanBoardId.call(context, itemIndex);
 	const stepId = getKanbanStepId.call(context, itemIndex);
 	const title = context.getNodeParameter('title', itemIndex);
-	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {});
+	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {}) as IDataObject;
+
+	if (additionalFields.priority === 'none') {
+		additionalFields.priority = null;
+	}
 
 	const task: IDataObject = {
 		title,
@@ -72,7 +76,7 @@ async function listTasks(
 ): Promise<INodeExecutionData[]> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const boardId = getKanbanBoardId.call(context, itemIndex);
-	const filters = context.getNodeParameter('taskFilters', itemIndex, {}) as IDataObject;
+	const filters = context.getNodeParameter('filters', itemIndex, {}) as IDataObject;
 
 	const result = await chatwootApiRequest.call(
 		context,
@@ -83,9 +87,9 @@ async function listTasks(
 			board_id: boardId,
 			...filters
 		},
-	) as IDataObject[];
+	) as { tasks: IDataObject[] };
 
-	return result.map((task) => ({ json: task }));
+	return result.tasks.map((task) => ({ json: task }));
 }
 
 async function updateTask(
@@ -95,7 +99,11 @@ async function updateTask(
 	const accountId = getAccountId.call(context, itemIndex);
 	const taskId = getKanbanTaskId.call(context, itemIndex);
 	const title = context.getNodeParameter('title', itemIndex);
-	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {});
+	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {}) as IDataObject;
+
+	if (additionalFields.priority === 'none') {
+		additionalFields.priority = null;
+	}
 
 	const task: IDataObject = {
 		title,
@@ -137,11 +145,11 @@ async function deleteTask(
 	const accountId = getAccountId.call(context, itemIndex);
 	const taskId = getKanbanTaskId.call(context, itemIndex);
 
-	const result = await chatwootApiRequest.call(
+	await chatwootApiRequest.call(
 		context,
 		'DELETE',
 		`/api/v1/accounts/${accountId}/kanban/tasks/${taskId}`,
-	) as IDataObject;
+	);
 
-	return { json: result };
+	return { json: {} };
 }

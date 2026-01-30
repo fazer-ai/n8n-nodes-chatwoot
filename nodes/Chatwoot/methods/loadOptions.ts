@@ -262,6 +262,34 @@ export async function loadKanbanBoardConversationsOptions(
 }
 
 /**
+ * Get all steps for the selected kanban board (for loadOptions)
+ */
+export async function loadKanbanStepsOptions(
+  this: ILoadOptionsFunctions,
+): Promise<INodePropertyOptions[]> {
+  const accountId = getAccountId.call(this, 0);
+  if (!accountId) {
+    return [];
+  }
+  const boardId = getKanbanBoardId.call(this, 0);
+  if (!boardId) {
+    return [];
+  }
+
+  const response = (await chatwootApiRequest.call(
+    this,
+    'GET',
+    `/api/v1/accounts/${accountId}/kanban/boards/${boardId}/steps`,
+  )) as { steps: Array<{ id: number; name: string }> };
+
+  const steps = response.steps || [];
+  return steps.map((step, index) => ({
+    name: `Step ${index + 1} - ${step.name}`,
+    value: step.id,
+  }));
+}
+
+/**
  * Get all contacts for the selected kanban board (for loadOptions)
 */
 export async function loadContactsOptions(

@@ -81,6 +81,13 @@ export interface ChatwootKanbanStep {
 export interface ChatwootKanbanTask {
   id: number;
   title: string;
+  status?: string;
+  board?: {
+    id: number;
+    name: string;
+    steps?: Array<{ id: number; name: string; color?: string }>;
+  };
+  board_step_id?: number;
 }
 
 export interface ChatwootMessage {
