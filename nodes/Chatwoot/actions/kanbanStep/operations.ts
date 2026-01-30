@@ -12,6 +12,8 @@ export async function executeKanbanStepOperation(
 			return createStep(context, itemIndex);
 		case 'delete':
 			return deleteStep(context, itemIndex);
+		case 'get':
+			return getStep(context, itemIndex);
 		case 'list':
 			return listSteps(context, itemIndex);
 		case 'update':
@@ -56,9 +58,9 @@ async function listSteps(
 		context,
 		'GET',
 		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/steps`,
-	) as IDataObject[];
+	) as { steps: IDataObject[] };
 
-	return result.map((step) => ({ json: step }));
+	return result.steps.map((step) => ({ json: step }));
 }
 
 async function updateStep(
@@ -95,9 +97,26 @@ async function deleteStep(
 	const boardId = getKanbanBoardId.call(context, itemIndex);
 	const stepId = getKanbanStepId.call(context, itemIndex);
 
-	const result = await chatwootApiRequest.call(
+	await chatwootApiRequest.call(
 		context,
 		'DELETE',
+		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/steps/${stepId}`,
+	) as IDataObject;
+
+	return { json: {} };
+}
+
+async function getStep(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const boardId = getKanbanBoardId.call(context, itemIndex);
+	const stepId = getKanbanStepId.call(context, itemIndex);
+
+	const result = await chatwootApiRequest.call(
+		context,
+		'GET',
 		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/steps/${stepId}`,
 	) as IDataObject;
 

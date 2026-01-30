@@ -478,8 +478,8 @@ export async function searchKanbanSteps(
 		(response as ChatwootKanbanStep[]) ||
 		[];
 
-	const results = steps.map((step: ChatwootKanbanStep) => ({
-		name: `#${step.id} - ` + (step.cancelled ? `(Cancelled) ` : '') + step.name + (step.description ? `: ${step.description}` : ''),
+	const results = steps.map((step: ChatwootKanbanStep, index: number) => ({
+		name: `Step ${index + 1} - ` + (step.cancelled ? `(Cancelled) ` : '') + step.name + (step.description ? `: ${step.description}` : ''),
 		value: String(step.id),
 		url: `${baseUrl}/app/accounts/${accountId}/kanban/boards/${boardId}`,
 	}));

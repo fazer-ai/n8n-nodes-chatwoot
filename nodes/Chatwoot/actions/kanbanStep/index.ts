@@ -32,6 +32,12 @@ const kanbanStepOperations: INodeProperties[] = [
 				action: 'Delete a kanban step',
 			},
 			{
+				name: 'Get',
+				value: 'get',
+				description: 'Get details of a specific step',
+				action: 'Get a kanban step',
+			},
+			{
 				name: 'List',
 				value: 'list',
 				description: 'List steps from a board',
@@ -60,7 +66,7 @@ const kanbanStepFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				...showOnlyForKanbanStep,
-				operation: ['create', 'list', 'update', 'delete'],
+				operation: ['create', 'get', 'list', 'update', 'delete'],
 			},
 		},
 	},
@@ -69,7 +75,7 @@ const kanbanStepFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				...showOnlyForKanbanStep,
-				operation: ['update', 'delete'],
+				operation: ['get', 'update', 'delete'],
 			},
 		},
 	},
