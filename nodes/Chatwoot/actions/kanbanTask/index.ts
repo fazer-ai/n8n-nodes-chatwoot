@@ -144,9 +144,117 @@ const kanbanTaskFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				...showOnlyForKanbanTask,
-				operation: ['create', 'update'],
+				operation: ['create'],
 			},
 		},
+	},
+	{
+		displayName: 'Update Fields',
+		name: 'updateFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: {
+			show: {
+				...showOnlyForKanbanTask,
+				operation: ['update'],
+			},
+		},
+		options: [
+			{
+				displayName: 'Title',
+				name: 'title',
+				type: 'string',
+				default: '',
+				description: 'Title of the task',
+			},
+			{
+				displayName: 'Description',
+				name: 'description',
+				type: 'string',
+				typeOptions: {
+					rows: 4,
+				},
+				default: '',
+				description: 'Detailed description of the task',
+			},
+			{
+				displayName: 'Priority',
+				name: 'priority',
+				type: 'options',
+				default: 'medium',
+				// eslint-disable-next-line n8n-nodes-base/node-param-options-type-unsorted-items
+				options: [
+					{ name: 'None', value: 'none' },
+					{ name: 'Low', value: 'low' },
+					{ name: 'Medium', value: 'medium' },
+					{ name: 'High', value: 'high' },
+					{ name: 'Urgent', value: 'urgent' },
+				],
+			},
+			{
+				displayName: 'Start Date',
+				name: 'start_date',
+				type: 'dateTime',
+				default: '',
+				description: 'Start date of the task',
+			},
+			{
+				displayName: 'End Date',
+				name: 'due_date',
+				type: 'dateTime',
+				default: '',
+				description: 'End/due date of the task',
+			},
+			{
+				// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-multi-options
+				displayName: 'Agents',
+				name: 'assigned_agent_ids',
+				description: 'Agents assigned to the task. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+				type: 'multiOptions',
+				typeOptions: {
+					loadOptionsMethod: 'loadKanbanBoardAgentsOptions',
+					loadOptionsDependsOn: ['kanbanBoardId'],
+				},
+				default: [],
+			},
+			{
+				// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-multi-options
+				displayName: 'Labels',
+				name: 'labels',
+				description: 'Labels assigned to the task. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+				type: 'multiOptions',
+				typeOptions: {
+					loadOptionsMethod: 'loadLabelsWithTitleValueOptions',
+					loadOptionsDependsOn: ['accountId'],
+				},
+				default: [],
+			},
+			{
+				// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-multi-options
+				displayName: 'Conversations',
+				name: 'conversation_ids',
+				description: 'Conversations linked to the task. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+				type: 'multiOptions',
+				typeOptions: {
+					loadOptionsMethod: 'loadKanbanBoardConversationsOptions',
+					loadOptionsDependsOn: ['kanbanBoardId'],
+				},
+				default: [],
+			},
+			{
+				// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-multi-options
+				displayName: 'Contacts',
+				name: 'contact_ids',
+				description: 'Contacts linked to the task. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+				type: 'multiOptions',
+				typeOptions: {
+					loadOptionsMethod: 'loadContactsOptions',
+					loadOptionsDependsOn: ['accountId'],
+				},
+				default: [],
+			},
+		],
 	},
 	{
 		displayName: 'Additional Fields',
@@ -157,7 +265,7 @@ const kanbanTaskFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				...showOnlyForKanbanTask,
-				operation: ['create', 'update'],
+				operation: ['create'],
 			},
 		},
 		options: [

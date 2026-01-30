@@ -1,4 +1,4 @@
-import { type IDataObject, type IExecuteFunctions, type INodeExecutionData } from 'n8n-workflow';
+import { type IDataObject, type IExecuteFunctions, type INodeExecutionData, NodeOperationError } from 'n8n-workflow';
 import { chatwootApiRequest, getAccountId, getKanbanBoardId, getKanbanStepId, getKanbanTaskId } from '../../shared/transport';
 import type { KanbanTaskOperation } from './types';
 
@@ -98,17 +98,21 @@ async function updateTask(
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const taskId = getKanbanTaskId.call(context, itemIndex);
-	const title = context.getNodeParameter('title', itemIndex);
-	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {}) as IDataObject;
+	const updateFields = context.getNodeParameter('updateFields', itemIndex, {}) as IDataObject;
 
-	if (additionalFields.priority === 'none') {
-		additionalFields.priority = null;
+	if (updateFields.priority === 'none') {
+		updateFields.priority = null;
 	}
 
-	const task: IDataObject = {
-		title,
-		...additionalFields,
-	};
+	const task: IDataObject = { ...updateFields };
+
+	if (Object.keys(task).length === 0) {
+		throw new NodeOperationError(
+			context.getNode(),
+			'At least one field must be provided to update the task',
+			{ itemIndex },
+		);
+	}
 
 	const result = await chatwootApiRequest.call(
 		context,
