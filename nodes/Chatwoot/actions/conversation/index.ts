@@ -312,7 +312,8 @@ const conversationFields: INodeProperties[] = [
         ],
       },
       {
-        displayName: 'Team Name or ID',
+        // eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-options
+        displayName: 'Team',
         name: 'team_id',
         type: 'options',
         default: '',
@@ -324,7 +325,8 @@ const conversationFields: INodeProperties[] = [
     ],
   },
   {
-    displayName: 'Agent Name or ID',
+    // eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-options
+    displayName: 'Agent',
     name: 'agentId',
     type: 'options',
     default: '',
@@ -341,7 +343,8 @@ const conversationFields: INodeProperties[] = [
     },
   },
   {
-    displayName: 'Team Name or ID',
+    // eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-options
+    displayName: 'Team',
     name: 'teamId',
     type: 'options',
     default: '',

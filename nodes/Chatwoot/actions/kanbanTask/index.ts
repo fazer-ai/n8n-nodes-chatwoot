@@ -200,7 +200,8 @@ const kanbanTaskFields: INodeProperties[] = [
 				description: 'End/due date of the task',
 			},
 			{
-				displayName: 'Agent Names or IDs',
+				// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-multi-options
+				displayName: 'Agents',
 				name: 'assigned_agent_ids',
 				description: 'Agents assigned to the task. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 				type: 'multiOptions',
@@ -211,7 +212,8 @@ const kanbanTaskFields: INodeProperties[] = [
 				default: [],
 			},
 			{
-				displayName: 'Label Names or IDs',
+				// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-multi-options
+				displayName: 'Labels',
 				name: 'labels',
 				description: 'Labels assigned to the task. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 				type: 'multiOptions',
@@ -223,7 +225,8 @@ const kanbanTaskFields: INodeProperties[] = [
 
 			},
 			{
-				displayName: 'Conversation Names or IDs',
+				// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-multi-options
+				displayName: 'Conversations',
 				name: 'conversation_ids',
 				description: 'Conversations linked to the task. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 				type: 'multiOptions',
@@ -234,7 +237,8 @@ const kanbanTaskFields: INodeProperties[] = [
 				default: [],
 			},
 			{
-				displayName: 'Contact Names or IDs',
+				// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-multi-options
+				displayName: 'Contacts',
 				name: 'contact_ids',
 				description: 'Contacts linked to the task. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 				type: 'multiOptions',
@@ -260,7 +264,8 @@ const kanbanTaskFields: INodeProperties[] = [
 		},
 		options: [
 			{
-				displayName: 'Step Name or ID',
+				// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-options
+				displayName: 'Step',
 				name: 'board_step_id',
 				type: 'options',
 				typeOptions: {
@@ -286,7 +291,8 @@ const kanbanTaskFields: INodeProperties[] = [
 				description: 'Filter by priority',
 			},
 			{
-				displayName: 'Agent Name or ID',
+				// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-options
+				displayName: 'Agent',
 				name: 'agent_id',
 				type: 'options',
 				typeOptions: {
@@ -297,7 +303,8 @@ const kanbanTaskFields: INodeProperties[] = [
 				description: 'Filter by assigned agent. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
-				displayName: 'Inbox Name or ID',
+				// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-options
+				displayName: 'Inbox',
 				name: 'inbox_id',
 				type: 'options',
 				typeOptions: {
