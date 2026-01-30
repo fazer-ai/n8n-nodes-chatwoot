@@ -3,6 +3,8 @@ export type KanbanBoardOperation =
 	| 'delete'
 	| 'get'
 	| 'list'
+	| 'listConversations'
+	| 'toggleFavorite'
 	| 'update'
 	| 'updateAgents'
 	| 'updateInboxes';

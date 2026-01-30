@@ -40,6 +40,18 @@ const kanbanBoardOperations: INodeProperties[] = [
 				action: 'List kanban boards',
 			},
 			{
+				name: 'List Conversations',
+				value: 'listConversations',
+				description: "List conversations associated with a board's inboxes",
+				action: 'List kanban board conversations',
+			},
+			{
+				name: 'Toggle Favorite',
+				value: 'toggleFavorite',
+				description: 'Toggle the favorite status of a board for the current user',
+				action: 'Toggle kanban board favorite',
+			},
+			{
 				name: 'Update',
 				value: 'update',
 				description: 'Update a Kanban board',
@@ -74,7 +86,36 @@ const kanbanBoardFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				...showOnlyForKanbanBoard,
-				operation: ['get', 'update', 'delete', 'updateAgents', 'updateInboxes'],
+				operation: ['get', 'update', 'delete', 'updateAgents', 'updateInboxes', 'toggleFavorite', 'listConversations'],
+			},
+		},
+	},
+	{
+		displayName: 'Search Query',
+		name: 'searchQuery',
+		type: 'string',
+		default: '',
+		description: 'Search query (searches display_id, contact name, email, phone, identifier)',
+		displayOptions: {
+			show: {
+				...showOnlyForKanbanBoard,
+				operation: ['listConversations'],
+			},
+		},
+	},
+	{
+		displayName: 'Page',
+		name: 'page',
+		type: 'number',
+		default: 1,
+		typeOptions: {
+			minValue: 1,
+		},
+		description: 'Page number',
+		displayOptions: {
+			show: {
+				...showOnlyForKanbanBoard,
+				operation: ['listConversations'],
 			},
 		},
 	},
