@@ -99,8 +99,7 @@ const scheduledMessageFields: INodeProperties[] = [
 		name: 'scheduledAt',
 		type: 'dateTime',
 		default: '',
-		required: true,
-		description: 'ISO 8601 datetime when the message should be sent',
+		description: "ISO 8601 datetime when the message should be sent. Required when status is 'pending'.",
 		displayOptions: {
 			show: {
 				...showOnlyForScheduledMessage,

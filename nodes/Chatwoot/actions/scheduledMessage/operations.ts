@@ -49,14 +49,17 @@ async function createScheduledMessage(
 	const conversationId = getConversationId.call(context, itemIndex);
 
 	const content = context.getNodeParameter('content', itemIndex) as string;
-	const scheduledAt = context.getNodeParameter('scheduledAt', itemIndex) as string;
+	const scheduledAt = context.getNodeParameter('scheduledAt', itemIndex, '') as string;
 	const status = context.getNodeParameter('status', itemIndex) as string;
 
 	const body: IDataObject = {
 		content,
-		scheduled_at: scheduledAt,
 		status,
 	};
+
+	if (scheduledAt) {
+		body.scheduled_at = scheduledAt;
+	}
 
 	const result = await chatwootApiRequest.call(
 		context,

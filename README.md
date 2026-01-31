@@ -157,6 +157,15 @@ A webhook trigger node that listens for Chatwoot events. Automatically registers
 | --------- | ---------------------------------------- |
 | Get       | Get the current user profile information |
 
+### Scheduled Message
+
+| Operation | Description                                        |
+| --------- | -------------------------------------------------- |
+| Create    | Create a new scheduled message in a conversation   |
+| Get Many  | List all scheduled messages for a conversation     |
+| Update    | Update an existing scheduled message               |
+| Delete    | Delete a scheduled message                         |
+
 ### Team
 
 | Operation        | Description                 |
