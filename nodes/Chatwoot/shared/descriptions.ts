@@ -127,6 +127,16 @@ export const conversationSelector: INodeProperties = resourceSelector(
 );
 
 /**
+ * Scheduled Message selector using resourceLocator (From List / By ID in single field)
+ */
+export const scheduledMessageSelector: INodeProperties = resourceSelector(
+	'Scheduled Message',
+	'scheduledMessageId',
+	'Select the scheduled message to use',
+	'searchScheduledMessages',
+);
+
+/**
  * Contact selector using resourceLocator (From List / By ID in single field)
  */
 export const contactSelector: INodeProperties = resourceSelector(

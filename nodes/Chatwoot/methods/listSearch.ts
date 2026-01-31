@@ -18,6 +18,7 @@ import {
 	ChatwootPayloadResponse,
 	ChatwootPayloadResponseWithData,
 	ChatwootProfileResponse,
+	ChatwootScheduledMessage,
 	ChatwootTeam,
 	ChatwootTeamMember,
 	ChatwootWebhook
@@ -181,6 +182,48 @@ export async function searchConversations(
 			};
 		},
 	);
+
+	return { results };
+}
+
+/**
+ * Get all scheduled messages for the selected conversation (for resourceLocator)
+ */
+export async function searchScheduledMessages(
+	this: ILoadOptionsFunctions,
+	filter?: string,
+): Promise<INodeListSearchResult> {
+	const accountId = getAccountId.call(this, 0);
+	const conversationId = getConversationId.call(this, 0);
+	if (accountId === '' || conversationId === '') {
+		return { results: [] };
+	}
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/conversations/${conversationId}/scheduled_messages`,
+	)) as { payload?: ChatwootScheduledMessage[] };
+
+	const scheduledMessages = response.payload || [];
+
+	let results = scheduledMessages.map((sm: ChatwootScheduledMessage) => {
+		const contentPreview = sm.content?.substring(0, 30) || 'No content';
+		const scheduledDate = sm.scheduled_at ? new Date(sm.scheduled_at * 1000).toISOString() : 'Not scheduled';
+		return {
+			name: `#${sm.id} - ${sm.status} - ${contentPreview}${sm.content && sm.content.length > 30 ? '...' : ''} (${scheduledDate})`,
+			value: String(sm.id),
+		};
+	});
+
+	if (filter) {
+		const filterLower = filter.toLowerCase();
+		results = results.filter(
+			(item) =>
+				item.name.toLowerCase().includes(filterLower) ||
+				item.value.includes(filter),
+		);
+	}
 
 	return { results };
 }

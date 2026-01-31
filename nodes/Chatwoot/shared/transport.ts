@@ -214,3 +214,10 @@ export function getKanbanTaskId(this: IExecuteFunctions | ILoadOptionsFunctions,
 export function getMessageId(this: IExecuteFunctions | ILoadOptionsFunctions, itemIndex: number): string {
 	return getResourceId.call(this, itemIndex, 'messageId');
 }
+
+/**
+ * Helper to get the scheduled message ID from parameters (handles resourceLocator)
+ */
+export function getScheduledMessageId(this: IExecuteFunctions | ILoadOptionsFunctions, itemIndex: number): string {
+	return getResourceId.call(this, itemIndex, 'scheduledMessageId');
+}
