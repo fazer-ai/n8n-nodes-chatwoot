@@ -19,6 +19,7 @@ import type {
 	KanbanTaskOperation,
 	LabelOperation,
 	ProfileOperation,
+	ScheduledMessageOperation,
 	TeamOperation,
 } from './actions/node.type';
 
@@ -34,6 +35,7 @@ import { kanbanBoardDescription, executeKanbanBoardOperation } from './actions/k
 import { kanbanStepDescription, executeKanbanStepOperation } from './actions/kanbanStep';
 import { kanbanTaskDescription, executeKanbanTaskOperation } from './actions/kanbanTask';
 import { teamDescription, executeTeamOperation } from './actions/team';
+import { scheduledMessageDescription, executeScheduledMessageOperation } from './actions/scheduledMessage';
 import { listSearch, loadOptions } from './methods';
 
 /**
@@ -126,6 +128,11 @@ export class Chatwoot implements INodeType {
 						description: 'Access user profile and authentication info',
 					},
 					{
+						name: 'Scheduled Message',
+						value: 'scheduledMessage',
+						description: 'Manage scheduled messages in conversations',
+					},
+					{
 						name: 'Team',
 						value: 'team',
 						description: 'Manage teams and team members',
@@ -144,6 +151,7 @@ export class Chatwoot implements INodeType {
 			...kanbanBoardDescription,
 			...kanbanStepDescription,
 			...kanbanTaskDescription,
+			...scheduledMessageDescription,
 			...teamDescription,
 		],
 	};
@@ -199,6 +207,9 @@ export class Chatwoot implements INodeType {
 						break;
 					case 'kanbanTask':
 						responseData = await executeKanbanTaskOperation(this, operation as KanbanTaskOperation, i);
+						break;
+					case 'scheduledMessage':
+						responseData = await executeScheduledMessageOperation(this, operation as ScheduledMessageOperation, i);
 						break;
 					case 'team':
 						responseData = await executeTeamOperation(this, operation as TeamOperation, i);

@@ -9,6 +9,7 @@ import type { KanbanStepOperation } from './kanbanStep/types';
 import type { KanbanTaskOperation } from './kanbanTask/types';
 import type { LabelOperation } from './label/types';
 import type { ProfileOperation } from './profile/types';
+import type { ScheduledMessageOperation } from './scheduledMessage/types';
 import type { TeamOperation } from './team/types';
 
 export type ChatwootResources =
@@ -23,6 +24,7 @@ export type ChatwootResources =
 	| 'kanbanTask'
 	| 'label'
 	| 'profile'
+	| 'scheduledMessage'
 	| 'team';
 
 export type ChatwootOperations =
@@ -37,6 +39,7 @@ export type ChatwootOperations =
 	| KanbanTaskOperation
 	| LabelOperation
 	| ProfileOperation
+	| ScheduledMessageOperation
 	| TeamOperation;
 
 export type {
@@ -51,5 +54,6 @@ export type {
 	KanbanTaskOperation,
 	LabelOperation,
 	ProfileOperation,
+	ScheduledMessageOperation,
 	TeamOperation,
 };

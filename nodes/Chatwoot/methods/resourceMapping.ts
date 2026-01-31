@@ -97,6 +97,14 @@ export interface ChatwootMessage {
   created_at?: string;
 }
 
+export interface ChatwootScheduledMessage {
+  id: number;
+  content?: string;
+  status?: string;
+  scheduled_at?: number;
+  created_at?: number;
+}
+
 export interface ChatwootTeamMember {
 	id: number;
 	name?: string;
