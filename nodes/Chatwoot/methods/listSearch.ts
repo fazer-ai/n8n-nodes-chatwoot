@@ -702,7 +702,8 @@ function buildTemplateDescription(template: ChatwootMessageTemplate): string {
 			}
 			case 'BODY': {
 				const paramCount = (component.text?.match(/\{\{\d+\}\}/g) || []).length;
-				const preview = component.text?.substring(0, 80) + (component.text && component.text.length > 80 ? '...' : '');
+				const bodyText = component.text ?? '';
+				const preview = bodyText.substring(0, 80) + (bodyText.length > 80 ? '...' : '');
 				if (paramCount > 0) {
 					parts.push(`BODY: "${preview}" [${paramCount} param${paramCount > 1 ? 's' : ''}]`);
 				} else {
@@ -718,15 +719,17 @@ function buildTemplateDescription(template: ChatwootMessageTemplate): string {
 				const buttons = component.buttons || [];
 				const buttonDescriptions = buttons.map((btn, idx) => {
 					if (btn.type === 'URL' && btn.url?.includes('{{')) {
-						return `  ${idx + 1}. URL button "${btn.text}" [requires param]`;
+						return `  ${idx}. URL button "${btn.text}" [requires param]`;
 					} else if (btn.type === 'URL') {
-						return `  ${idx + 1}. URL button "${btn.text}"`;
+						return `  ${idx}. URL button "${btn.text}"`;
 					} else if (btn.type === 'QUICK_REPLY') {
-						return `  ${idx + 1}. Quick reply "${btn.text}"`;
+						return `  ${idx}. Quick reply "${btn.text}"`;
+					} else if (btn.type === 'COPY_CODE') {
+						return `  ${idx}. Copy code button [requires param]`;
 					} else if (btn.type === 'PHONE_NUMBER') {
-						return `  ${idx + 1}. Phone button "${btn.text}"`;
+						return `  ${idx}. Phone button "${btn.text}"`;
 					}
-					return `  ${idx + 1}. ${btn.type} "${btn.text}"`;
+					return `  ${idx}. ${btn.type} "${btn.text}"`;
 				});
 				parts.push(`BUTTONS:\n${buttonDescriptions.join('\n')}`);
 				break;

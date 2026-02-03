@@ -1072,15 +1072,16 @@ async function sendTemplateToConversation(
 
 	for (const idx of requiredParams.buttonIndicesRequiringParams) {
 		if (!providedParams.buttonIndices.has(idx)) {
-			validationErrors.push(`Button at index ${idx} requires a parameter`);
+			validationErrors.push(
+				`Button at index ${idx} (button #${idx + 1}) requires a parameter`,
+			);
 		}
 	}
 
 	// Check for empty button parameters
 	if (emptyButtonParams.length > 0) {
-		validationErrors.push(
-			`Button parameter(s) at index(es) ${emptyButtonParams.join(', ')} are empty`,
-		);
+		const indexList = emptyButtonParams.map((i) => `${i} (#${i + 1})`).join(', ');
+		validationErrors.push(`Button parameter(s) at index ${indexList} are empty`);
 	}
 
 	if (validationErrors.length > 0) {
