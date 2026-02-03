@@ -227,7 +227,7 @@ const conversationFields: INodeProperties[] = [
     displayOptions: {
       show: {
         ...showOnlyForConversation,
-        operation: ['list', 'get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'listLabels', 'addCustomAttributes', 'removeCustomAttributes', 'setCustomAttributes', 'setPriority', 'sendMessage', 'sendFile', 'updateLastSeen', 'updatePresence', 'markUnread', 'listMessages', 'listAttachments', 'updateAttachmentMeta', 'deleteMessage'],
+        operation: ['list', 'get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'listLabels', 'addCustomAttributes', 'removeCustomAttributes', 'setCustomAttributes', 'setPriority', 'sendMessage', 'sendFile', 'sendTemplate', 'updateLastSeen', 'updatePresence', 'markUnread', 'listMessages', 'listAttachments', 'updateAttachmentMeta', 'deleteMessage'],
       },
     },
   },
@@ -979,16 +979,6 @@ const sendFileFields: INodeProperties[] = [
 ];
 
 const sendTemplateFields: INodeProperties[] = [
-  {
-    ...inboxSelector,
-    description: 'Select the inbox to fetch templates from (must be a WhatsApp inbox)',
-    displayOptions: {
-      show: {
-        resource: ['conversation'],
-        operation: ['sendTemplate'],
-      },
-    },
-  },
   {
     ...messageTemplateSelector,
     displayOptions: {
