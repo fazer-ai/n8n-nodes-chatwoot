@@ -10,8 +10,9 @@ import {
   ChatwootContact,
   ChatwootKanbanBoard,
   ChatwootPayloadResponseWithData,
+  ChatwootMessageTemplate,
 } from "./resourceMapping";
-import { chatwootApiRequest, getAccountId, getKanbanBoardId } from "../shared/transport";
+import { chatwootApiRequest, getAccountId, getInboxId, getKanbanBoardId, getTemplateName } from "../shared/transport";
 
 /**
  * Get all agents for the selected account (for loadOptions)
@@ -316,4 +317,85 @@ export async function loadContactsOptions(
     name: `#${contact.id} - ${contact.name || contact.email || 'Contact'}`,
     value: contact.id,
   }));
+}
+
+/**
+ * Load template structure preview for the selected template (for loadOptions dropdown)
+ */
+export async function loadTemplatePreview(
+  this: ILoadOptionsFunctions,
+): Promise<INodePropertyOptions[]> {
+  const accountId = getAccountId.call(this, 0);
+  const inboxId = getInboxId.call(this, 0);
+  const templateName = getTemplateName.call(this, 0);
+
+  if (!accountId || !inboxId || !templateName) {
+    return [{ name: 'Select an Inbox and Template First', value: '' }];
+  }
+
+  const inbox = (await chatwootApiRequest.call(
+    this,
+    'GET',
+    `/api/v1/accounts/${accountId}/inboxes/${inboxId}`,
+  )) as ChatwootInbox;
+
+  const templates = inbox.message_templates || [];
+  const template = templates.find((t: ChatwootMessageTemplate) => t.name === templateName);
+
+  if (!template) {
+    return [{ name: `Template "${templateName}" not found in inbox`, value: '' }];
+  }
+
+  const options: INodePropertyOptions[] = [];
+
+  for (const component of template.components) {
+    switch (component.type) {
+      case 'HEADER': {
+        if (component.format === 'TEXT') {
+          options.push({ name: `📋 HEADER (text): "${component.text}"`, value: 'header' });
+        } else if (component.format) {
+          options.push({ name: `📋 HEADER (${component.format.toLowerCase()}): requires media URL`, value: 'header' });
+        }
+        break;
+      }
+      case 'BODY': {
+        const paramCount = (component.text?.match(/\{\{\d+\}\}/g) || []).length;
+        const preview = component.text || '';
+        if (paramCount > 0) {
+          options.push({ name: `📝 BODY [${paramCount} params]: "${preview}"`, value: 'body' });
+        } else {
+          options.push({ name: `📝 BODY: "${preview}"`, value: 'body' });
+        }
+        break;
+      }
+      case 'FOOTER': {
+        options.push({ name: `📎 FOOTER: "${component.text}"`, value: 'footer' });
+        break;
+      }
+      case 'BUTTONS': {
+        const buttons = component.buttons || [];
+        for (let i = 0; i < buttons.length; i++) {
+          const btn = buttons[i];
+          if (btn.type === 'URL' && btn.url?.includes('{{')) {
+            options.push({ name: `🔘 Button ${i + 1}: URL "${btn.text}" [requires param]`, value: `button_${i}` });
+          } else if (btn.type === 'URL') {
+            options.push({ name: `🔘 Button ${i + 1}: URL "${btn.text}"`, value: `button_${i}` });
+          } else if (btn.type === 'QUICK_REPLY') {
+            options.push({ name: `🔘 Button ${i + 1}: Quick reply "${btn.text}"`, value: `button_${i}` });
+          } else if (btn.type === 'PHONE_NUMBER') {
+            options.push({ name: `🔘 Button ${i + 1}: Phone "${btn.text}"`, value: `button_${i}` });
+          } else {
+            options.push({ name: `🔘 Button ${i + 1}: ${btn.type} "${btn.text}"`, value: `button_${i}` });
+          }
+        }
+        break;
+      }
+    }
+  }
+
+  if (options.length === 0) {
+    options.push({ name: 'Template has no components', value: '' });
+  }
+
+  return options;
 }

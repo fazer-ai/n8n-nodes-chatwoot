@@ -1,8 +1,9 @@
 import type {
 	ILoadOptionsFunctions,
+	INodeListSearchItems,
 	INodeListSearchResult,
 } from 'n8n-workflow';
-import { chatwootApiRequest, getAccountId, getChatwootBaseUrl, getConversationId, getInboxId, getKanbanBoardId, getMessageId, getTeamId } from '../shared/transport';
+import { chatwootApiRequest, getAccountId, getChatwootBaseUrl, getConversationId, getInboxId, getKanbanBoardId, getMessageId, getTeamId, getTemplateName } from '../shared/transport';
 import {
 	ChatwootAccount,
 	ChatwootAgent,
@@ -15,6 +16,7 @@ import {
 	ChatwootKanbanTask,
 	ChatwootLabel,
 	ChatwootMessage,
+	ChatwootMessageTemplate,
 	ChatwootPayloadResponse,
 	ChatwootPayloadResponseWithData,
 	ChatwootProfileResponse,
@@ -677,6 +679,236 @@ export async function searchAttachments(
 				item.name.toLowerCase().includes(filterLower) ||
 				item.value.includes(filter),
 		);
+	}
+
+	return { results };
+}
+
+/**
+ * Build a human-readable description of a template's structure
+ */
+function buildTemplateDescription(template: ChatwootMessageTemplate): string {
+	const parts: string[] = [];
+
+	for (const component of template.components) {
+		switch (component.type) {
+			case 'HEADER': {
+				if (component.format === 'TEXT') {
+					parts.push(`HEADER (text): "${component.text}"`);
+				} else if (component.format) {
+					parts.push(`HEADER (${component.format.toLowerCase()}): requires media URL`);
+				}
+				break;
+			}
+			case 'BODY': {
+				const paramCount = (component.text?.match(/\{\{\d+\}\}/g) || []).length;
+				const preview = component.text?.substring(0, 80) + (component.text && component.text.length > 80 ? '...' : '');
+				if (paramCount > 0) {
+					parts.push(`BODY: "${preview}" [${paramCount} param${paramCount > 1 ? 's' : ''}]`);
+				} else {
+					parts.push(`BODY: "${preview}"`);
+				}
+				break;
+			}
+			case 'FOOTER': {
+				parts.push(`FOOTER: "${component.text}"`);
+				break;
+			}
+			case 'BUTTONS': {
+				const buttons = component.buttons || [];
+				const buttonDescriptions = buttons.map((btn, idx) => {
+					if (btn.type === 'URL' && btn.url?.includes('{{')) {
+						return `  ${idx + 1}. URL button "${btn.text}" [requires param]`;
+					} else if (btn.type === 'URL') {
+						return `  ${idx + 1}. URL button "${btn.text}"`;
+					} else if (btn.type === 'QUICK_REPLY') {
+						return `  ${idx + 1}. Quick reply "${btn.text}"`;
+					} else if (btn.type === 'PHONE_NUMBER') {
+						return `  ${idx + 1}. Phone button "${btn.text}"`;
+					}
+					return `  ${idx + 1}. ${btn.type} "${btn.text}"`;
+				});
+				parts.push(`BUTTONS:\n${buttonDescriptions.join('\n')}`);
+				break;
+			}
+		}
+	}
+
+	return parts.join('\n');
+}
+
+/**
+ * Get WhatsApp message templates for the selected inbox (for resourceLocator)
+ */
+export async function searchMessageTemplates(
+	this: ILoadOptionsFunctions,
+	filter?: string,
+): Promise<INodeListSearchResult> {
+	const accountId = getAccountId.call(this, 0);
+	const inboxId = getInboxId.call(this, 0);
+
+	if (!accountId || !inboxId) {
+		return { results: [] };
+	}
+
+	const inbox = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/inboxes/${inboxId}`,
+	)) as ChatwootInbox;
+
+	const templates = inbox.message_templates || [];
+
+	let results = templates.map((template: ChatwootMessageTemplate) => {
+		// Find body component to show preview in the name
+		const bodyComponent = template.components.find(c => c.type === 'BODY');
+		const bodyPreview = bodyComponent?.text
+			? bodyComponent.text.substring(0, 50) + (bodyComponent.text.length > 50 ? '...' : '')
+			: '';
+
+		return {
+			name: `${template.name} (${template.language}) - ${template.category}${bodyPreview ? ` | ${bodyPreview}` : ''}`,
+			value: template.name,
+			description: buildTemplateDescription(template),
+		};
+	});
+
+	if (filter) {
+		const filterLower = filter.toLowerCase();
+		results = results.filter(
+			(item) =>
+				item.name.toLowerCase().includes(filterLower) ||
+				item.value.toLowerCase().includes(filterLower),
+		);
+	}
+
+	return { results };
+}
+
+/**
+ * Get template structure for the currently selected template (for resourceLocator preview)
+ */
+export async function searchTemplateStructure(
+	this: ILoadOptionsFunctions,
+): Promise<INodeListSearchResult> {
+	const accountId = getAccountId.call(this, 0);
+	const inboxId = getInboxId.call(this, 0);
+	const templateName = getTemplateName.call(this, 0);
+
+	if (!accountId || !inboxId || !templateName) {
+		return {
+			results: [
+				{
+					name: 'Select an Inbox and Template First',
+					value: '',
+				},
+			],
+		};
+	}
+
+	const inbox = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/inboxes/${inboxId}`,
+	)) as ChatwootInbox;
+
+	const templates = inbox.message_templates || [];
+	const template = templates.find((t) => t.name === templateName);
+
+	if (!template) {
+		return {
+			results: [
+				{
+					name: `Template "${templateName}" not found`,
+					value: '',
+				},
+			],
+		};
+	}
+
+	// Build structure items - each component as a separate selectable item for visibility
+	const results: INodeListSearchItems[] = [];
+
+	for (const component of template.components) {
+		switch (component.type) {
+			case 'HEADER': {
+				if (component.format === 'TEXT') {
+					results.push({
+						name: `📋 HEADER (text): "${component.text}"`,
+						value: 'header',
+					});
+				} else if (component.format) {
+					results.push({
+						name: `📋 HEADER (${component.format.toLowerCase()}): requires media URL`,
+						value: 'header',
+					});
+				}
+				break;
+			}
+			case 'BODY': {
+				const paramCount = (component.text?.match(/\{\{\d+\}\}/g) || []).length;
+				const text = component.text || '';
+				if (paramCount > 0) {
+					results.push({
+						name: `📝 BODY [${paramCount} params]: "${text}"`,
+						value: 'body',
+					});
+				} else {
+					results.push({
+						name: `📝 BODY: "${text}"`,
+						value: 'body',
+					});
+				}
+				break;
+			}
+			case 'FOOTER': {
+				results.push({
+					name: `📎 FOOTER: "${component.text}"`,
+					value: 'footer',
+				});
+				break;
+			}
+			case 'BUTTONS': {
+				const buttons = component.buttons || [];
+				for (let i = 0; i < buttons.length; i++) {
+					const btn = buttons[i];
+					if (btn.type === 'URL' && btn.url?.includes('{{')) {
+						results.push({
+							name: `🔘 Button ${i}: URL "${btn.text}" [requires param]`,
+							value: `button_${i}`,
+						});
+					} else if (btn.type === 'URL') {
+						results.push({
+							name: `🔘 Button ${i}: URL "${btn.text}"`,
+							value: `button_${i}`,
+						});
+					} else if (btn.type === 'QUICK_REPLY') {
+						results.push({
+							name: `🔘 Button ${i}: Quick Reply "${btn.text}"`,
+							value: `button_${i}`,
+						});
+					} else if (btn.type === 'COPY_CODE') {
+						results.push({
+							name: `🔘 Button ${i}: Copy Code [requires param]`,
+							value: `button_${i}`,
+						});
+					} else {
+						results.push({
+							name: `🔘 Button ${i}: ${btn.type} "${btn.text}"`,
+							value: `button_${i}`,
+						});
+					}
+				}
+				break;
+			}
+		}
+	}
+
+	if (results.length === 0) {
+		results.push({
+			name: 'No components found in template',
+			value: '',
+		});
 	}
 
 	return { results };

@@ -197,6 +197,45 @@ export const webhookSelector: INodeProperties = resourceSelector(
 );
 
 /**
+ * Message Template selector using resourceLocator (From List / By Name)
+ */
+export const messageTemplateSelector: INodeProperties = {
+	displayName: 'Template',
+	name: 'templateName',
+	type: 'resourceLocator',
+	default: { mode: 'list', value: '' },
+	required: true,
+	description: 'Select the WhatsApp template to use',
+	modes: [
+		{
+			displayName: 'From List',
+			name: 'list',
+			type: 'list',
+			placeholder: 'Select a template...',
+			typeOptions: {
+				searchListMethod: 'searchMessageTemplates',
+				searchable: true,
+			},
+		},
+		{
+			displayName: 'By Name',
+			name: 'name',
+			type: 'string',
+			placeholder: 'e.g. hello_world',
+			validation: [
+				{
+					type: 'regex',
+					properties: {
+						regex: '^[a-z0-9_]+$',
+						errorMessage: 'Template name must contain only lowercase letters, numbers, and underscores',
+					},
+				},
+			],
+		},
+	],
+};
+
+/**
  * Webhook events multi-select
  */
 export const webhookEventsSelector: INodeProperties = {

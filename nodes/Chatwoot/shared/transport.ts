@@ -221,3 +221,10 @@ export function getMessageId(this: IExecuteFunctions | ILoadOptionsFunctions, it
 export function getScheduledMessageId(this: IExecuteFunctions | ILoadOptionsFunctions, itemIndex: number): string {
 	return getResourceId.call(this, itemIndex, 'scheduledMessageId');
 }
+
+/**
+ * Helper to get the template name from parameters (handles resourceLocator)
+ */
+export function getTemplateName(this: IExecuteFunctions | ILoadOptionsFunctions, itemIndex: number): string {
+	return getResourceId.call(this, itemIndex, 'templateName');
+}
