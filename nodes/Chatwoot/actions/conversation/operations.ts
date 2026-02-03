@@ -6,6 +6,7 @@ import {
 	getInboxId,
 	getConversationId,
 	getContactId,
+	getTemplateName,
 } from '../../shared/transport';
 import { ConversationOperation } from './types';
 
@@ -68,6 +69,8 @@ export async function executeConversationOperation(
 			return listConversations(context, itemIndex);
 		case 'sendMessage':
 			return sendMessageToConversation(context, itemIndex);
+		case 'sendTemplate':
+			return sendTemplateToConversation(context, itemIndex);
 		case 'sendFile':
 			return sendFileToConversation(context, itemIndex);
 		case 'listMessages':
@@ -904,6 +907,287 @@ async function sendMessageToConversation(
 	});
 
 	return { json: result };
+}
+
+async function sendTemplateToConversation(
+	context: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const accountId = getAccountId.call(context, itemIndex);
+	const conversationId = getConversationId.call(context, itemIndex);
+	const inboxId = getInboxId.call(context, itemIndex);
+	const templateName = getTemplateName.call(context, itemIndex);
+
+	// Fetch inbox to get template details
+	const inbox = await chatwootApiRequest.call(
+		context,
+		'GET',
+		`/api/v1/accounts/${accountId}/inboxes/${inboxId}`,
+	) as IDataObject;
+
+	const messageTemplates = (inbox.message_templates as IDataObject[]) || [];
+	const template = messageTemplates.find((t: IDataObject) => t.name === templateName) as IDataObject | undefined;
+
+	if (!template) {
+		throw new NodeOperationError(
+			context.getNode(),
+			`Template "${templateName}" not found in inbox ${inboxId}`,
+			{ itemIndex },
+		);
+	}
+
+	// Extract template details
+	const category = template.category as string;
+	const language = template.language as string;
+	const templateComponents = (template.components as IDataObject[]) || [];
+
+	// Parse template to determine required parameters
+	const requiredParams = analyzeTemplateRequirements(templateComponents);
+
+	// Process user-provided components
+	const componentsData = context.getNodeParameter('components', itemIndex, {}) as IDataObject;
+	const userComponents = (componentsData.component as IDataObject[]) || [];
+
+	// Build processed_params object from components
+	const processedParams: IDataObject = {};
+	const providedParams = {
+		bodyCount: 0,
+		headerCount: 0,
+		buttonIndices: new Set<number>(),
+	};
+
+	// Track body parameters for rendering the message content
+	const bodyParamValues: string[] = [];
+	const emptyBodyParams: number[] = [];
+	const emptyHeaderParams: number[] = [];
+	const emptyButtonParams: number[] = [];
+
+	for (const comp of userComponents) {
+		const compType = comp.type as string;
+
+		if (compType === 'body') {
+			const bodyParams = comp.bodyParameters as IDataObject;
+			const params = (bodyParams?.parameter as IDataObject[]) || [];
+			if (params.length > 0) {
+				const bodyObj: IDataObject = {};
+				for (let i = 0; i < params.length; i++) {
+					const param = params[i];
+					const paramType = param.type as string;
+
+					if (paramType === 'text') {
+						const textValue = (param.text as string || '').trim();
+						if (!textValue) {
+							emptyBodyParams.push(i + 1);
+						}
+						bodyObj[String(i + 1)] = textValue;
+						bodyParamValues.push(textValue);
+					} else if (paramType === 'date_time') {
+						const dateValue = (param.date_time as string || '').trim();
+						if (!dateValue) {
+							emptyBodyParams.push(i + 1);
+						}
+						bodyObj[String(i + 1)] = dateValue;
+						bodyParamValues.push(dateValue);
+					}
+				}
+				processedParams.body = bodyObj;
+				providedParams.bodyCount = params.length;
+			}
+		} else if (compType === 'header') {
+			const headerParams = comp.headerParameters as IDataObject;
+			const params = (headerParams?.parameter as IDataObject[]) || [];
+			if (params.length > 0) {
+				const param = params[0]; // Header typically has one parameter
+				const paramType = param.type as string;
+
+				if (paramType === 'text') {
+					const textValue = (param.text as string || '').trim();
+					if (!textValue) {
+						emptyHeaderParams.push(1);
+					}
+					processedParams.header = { text: textValue };
+				} else if (['image', 'video', 'document'].includes(paramType)) {
+					const mediaUrl = (param.mediaUrl as string || '').trim();
+					if (!mediaUrl) {
+						emptyHeaderParams.push(1);
+					}
+					processedParams.header = {
+						media_url: mediaUrl,
+						media_type: paramType,
+					};
+				}
+				providedParams.headerCount = 1;
+			}
+		} else if (compType === 'button') {
+			const buttonIndex = comp.index as number;
+			const subType = comp.sub_type as string;
+			const buttonParameter = (comp.buttonParameter as string || '').trim();
+
+			if (!buttonParameter) {
+				emptyButtonParams.push(buttonIndex);
+			}
+
+			if (!processedParams.buttons) {
+				processedParams.buttons = [];
+			}
+
+			(processedParams.buttons as IDataObject[]).push({
+				type: subType,
+				index: buttonIndex,
+				parameter: buttonParameter,
+			});
+
+			providedParams.buttonIndices.add(buttonIndex);
+		}
+	}
+
+	// Validate required parameters
+	const validationErrors: string[] = [];
+
+	if (requiredParams.bodyParamCount > 0 && providedParams.bodyCount < requiredParams.bodyParamCount) {
+		validationErrors.push(
+			`Body requires ${requiredParams.bodyParamCount} parameter(s), but only ${providedParams.bodyCount} provided`,
+		);
+	}
+
+	// Check for empty body parameters
+	if (emptyBodyParams.length > 0) {
+		validationErrors.push(
+			`Body parameter(s) at position(s) ${emptyBodyParams.join(', ')} are empty`,
+		);
+	}
+
+	if (requiredParams.headerRequiresParam && providedParams.headerCount === 0) {
+		validationErrors.push(
+			`Header requires a parameter (${requiredParams.headerFormat || 'media/text'})`,
+		);
+	}
+
+	// Check for empty header parameters
+	if (emptyHeaderParams.length > 0) {
+		validationErrors.push(
+			`Header parameter is empty`,
+		);
+	}
+
+	for (const idx of requiredParams.buttonIndicesRequiringParams) {
+		if (!providedParams.buttonIndices.has(idx)) {
+			validationErrors.push(
+				`Button at index ${idx} (button #${idx + 1}) requires a parameter`,
+			);
+		}
+	}
+
+	// Check for empty button parameters
+	if (emptyButtonParams.length > 0) {
+		const indexList = emptyButtonParams.map((i) => `${i} (#${i + 1})`).join(', ');
+		validationErrors.push(`Button parameter(s) at index ${indexList} are empty`);
+	}
+
+	if (validationErrors.length > 0) {
+		throw new NodeOperationError(
+			context.getNode(),
+			`Template validation failed:\n- ${validationErrors.join('\n- ')}`,
+			{ itemIndex },
+		);
+	}
+
+	// Render message content by substituting placeholders in the template body
+	let messageContent = '';
+	const bodyComponent = templateComponents.find((c: IDataObject) => c.type === 'BODY');
+	if (bodyComponent && bodyComponent.text) {
+		messageContent = bodyComponent.text as string;
+		// Replace {{1}}, {{2}}, etc. with actual values
+		for (let i = 0; i < bodyParamValues.length; i++) {
+			messageContent = messageContent.replace(new RegExp(`\\{\\{${i + 1}\\}\\}`, 'g'), bodyParamValues[i]);
+		}
+	}
+
+	// Fallback if no body or no substitution was done
+	if (!messageContent) {
+		messageContent = `Template: ${templateName}`;
+	}
+
+	// Build the request body
+	const body: IDataObject = {
+		content: messageContent,
+		message_type: 'outgoing',
+		template_params: {
+			name: templateName,
+			category,
+			language,
+			processed_params: processedParams,
+		},
+	};
+
+	const result = await chatwootApiRequest.call(
+		context,
+		'POST',
+		`/api/v1/accounts/${accountId}/conversations/${conversationId}/messages`,
+		body,
+	) as IDataObject;
+
+	return { json: result };
+}
+
+/**
+ * Analyze template components to determine required parameters
+ */
+function analyzeTemplateRequirements(components: IDataObject[]): {
+	bodyParamCount: number;
+	headerRequiresParam: boolean;
+	headerFormat: string | null;
+	buttonIndicesRequiringParams: number[];
+} {
+	let bodyParamCount = 0;
+	let headerRequiresParam = false;
+	let headerFormat: string | null = null;
+	const buttonIndicesRequiringParams: number[] = [];
+
+	for (const component of components) {
+		const type = component.type as string;
+
+		if (type === 'BODY') {
+			// Count {{n}} placeholders in body text
+			const text = component.text as string || '';
+			const matches = text.match(/\{\{\d+\}\}/g) || [];
+			bodyParamCount = matches.length;
+		} else if (type === 'HEADER') {
+			const format = component.format as string;
+			if (format && format !== 'TEXT') {
+				// IMAGE, VIDEO, DOCUMENT headers require media
+				headerRequiresParam = true;
+				headerFormat = format.toLowerCase();
+			} else if (format === 'TEXT') {
+				// Check if header text has placeholders
+				const text = component.text as string || '';
+				if (text.includes('{{')) {
+					headerRequiresParam = true;
+					headerFormat = 'text';
+				}
+			}
+		} else if (type === 'BUTTONS') {
+			const buttons = (component.buttons as IDataObject[]) || [];
+			for (let i = 0; i < buttons.length; i++) {
+				const btn = buttons[i];
+				// URL buttons with {{1}} require a parameter
+				if (btn.type === 'URL' && (btn.url as string)?.includes('{{')) {
+					buttonIndicesRequiringParams.push(i);
+				}
+				// COPY_CODE buttons require a parameter
+				if (btn.type === 'COPY_CODE') {
+					buttonIndicesRequiringParams.push(i);
+				}
+			}
+		}
+	}
+
+	return {
+		bodyParamCount,
+		headerRequiresParam,
+		headerFormat,
+		buttonIndicesRequiringParams,
+	};
 }
 
 async function sendFileToConversation(

@@ -4,6 +4,7 @@ import {
   inboxSelector,
   conversationSelector,
   contactSelector,
+  messageTemplateSelector,
 } from '../../shared/descriptions';
 
 const showOnlyForConversation = {
@@ -50,6 +51,12 @@ const conversationOperations: INodeProperties[] = [
         value: 'sendFile',
         description: 'Send a file message in conversation',
         action: 'Send file message in conversation',
+      },
+      {
+        name: 'Send with Template',
+        value: 'sendTemplate',
+        description: 'Send a WhatsApp template message',
+        action: 'Send template message',
       },
       {
         name: 'List Messages',
@@ -211,7 +218,7 @@ const conversationFields: INodeProperties[] = [
     displayOptions: {
       show: {
         ...showOnlyForConversation,
-        operation: ['create', 'list', 'get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'listLabels', 'addCustomAttributes', 'removeCustomAttributes', 'setCustomAttributes', 'setPriority', 'sendMessage', 'sendFile', 'updateLastSeen', 'updatePresence', 'markUnread', 'listMessages', 'listAttachments', 'updateAttachmentMeta', 'deleteMessage'],
+        operation: ['create', 'list', 'get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'listLabels', 'addCustomAttributes', 'removeCustomAttributes', 'setCustomAttributes', 'setPriority', 'sendMessage', 'sendFile', 'sendTemplate', 'updateLastSeen', 'updatePresence', 'markUnread', 'listMessages', 'listAttachments', 'updateAttachmentMeta', 'deleteMessage'],
       },
     },
   },
@@ -229,7 +236,7 @@ const conversationFields: INodeProperties[] = [
     displayOptions: {
       show: {
         ...showOnlyForConversation,
-        operation: ['get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'listLabels', 'addCustomAttributes', 'removeCustomAttributes', 'setCustomAttributes', 'setPriority', 'sendMessage', 'sendFile', 'updateLastSeen', 'updatePresence', 'markUnread', 'listMessages', 'listAttachments', 'updateAttachmentMeta', 'deleteMessage'],
+        operation: ['get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'listLabels', 'addCustomAttributes', 'removeCustomAttributes', 'setCustomAttributes', 'setPriority', 'sendMessage', 'sendFile', 'sendTemplate', 'updateLastSeen', 'updatePresence', 'markUnread', 'listMessages', 'listAttachments', 'updateAttachmentMeta', 'deleteMessage'],
       },
     },
   },
@@ -971,6 +978,254 @@ const sendFileFields: INodeProperties[] = [
   },
 ];
 
+const sendTemplateFields: INodeProperties[] = [
+  {
+    ...inboxSelector,
+    description: 'Select the inbox to fetch templates from (must be a WhatsApp inbox)',
+    displayOptions: {
+      show: {
+        resource: ['conversation'],
+        operation: ['sendTemplate'],
+      },
+    },
+  },
+  {
+    ...messageTemplateSelector,
+    displayOptions: {
+      show: {
+        resource: ['conversation'],
+        operation: ['sendTemplate'],
+      },
+    },
+  },
+  {
+    displayName: 'Template Structure',
+    name: 'templatePreview',
+    type: 'resourceLocator',
+    default: { mode: 'list', value: '' },
+    description: 'View the structure of the selected template. This field is informational only and does not affect the message.',
+    displayOptions: {
+      show: {
+        resource: ['conversation'],
+        operation: ['sendTemplate'],
+      },
+    },
+    modes: [
+      {
+        displayName: 'From Template',
+        name: 'list',
+        type: 'list',
+        typeOptions: {
+          searchListMethod: 'searchTemplateStructure',
+          searchable: false,
+        },
+      },
+    ],
+  },
+  {
+    displayName: 'Components',
+    name: 'components',
+    type: 'fixedCollection',
+    default: {},
+    typeOptions: {
+      multipleValues: true,
+    },
+    placeholder: 'Add Component',
+    description: 'Template components with dynamic parameters. Add components matching your template structure.',
+    displayOptions: {
+      show: {
+        resource: ['conversation'],
+        operation: ['sendTemplate'],
+      },
+    },
+    options: [
+      {
+        name: 'component',
+        displayName: 'Component',
+        // eslint-disable-next-line n8n-nodes-base/node-param-fixed-collection-type-unsorted-items
+        values: [
+          {
+            displayName: 'Type',
+            name: 'type',
+            type: 'options',
+            options: [
+              { name: 'Body', value: 'body' },
+              { name: 'Header', value: 'header' },
+              { name: 'Button', value: 'button' },
+            ],
+            default: 'body',
+          },
+          // Body parameters
+          {
+            displayName: 'Parameters',
+            name: 'bodyParameters',
+            type: 'fixedCollection',
+            typeOptions: {
+              sortable: true,
+              multipleValues: true,
+            },
+            displayOptions: {
+              show: {
+                type: ['body'],
+              },
+            },
+            placeholder: 'Add Parameter',
+            default: {},
+            options: [
+              {
+                displayName: 'Parameter',
+                name: 'parameter',
+                values: [
+                  {
+                    displayName: 'Type',
+                    name: 'type',
+                    type: 'options',
+                    options: [
+                      { name: 'Text', value: 'text' },
+                      { name: 'Date Time', value: 'date_time' },
+                    ],
+                    default: 'text',
+                  },
+                  {
+                    displayName: 'Text',
+                    name: 'text',
+                    type: 'string',
+                    displayOptions: {
+                      show: {
+                        type: ['text'],
+                      },
+                    },
+                    default: '',
+                    description: 'Text value for the parameter',
+                  },
+                  {
+                    displayName: 'Date Time',
+                    name: 'date_time',
+                    type: 'dateTime',
+                    displayOptions: {
+                      show: {
+                        type: ['date_time'],
+                      },
+                    },
+                    default: '',
+                    description: 'Date/time value for the parameter',
+                  },
+                ],
+              },
+            ],
+          },
+          // Header parameters
+          {
+            displayName: 'Parameters',
+            name: 'headerParameters',
+            type: 'fixedCollection',
+            typeOptions: {
+              sortable: true,
+              multipleValues: true,
+            },
+            displayOptions: {
+              show: {
+                type: ['header'],
+              },
+            },
+            placeholder: 'Add Parameter',
+            default: {},
+            options: [
+              {
+                displayName: 'Parameter',
+                name: 'parameter',
+                values: [
+                  {
+                    displayName: 'Type',
+                    name: 'type',
+                    type: 'options',
+                    options: [
+                      { name: 'Text', value: 'text' },
+                      { name: 'Image', value: 'image' },
+                      { name: 'Video', value: 'video' },
+                      { name: 'Document', value: 'document' },
+                    ],
+                    default: 'text',
+                  },
+                  {
+                    displayName: 'Text',
+                    name: 'text',
+                    type: 'string',
+                    displayOptions: {
+                      show: {
+                        type: ['text'],
+                      },
+                    },
+                    default: '',
+                    description: 'Text value for the parameter',
+                  },
+                  {
+                    displayName: 'Media URL',
+                    name: 'mediaUrl',
+                    type: 'string',
+                    displayOptions: {
+                      show: {
+                        type: ['image', 'video', 'document'],
+                      },
+                    },
+                    default: '',
+                    description: 'URL of the media file',
+                  },
+                ],
+              },
+            ],
+          },
+          // Button fields
+          {
+            displayName: 'Button Type',
+            name: 'sub_type',
+            type: 'options',
+            displayOptions: {
+              show: {
+                type: ['button'],
+              },
+            },
+            options: [
+              { name: 'Quick Reply', value: 'quick_reply', description: 'Quick reply button with payload' },
+              { name: 'URL', value: 'url', description: 'URL button with dynamic suffix' },
+              { name: 'Copy Code', value: 'copy_code', description: 'Copy code button' },
+            ],
+            default: 'quick_reply',
+          },
+          {
+            displayName: 'Button Index',
+            name: 'index',
+            type: 'number',
+            displayOptions: {
+              show: {
+                type: ['button'],
+              },
+            },
+            typeOptions: {
+              minValue: 0,
+              maxValue: 9,
+            },
+            default: 0,
+            description: 'Index of the button (0-based, in order they appear in the template)',
+          },
+          {
+            displayName: 'Payload / Parameter',
+            name: 'buttonParameter',
+            type: 'string',
+            displayOptions: {
+              show: {
+                type: ['button'],
+              },
+            },
+            default: '',
+            description: 'For quick_reply: the payload. For URL: the dynamic suffix. For copy_code: the code to copy.',
+          },
+        ],
+      },
+    ],
+  },
+];
+
 const updateAttachmentMetaFields: INodeProperties[] = [
   {
     displayName: 'Message',
@@ -1318,6 +1573,7 @@ export const conversationDescription: INodeProperties[] = [
   ...conversationFields,
   ...updatePresenceFields,
   ...sendFileFields,
+  ...sendTemplateFields,
   ...updateAttachmentMetaFields,
   ...listAttachmentsFields,
   ...deleteMessageFields,

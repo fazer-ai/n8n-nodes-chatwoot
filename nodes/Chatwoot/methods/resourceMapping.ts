@@ -8,6 +8,32 @@ export interface ChatwootInbox {
   name: string;
   channel_type?: string;
   provider?: string;
+  message_templates?: ChatwootMessageTemplate[];
+}
+
+export interface ChatwootMessageTemplate {
+  id: string;
+  name: string;
+  status: string;
+  category: string;
+  language: string;
+  components: Array<{
+    text?: string;
+    type: string;
+    format?: string;
+    example?: {
+      body_text?: string[][];
+      header_parameters?: string[];
+    };
+    buttons?: Array<{
+      url?: string;
+      text: string;
+      type: string;
+      example?: string[];
+    }>;
+  }>;
+  parameter_format?: string;
+  library_template_name?: string;
 }
 
 export interface ChatwootConversation {

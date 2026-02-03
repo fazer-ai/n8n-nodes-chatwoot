@@ -3,6 +3,7 @@ export type ConversationOperation =
   | 'get'
   | 'list'
   | 'sendMessage'
+  | 'sendTemplate'
   | 'sendFile'
   | 'listMessages'
   | 'listAttachments'
