@@ -209,7 +209,10 @@ const conversationFields: INodeProperties[] = [
   {
     ...accountSelector,
     displayOptions: {
-      show: showOnlyForConversation,
+      show: {
+        ...showOnlyForConversation,
+        operation: ['create', 'list', 'get', 'toggleStatus', 'assignAgent', 'assignTeam', 'addLabels', 'removeLabels', 'updateLabels', 'listLabels', 'addCustomAttributes', 'removeCustomAttributes', 'setCustomAttributes', 'setPriority', 'sendMessage', 'sendFile', 'updateLastSeen', 'updatePresence', 'markUnread', 'listMessages', 'listAttachments', 'updateAttachmentMeta', 'deleteMessage'],
+      },
     },
   },
   {
