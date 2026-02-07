@@ -279,8 +279,8 @@ This node is enabled as an n8n AI tool (`usableAsTool: true`), allowing it to be
 
 ```bash
 # Clone the repository
-git clone https://github.com/fazer-ai/n8n-nodes-fazer-ai-chatwoot.git
-cd n8n-nodes-fazer-ai-chatwoot
+git clone https://github.com/fazer-ai/n8n-nodes-chatwoot.git
+cd n8n-nodes-chatwoot
 
 # Install dependencies
 pnpm install

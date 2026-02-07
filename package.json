@@ -16,7 +16,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/fazer-ai/n8n-nodes-fazer-ai-chatwoot.git"
+		"url": "https://github.com/fazer-ai/n8n-nodes-chatwoot.git"
 	},
 	"publishConfig": {
 		"access": "public",
