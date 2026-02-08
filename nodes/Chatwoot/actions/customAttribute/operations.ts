@@ -13,6 +13,8 @@ export async function executeCustomAttributeOperation(
   switch (operation) {
     case 'create':
       return createCustomAttribute(context, itemIndex);
+		// FIXME: Drop legacy `remove` operation
+    case 'remove':
     case 'delete':
       return deleteCustomAttribute(context, itemIndex);
     case 'list':
