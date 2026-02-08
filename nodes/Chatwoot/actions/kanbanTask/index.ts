@@ -179,6 +179,40 @@ const kanbanTaskFields: INodeProperties[] = [
 				description: 'Detailed description of the task',
 			},
 			{
+				displayName: 'Kanban Step',
+				name: 'board_step_id',
+				type: 'resourceLocator',
+				default: { mode: 'list', value: '' },
+				description: 'Move the task to a different step',
+				modes: [
+					{
+						displayName: 'From List',
+						name: 'list',
+						type: 'list',
+						placeholder: 'Select a kanban step...',
+						typeOptions: {
+							searchListMethod: 'searchKanbanSteps',
+							searchable: true,
+						},
+					},
+					{
+						displayName: 'By ID',
+						name: 'id',
+						type: 'string',
+						placeholder: 'e.g. 1',
+						validation: [
+							{
+								type: 'regex',
+								properties: {
+									regex: '^[0-9]*$',
+									errorMessage: 'The ID must be a number',
+								},
+							},
+						],
+					},
+				],
+			},
+			{
 				displayName: 'Priority',
 				name: 'priority',
 				type: 'options',
