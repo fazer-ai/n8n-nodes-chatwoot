@@ -13,10 +13,10 @@ export async function executeCustomAttributeOperation(
   switch (operation) {
     case 'create':
       return createCustomAttribute(context, itemIndex);
+    case 'delete':
+      return deleteCustomAttribute(context, itemIndex);
     case 'list':
       return listCustomAttributes(context, itemIndex);
-    case 'remove':
-      return removeCustomAttribute(context, itemIndex);
   }
 }
 
@@ -26,12 +26,25 @@ async function createCustomAttribute(
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 
-	const attributeModel = context.getNodeParameter('attributeModel', itemIndex);
-	const attributeDisplayName = context.getNodeParameter('attributeDisplayName', itemIndex);
-	const attributeType = context.getNodeParameter('attributeType', itemIndex) ;
-	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {});
+	const attributeModel = context.getNodeParameter('attributeModel', itemIndex) as string;
+	const attributeDisplayName = context.getNodeParameter('attributeDisplayName', itemIndex) as string;
+	const attributeType = context.getNodeParameter('attributeType', itemIndex) as string;
+	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {}) as IDataObject;
 
-	const attributeKey = String(attributeDisplayName)
+	const displayTypeMap: Record<string, number> = {
+		text: 0,
+		number: 1,
+		currency: 2,
+		percent: 3,
+		link: 4,
+		date: 5,
+		list: 6,
+		checkbox: 7,
+	};
+
+	const customKey = additionalFields.attributeKey as string | undefined;
+	const attributeKey = customKey?.trim()
+		|| String(attributeDisplayName)
 			.normalize('NFD')
 			.replace(/[\u0300-\u036f]/g, '')
 			.toLowerCase()
@@ -41,28 +54,32 @@ async function createCustomAttribute(
 	const body: IDataObject = {
 		attribute_display_name: attributeDisplayName,
 		attribute_key: attributeKey,
-		attribute_display_type: attributeType,
+		attribute_display_type: displayTypeMap[attributeType] ?? 0,
 		attribute_model: attributeModel === 'conversation_attribute' ? 0 : 1,
 	};
 
-	if (attributeType === 'list') {
-		const attributeValuesInput = context.getNodeParameter('attributeValues', itemIndex) as
-			| string
-			| string[];
-		const attributeValues = (
-			Array.isArray(attributeValuesInput)
-				? attributeValuesInput
-				: [attributeValuesInput]
-		).filter((value) => value !== '');
+	const attributeValuesRaw = additionalFields.attributeValues as string | string[] | undefined;
+	if (attributeValuesRaw) {
+		const parsed = typeof attributeValuesRaw === 'string'
+			? JSON.parse(attributeValuesRaw) as unknown
+			: attributeValuesRaw;
 
-		if (attributeValues.length) {
-			body.attribute_values = attributeValues;
+		if (Array.isArray(parsed) && parsed.length) {
+			body.attribute_values = parsed.map(String);
 		}
 	}
 
-	const attributeDescription = additionalFields.attributeDescription;
-	if (attributeDescription) {
-		body.attribute_description = attributeDescription;
+	if (additionalFields.attributeDescription) {
+		body.attribute_description = additionalFields.attributeDescription;
+	}
+
+	if (attributeType === 'text') {
+		if (additionalFields.regexPattern) {
+			body.regex_pattern = additionalFields.regexPattern;
+		}
+		if (additionalFields.regexCue) {
+			body.regex_cue = additionalFields.regexCue;
+		}
 	}
 
 	const result = await chatwootApiRequest.call(
@@ -97,7 +114,7 @@ async function listCustomAttributes(
 	return result.map((attr) => ({ json: attr }));
 }
 
-async function removeCustomAttribute(
+async function deleteCustomAttribute(
 	context: IExecuteFunctions,
 	itemIndex: number,
 ): Promise<INodeExecutionData> {
