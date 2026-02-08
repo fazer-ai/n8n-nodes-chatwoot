@@ -86,35 +86,18 @@ const customAttributeFields: INodeProperties[] = [
 		default: 'text',
 		options: [
 			{ name: 'Checkbox', value: 'checkbox' },
+			{ name: 'Currency', value: 'currency' },
 			{ name: 'Date', value: 'date' },
 			{ name: 'Link', value: 'link' },
 			{ name: 'List', value: 'list' },
 			{ name: 'Number', value: 'number' },
+			{ name: 'Percent', value: 'percent' },
 			{ name: 'Text', value: 'text' },
 		],
 		displayOptions: {
 			show: {
 				...showOnlyForCustomAttribute,
 				operation: ['create'],
-			},
-		},
-	},
-	{
-		displayName: 'List Values',
-		name: 'attributeValues',
-		type: 'string',
-		default: [],
-		required: true,
-		description: 'Possible values when using the List attribute type',
-		typeOptions: {
-			multipleValues: true,
-			multipleValueButtonText: 'Add Value',
-		},
-		displayOptions: {
-			show: {
-				...showOnlyForCustomAttribute,
-				operation: ['create'],
-				attributeType: ['list'],
 			},
 		},
 	},
@@ -137,7 +120,35 @@ const customAttributeFields: INodeProperties[] = [
 				type: 'string',
 				default: '',
 				description: 'Description of the custom attribute',
-			}
+			},
+			{
+				displayName: 'Attribute Key',
+				name: 'attributeKey',
+				type: 'string',
+				default: '',
+				description: 'Unique key for the attribute. If left empty, a key will be auto-generated from the display name.',
+			},
+			{
+				displayName: 'List Values',
+				name: 'attributeValues',
+				type: 'json',
+				default: '[]',
+				description: 'Values for the List attribute type as a JSON array (e.g. ["value1", "value2"])',
+			},
+			{
+				displayName: 'Regex Cue',
+				name: 'regexCue',
+				type: 'string',
+				default: '',
+				description: 'Message shown when the regex pattern is not matched (only for text type)',
+			},
+			{
+				displayName: 'Regex Pattern',
+				name: 'regexPattern',
+				type: 'string',
+				default: '',
+				description: 'Regex pattern used to validate the attribute value (only for text type)',
+			},
 		],
 	},
 	{
