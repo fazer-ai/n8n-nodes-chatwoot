@@ -1267,13 +1267,11 @@ async function sendFileToConversation(
 	}
 
 	// Add attachments metadata if provided
-	const attachmentsMetadataConfig = options.attachments_metadata as IDataObject | undefined;
-	if (attachmentsMetadataConfig?.metadata) {
-		const metadataItems = attachmentsMetadataConfig.metadata as Array<{ key: string; value: string }>;
-		for (const item of metadataItems) {
-			if (item.key) {
-				formData[`attachments_metadata[${fileName}][${item.key}]`] = item.value;
-			}
+	const attachmentMetadata = options.attachmentMetadata as string | undefined;
+	if (attachmentMetadata) {
+		const metaObj = JSON.parse(attachmentMetadata) as IDataObject;
+		for (const [key, value] of Object.entries(metaObj)) {
+			formData[`attachments_metadata[${fileName}][${key}]`] = String(value);
 		}
 	}
 
@@ -1326,15 +1324,8 @@ async function updateAttachmentMeta(
 	const attachmentIdParam = context.getNodeParameter('attachmentId', itemIndex) as { mode: string; value: string };
 	const attachmentId = attachmentIdParam.value;
 
-	const metadataConfig = context.getNodeParameter('attachmentMeta', itemIndex, {}) as IDataObject;
-	const metadataItems = (metadataConfig.metadata as Array<{ key: string; value: string }>) || [];
-
-	const meta: IDataObject = {};
-	for (const item of metadataItems) {
-		if (item.key) {
-			meta[item.key] = item.value;
-		}
-	}
+	const metaValue = context.getNodeParameter('attachmentMeta', itemIndex) as string;
+	const meta = JSON.parse(metaValue) as IDataObject;
 
 	const result = await chatwootApiRequest.call(
 		context,

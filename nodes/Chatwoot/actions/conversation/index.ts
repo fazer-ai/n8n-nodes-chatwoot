@@ -887,40 +887,8 @@ const sendFileFields: INodeProperties[] = [
         operation: ['sendFile'],
       },
     },
+    // eslint-disable-next-line n8n-nodes-base/node-param-collection-type-unsorted-items
     options: [
-      {
-        displayName: 'Attachment Metadata',
-        name: 'attachments_metadata',
-        type: 'fixedCollection',
-        typeOptions: {
-          multipleValues: true,
-        },
-        default: {},
-        description: 'Custom metadata to attach to the file (e.g., transcribed_text, image_description)',
-        options: [
-          {
-            name: 'metadata',
-            displayName: 'Metadata',
-            values: [
-              {
-                displayName: 'Key',
-                name: 'key',
-                type: 'string',
-                default: '',
-                placeholder: 'e.g., transcribed_text',
-                description: 'The metadata key (e.g., transcribed_text, image_description)',
-              },
-              {
-                displayName: 'Value',
-                name: 'value',
-                type: 'string',
-                default: '',
-                description: 'The metadata value',
-              },
-            ],
-          },
-        ],
-      },
       {
         displayName: 'Private Note',
         name: 'private',
@@ -973,6 +941,13 @@ const sendFileFields: INodeProperties[] = [
             wait_before_sending: ['fixed'],
           },
         },
+      },
+      {
+        displayName: 'Attachment Metadata',
+        name: 'attachmentMetadata',
+        type: 'json',
+        default: '{}',
+        description: 'Custom metadata as a JSON object to attach to the file (e.g., { "transcribed_text": "...", "image_description": "..." })',
       },
     ],
   },
@@ -1286,42 +1261,16 @@ const updateAttachmentMetaFields: INodeProperties[] = [
   {
     displayName: 'Metadata',
     name: 'attachmentMeta',
-    type: 'fixedCollection',
-    typeOptions: {
-      multipleValues: true,
-    },
-    default: {},
+    type: 'json',
+    default: '{}',
     required: true,
-    description: 'Metadata to set on the attachment',
+    description: 'Metadata as a JSON object to set on the attachment (e.g., { "transcribed_text": "...", "image_description": "..." })',
     displayOptions: {
       show: {
         resource: ['conversation'],
         operation: ['updateAttachmentMeta'],
       },
     },
-    options: [
-      {
-        name: 'metadata',
-        displayName: 'Metadata',
-        values: [
-          {
-            displayName: 'Key',
-            name: 'key',
-            type: 'string',
-            default: '',
-            placeholder: 'e.g., transcribed_text',
-            description: 'The metadata key (e.g., transcribed_text, image_description)',
-          },
-          {
-            displayName: 'Value',
-            name: 'value',
-            type: 'string',
-            default: '',
-            description: 'The metadata value',
-          },
-        ],
-      },
-    ],
   },
 ];
 
