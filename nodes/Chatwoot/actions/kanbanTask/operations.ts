@@ -104,6 +104,11 @@ async function updateTask(
 		updateFields.priority = null;
 	}
 
+	// Normalize resourceLocator value for board_step_id
+	if (updateFields.board_step_id != null && typeof updateFields.board_step_id === 'object') {
+		updateFields.board_step_id = (updateFields.board_step_id as IDataObject).value;
+	}
+
 	const task: IDataObject = { ...updateFields };
 
 	if (Object.keys(task).length === 0) {
