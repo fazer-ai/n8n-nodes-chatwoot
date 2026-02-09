@@ -259,6 +259,17 @@ export class ChatwootTrigger implements INodeType {
 				const events = this.getNodeParameter('events');
 				const webhookName = getWebhookName(this);
 
+				// Delete any previously tracked webhook before creating a new one
+				const webhookData = this.getWorkflowStaticData('node');
+				if (webhookData.webhookId) {
+					try {
+						await deleteWebhook(this, accountId, webhookData.webhookId as number);
+					} catch {
+						// Ignore errors — the webhook may have been removed externally
+					}
+					delete webhookData.webhookId;
+				}
+
 				const body: IDataObject = {
 					webhook: {
 						name: webhookName,
@@ -276,8 +287,6 @@ export class ChatwootTrigger implements INodeType {
 						message: `Failed to create webhook: ${(error as Error).message}`,
 					});
 				}
-
-				const webhookData = this.getWorkflowStaticData('node');
 
 				let webhookId: unknown;
 				if (response.payload && typeof response.payload === 'object') {
