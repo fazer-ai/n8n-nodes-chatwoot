@@ -171,6 +171,11 @@ export class Chatwoot implements INodeType {
 		const resource = this.getNodeParameter('resource', 0) as ChatwootResources;
 		const operation = this.getNodeParameter('operation', 0);
 
+		// NOTE: When the node is used as an AI-agent tool, n8n appends "Tool" to the
+		// type name. In that mode we always swallow errors so the agent receives an
+		// error description instead of crashing the whole workflow.
+		const isToolMode = this.getNode().type.endsWith('Tool');
+
 		for (let i = 0; i < items.length; i++) {
 			try {
 				let responseData: INodeExecutionData | INodeExecutionData[];
@@ -222,11 +227,12 @@ export class Chatwoot implements INodeType {
 					returnData.push(responseData);
 				}
 			} catch (error) {
-				if (this.continueOnFail()) {
+				if (isToolMode || this.continueOnFail()) {
 					returnData.push({
 						json: {
 							error: (error as Error).message,
 						},
+						pairedItem: { item: i },
 					});
 					continue;
 				}
