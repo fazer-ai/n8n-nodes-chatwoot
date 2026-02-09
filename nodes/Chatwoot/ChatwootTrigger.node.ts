@@ -130,7 +130,7 @@ export class ChatwootTrigger implements INodeType {
 				name: 'default',
 				httpMethod: 'POST',
 				responseMode: 'onReceived',
-				path: 'webhook',
+				path: '={{$nodeId}}',
 			},
 		],
 		properties: [
@@ -227,22 +227,26 @@ export class ChatwootTrigger implements INodeType {
 
 				let exactMatch: IDataObject | undefined;
 
-				// Delete ALL webhooks sharing the same URL, keeping only an exact
-				// match (same subscriptions + name) for the current mode.
+				// Delete webhooks that share the same URL or the same name (handles
+				// URL format migration). Keep only an exact match for reuse.
 				for (const webhook of webhooks) {
-					if (webhook.url !== webhookUrl) continue;
+					const urlMatch = webhook.url === webhookUrl;
+					const nameMatch = webhook.name === expectedName;
 
-					const currentSubscriptions = (webhook.subscriptions as string[]) || [];
-					const sortedCurrent = [...currentSubscriptions].sort();
-					const sortedExpected = [...events].sort();
+					if (!urlMatch && !nameMatch) continue;
 
-					if (
-						!exactMatch &&
-						JSON.stringify(sortedCurrent) === JSON.stringify(sortedExpected) &&
-						webhook.name === expectedName
-					) {
-						exactMatch = webhook;
-						continue;
+					if (urlMatch && nameMatch) {
+						const currentSubscriptions = (webhook.subscriptions as string[]) || [];
+						const sortedCurrent = [...currentSubscriptions].sort();
+						const sortedExpected = [...events].sort();
+
+						if (
+							!exactMatch &&
+							JSON.stringify(sortedCurrent) === JSON.stringify(sortedExpected)
+						) {
+							exactMatch = webhook;
+							continue;
+						}
 					}
 
 					try {
@@ -268,12 +272,12 @@ export class ChatwootTrigger implements INodeType {
 				const events = this.getNodeParameter('events');
 				const webhookName = getWebhookName(this);
 
-				// Defensively delete any remaining webhooks with this URL
+				// Defensively delete any remaining webhooks with this URL or name
 				const webhookData = this.getWorkflowStaticData('node');
 				try {
 					const existing = await fetchWebhooks(this, accountId);
 					for (const wh of existing) {
-						if (wh.url === webhookUrl) {
+						if (wh.url === webhookUrl || wh.name === webhookName) {
 							await deleteWebhook(this, accountId, wh.id as number);
 						}
 					}
@@ -330,8 +334,7 @@ export class ChatwootTrigger implements INodeType {
 					try {
 						await deleteWebhook(this, accountId, webhookData.webhookId as number);
 					} catch {
-						// Ignore — webhook may have been removed externally or by
-						// the other mode's lifecycle
+						// Ignore — webhook may have been removed externally
 					}
 					delete webhookData.webhookId;
 				}
