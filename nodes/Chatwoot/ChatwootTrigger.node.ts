@@ -130,7 +130,7 @@ export class ChatwootTrigger implements INodeType {
 				name: 'default',
 				httpMethod: 'POST',
 				responseMode: 'onReceived',
-				path: 'webhook',
+				path: '={{$nodeId}}',
 			},
 		],
 		properties: [
@@ -205,7 +205,7 @@ export class ChatwootTrigger implements INodeType {
 	webhookMethods = {
 		default: {
 			async checkExists(this: IHookFunctions): Promise<boolean> {
-				const webhookUrl = this.getNodeWebhookUrl('default');
+				const webhookUrl = this.getNodeWebhookUrl('default')!;
 				const accountId = extractAccountId(this);
 				const events = this.getNodeParameter('events') as string[];
 				const expectedName = getWebhookName(this);
@@ -225,50 +225,74 @@ export class ChatwootTrigger implements INodeType {
 					});
 				}
 
+				let exactMatch: IDataObject | undefined;
+
+				// Build the legacy URL to clean up webhooks from the old path format.
+				// Old: /webhook/{webhookId}/webhook
+				// New: /webhook/{webhookId}/{nodeId}
+				const legacyUrl = webhookUrl.replace(/\/[^/]+$/, '/webhook');
+
+				// Delete webhooks matching the current or legacy URL, keeping only
+				// an exact match (same URL, name, and subscriptions) for reuse.
 				for (const webhook of webhooks) {
-					if (webhook.url === webhookUrl) {
+					const urlMatch = webhook.url === webhookUrl;
+					const legacyUrlMatch = webhook.url === legacyUrl;
+
+					if (!urlMatch && !legacyUrlMatch) continue;
+
+					if (urlMatch) {
 						const currentSubscriptions = (webhook.subscriptions as string[]) || [];
 						const sortedCurrent = [...currentSubscriptions].sort();
 						const sortedExpected = [...events].sort();
 
 						if (
+							!exactMatch &&
 							JSON.stringify(sortedCurrent) === JSON.stringify(sortedExpected) &&
 							webhook.name === expectedName
 						) {
-							const webhookData = this.getWorkflowStaticData('node');
-							webhookData.webhookId = webhook.id;
-							return true;
+							exactMatch = webhook;
+							continue;
 						}
-						try {
-							await deleteWebhook(this, accountId, webhook.id as number);
-						} catch (error) {
-							throw new NodeApiError(this.getNode(), error as JsonObject, {
-								message: `Failed to delete existing webhook: ${(error as Error).message}`,
-							});
-						}
-						return false;
+					}
+
+					try {
+						await deleteWebhook(this, accountId, webhook.id as number);
+					} catch {
+						// Ignore — may have been removed externally
 					}
 				}
+
+				if (exactMatch) {
+					const webhookData = this.getWorkflowStaticData('node');
+					webhookData.webhookId = exactMatch.id;
+					return true;
+				}
+
 				return false;
 			},
 
 			async create(this: IHookFunctions): Promise<boolean> {
-				const webhookUrl = this.getNodeWebhookUrl('default');
+				const webhookUrl = this.getNodeWebhookUrl('default')!;
 				const accountId = extractAccountId(this);
 				const inboxId = extractInboxId(this);
 				const events = this.getNodeParameter('events');
 				const webhookName = getWebhookName(this);
 
-				// Delete any previously tracked webhook before creating a new one
+				// Defensively delete any remaining webhooks with this URL or
+				// the legacy URL format
 				const webhookData = this.getWorkflowStaticData('node');
-				if (webhookData.webhookId) {
-					try {
-						await deleteWebhook(this, accountId, webhookData.webhookId as number);
-					} catch {
-						// Ignore errors — the webhook may have been removed externally
+				const legacyUrl = webhookUrl.replace(/\/[^/]+$/, '/webhook');
+				try {
+					const existing = await fetchWebhooks(this, accountId);
+					for (const wh of existing) {
+						if (wh.url === webhookUrl || wh.url === legacyUrl) {
+							await deleteWebhook(this, accountId, wh.id as number);
+						}
 					}
-					delete webhookData.webhookId;
+				} catch {
+					// Best-effort cleanup — checkExists should have handled this
 				}
+				delete webhookData.webhookId;
 
 				const body: IDataObject = {
 					webhook: {
@@ -317,10 +341,8 @@ export class ChatwootTrigger implements INodeType {
 				if (webhookData.webhookId) {
 					try {
 						await deleteWebhook(this, accountId, webhookData.webhookId as number);
-					} catch (error) {
-						throw new NodeApiError(this.getNode(), error as JsonObject, {
-							message: `Failed to delete webhook: ${(error as Error).message}`,
-						});
+					} catch {
+						// Ignore — webhook may have been removed externally
 					}
 					delete webhookData.webhookId;
 				}

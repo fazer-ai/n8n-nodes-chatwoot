@@ -36,16 +36,8 @@ export async function fetchWebhooks(
 		`/api/v1/accounts/${accountId}/webhooks`,
 	)) as IDataObject;
 
-	if (Array.isArray(response)) {
-		return response as IDataObject[];
-	}
-	if (Array.isArray(response.webhooks)) {
-		return response.webhooks as IDataObject[];
-	}
-	if (Array.isArray(response.payload)) {
-		return response.payload as IDataObject[];
-	}
-	return [];
+	const payload = response.payload as IDataObject;
+	return (payload.webhooks ?? []) as IDataObject[];
 }
 
 export async function createWebhook(
