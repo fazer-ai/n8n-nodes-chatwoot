@@ -171,9 +171,10 @@ export class Chatwoot implements INodeType {
 		const resource = this.getNodeParameter('resource', 0) as ChatwootResources;
 		const operation = this.getNodeParameter('operation', 0);
 
-		// NOTE: When the node is used as an AI-agent tool, n8n appends "Tool" to the
-		// type name. In that mode we always swallow errors so the agent receives an
-		// error description instead of crashing the whole workflow.
+		// NOTE: When the node is used as an AI-agent tool, n8n's createNodeAsTool
+		// wrapper (makeHandleToolInvocation) re-throws errors on the last retry,
+		// which crashes the workflow. We catch errors and return a descriptive
+		// string following the convention used by ToolCode and WorkflowToolService.
 		const isToolMode = this.getNode().type.endsWith('Tool');
 
 		for (let i = 0; i < items.length; i++) {
@@ -227,15 +228,22 @@ export class Chatwoot implements INodeType {
 					returnData.push(responseData);
 				}
 			} catch (error) {
-				if (isToolMode || this.continueOnFail()) {
+				if (isToolMode) {
 					returnData.push({
-						json: {
-							error: (error as Error).message,
-						},
+						json: { error: `There was an error: "${(error as Error).message}"` },
 						pairedItem: { item: i },
 					});
 					continue;
 				}
+
+				if (this.continueOnFail()) {
+					returnData.push({
+						json: { error: (error as Error).message },
+						pairedItem: { item: i },
+					});
+					continue;
+				}
+
 				throw error;
 			}
 		}
