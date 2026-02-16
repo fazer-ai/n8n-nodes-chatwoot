@@ -73,7 +73,7 @@ async function getTask(
 async function listTasks(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<INodeExecutionData[]> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const boardId = getKanbanBoardId.call(context, itemIndex);
 	const filters = context.getNodeParameter('filters', itemIndex, {}) as IDataObject;
@@ -87,9 +87,9 @@ async function listTasks(
 			board_id: boardId,
 			...filters
 		},
-	) as { tasks: IDataObject[] };
+	) as IDataObject;
 
-	return result.tasks.map((task) => ({ json: task }));
+	return { json: result };
 }
 
 async function updateTask(
