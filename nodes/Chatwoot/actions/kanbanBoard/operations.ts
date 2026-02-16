@@ -184,7 +184,7 @@ async function toggleBoardFavorite(
 async function listBoardConversations(
 	context: IExecuteFunctions,
 	itemIndex: number,
-): Promise<INodeExecutionData[]> {
+): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const boardId = getKanbanBoardId.call(context, itemIndex);
 	const searchQuery = context.getNodeParameter('searchQuery', itemIndex, '') as string;
@@ -201,7 +201,7 @@ async function listBoardConversations(
 		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/conversations`,
 		undefined,
 		query,
-	) as { payload: IDataObject[] };
+	) as IDataObject;
 
-	return result.payload.map((conversation) => ({ json: conversation }));
+	return { json: result };
 }
