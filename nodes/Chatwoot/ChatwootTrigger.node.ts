@@ -100,6 +100,7 @@ export async function searchInboxesForWebhook(
 	results.unshift({
 		name: 'All Inboxes',
 		value: 'all',
+		url: `${baseUrl}/app/accounts/${accountId}/settings/inboxes`,
 	})
 
 	return { results };
