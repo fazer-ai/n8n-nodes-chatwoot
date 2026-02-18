@@ -19,7 +19,7 @@ import {
 	createWebhook,
 	deleteWebhook,
 } from './actions/webhook';
-import { chatwootApiRequest, getAccountId } from './shared/transport';
+import { chatwootApiRequest, getAccountId, getChatwootBaseUrl } from './shared/transport';
 import {
 	ChatwootInbox,
 	ChatwootPayloadResponse,
@@ -70,6 +70,8 @@ export async function searchInboxesForWebhook(
 		return { results: [] };
 	}
 
+	const baseUrl = await getChatwootBaseUrl.call(this);
+
 	const response = (await chatwootApiRequest.call(
 		this,
 		'GET',
@@ -81,8 +83,9 @@ export async function searchInboxesForWebhook(
 		[];
 
 	let results = (inboxes as ChatwootInbox[]).map((inbox: ChatwootInbox) => ({
-		name: inbox.name,
+		name: `#${inbox.id} - ${inbox.name}`,
 		value: String(inbox.id),
+		url: `${baseUrl}/app/accounts/${accountId}/settings/inboxes/${inbox.id}`,
 	}));
 
 	if (filter) {
