@@ -124,6 +124,7 @@ async function listConversationMessages(
 	const options = context.getNodeParameter('listMessagesOptions', itemIndex, {}) as IDataObject;
 
 	const allMessages: IDataObject[] = [];
+	const seenIds = new Set<number>();
 	const beforeParam = options.before as { mode: string; value: string } | undefined;
 	let beforeId = beforeParam?.value ? Number(beforeParam.value) : undefined;
 	let hasMore = true;
@@ -146,12 +147,27 @@ async function listConversationMessages(
 
 		if (messages.length === 0) {
 			hasMore = false;
-		} else {
-			allMessages.push(...messages);
-			// Get the smallest message ID for the next pagination
-			const lastMessage = messages[messages.length - 1];
-			beforeId = lastMessage.id as number;
+			break;
 		}
+
+		let addedNew = false;
+		for (const msg of messages) {
+			const id = msg.id as number;
+			if (!seenIds.has(id)) {
+				seenIds.add(id);
+				allMessages.push(msg);
+				addedNew = true;
+			}
+		}
+
+		if (!addedNew) {
+			hasMore = false;
+			break;
+		}
+
+		// Advance cursor past the oldest fetched message to avoid re-fetching it
+		const lastMessage = messages[messages.length - 1];
+		beforeId = (lastMessage.id as number) - 1;
 	}
 
 	return allMessages.map((msg) => ({ json: msg }));
