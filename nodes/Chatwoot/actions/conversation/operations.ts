@@ -131,7 +131,7 @@ async function listConversationMessages(
 
 	while (hasMore && allMessages.length < fetchAtLeast) {
 		const query: IDataObject = {};
-		if (beforeId) {
+		if (beforeId !== undefined) {
 			query.before = beforeId;
 		}
 
@@ -167,7 +167,12 @@ async function listConversationMessages(
 
 		// Advance cursor past the oldest fetched message to avoid re-fetching it
 		const lastMessage = messages[messages.length - 1];
-		beforeId = (lastMessage.id as number) - 1;
+		const nextBeforeId = (lastMessage.id as number) - 1;
+		if (nextBeforeId <= 0) {
+			hasMore = false;
+			break;
+		}
+		beforeId = nextBeforeId;
 	}
 
 	return allMessages.map((msg) => ({ json: msg }));
