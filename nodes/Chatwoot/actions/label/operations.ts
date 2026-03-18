@@ -56,9 +56,11 @@ async function listLabels(
 		context,
 		'GET',
 		`/api/v1/accounts/${accountId}/labels`,
-	) as IDataObject[];
+	) as IDataObject;
 
-	return result.map((label) => ({ json: label }));
+	const labels = (result.payload ?? result) as IDataObject[];
+
+	return labels.map((label) => ({ json: label }));
 }
 
 async function updateLabel(
