@@ -5,8 +5,10 @@ import type { ConversationOperation } from './conversation/types';
 import type { CustomAttributeOperation } from './customAttribute/types';
 import type { InboxOperation } from './inbox/types';
 import type { KanbanBoardOperation } from './kanbanBoard/types';
+import type { KanbanProductOperation } from './kanbanProduct/types';
 import type { KanbanStepOperation } from './kanbanStep/types';
 import type { KanbanTaskOperation } from './kanbanTask/types';
+import type { KanbanTaskProductOperation } from './kanbanTaskProduct/types';
 import type { LabelOperation } from './label/types';
 import type { ProfileOperation } from './profile/types';
 import type { ScheduledMessageOperation } from './scheduledMessage/types';
@@ -20,8 +22,10 @@ export type ChatwootResources =
 	| 'customAttribute'
 	| 'inbox'
 	| 'kanbanBoard'
+	| 'kanbanProduct'
 	| 'kanbanStep'
 	| 'kanbanTask'
+	| 'kanbanTaskProduct'
 	| 'label'
 	| 'profile'
 	| 'scheduledMessage'
@@ -35,8 +39,10 @@ export type ChatwootOperations =
 	| CustomAttributeOperation
 	| InboxOperation
 	| KanbanBoardOperation
+	| KanbanProductOperation
 	| KanbanStepOperation
 	| KanbanTaskOperation
+	| KanbanTaskProductOperation
 	| LabelOperation
 	| ProfileOperation
 	| ScheduledMessageOperation
@@ -50,8 +56,10 @@ export type {
 	CustomAttributeOperation,
 	InboxOperation,
 	KanbanBoardOperation,
+	KanbanProductOperation,
 	KanbanStepOperation,
 	KanbanTaskOperation,
+	KanbanTaskProductOperation,
 	LabelOperation,
 	ProfileOperation,
 	ScheduledMessageOperation,

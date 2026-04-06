@@ -36,9 +36,13 @@ async function createBoard(
 	const accountId = getAccountId.call(context, itemIndex);
 	const name = context.getNodeParameter('name', itemIndex);
 	const description = context.getNodeParameter('description', itemIndex, '');
+	const currency = context.getNodeParameter('currency', itemIndex, '') as string;
 	const automations = context.getNodeParameter('automations', itemIndex, {}) as IDataObject;
 
-	const body = {name, description}
+	const body: IDataObject = {name, description};
+	if (currency) {
+		body.currency = currency;
+	}
 	if(automations.settings){
 		Object.assign(body, {settings: automations.settings});
 	}
@@ -96,9 +100,13 @@ async function updateBoard(
 	const boardId = getKanbanBoardId.call(context, itemIndex);
 	const name = context.getNodeParameter('name', itemIndex);
 	const description = context.getNodeParameter('description', itemIndex, '');
+	const currency = context.getNodeParameter('currency', itemIndex, '') as string;
 	const automations = context.getNodeParameter('automations', itemIndex, {}) as IDataObject;
 
-	const body = {name, description}
+	const body: IDataObject = {name, description};
+	if (currency) {
+		body.currency = currency;
+	}
 	if(automations.settings){
 		Object.assign(body, {settings: automations.settings});
 	}

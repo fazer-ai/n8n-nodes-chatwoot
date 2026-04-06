@@ -97,6 +97,14 @@ export interface ChatwootKanbanBoard {
   assigned_inboxes: ChatwootInbox[];
 }
 
+export interface ChatwootKanbanProduct {
+  id: number;
+  name: string;
+  description?: string;
+  unit_price?: number;
+  archived?: boolean;
+}
+
 export interface ChatwootKanbanStep {
   id: number;
   name: string;
@@ -114,6 +122,17 @@ export interface ChatwootKanbanTask {
     steps?: Array<{ id: number; name: string; color?: string }>;
   };
   board_step_id?: number;
+}
+
+export interface ChatwootKanbanTaskProduct {
+  id: number;
+  task_id: number;
+  product_id: number;
+  product?: { id: number; name: string };
+  quantity: number;
+  unit_price: number;
+  discount_percentage: number;
+  line_total: number;
 }
 
 export interface ChatwootMessage {

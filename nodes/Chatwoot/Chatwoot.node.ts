@@ -15,8 +15,10 @@ import type {
 	CustomAttributeOperation,
 	InboxOperation,
 	KanbanBoardOperation,
+	KanbanProductOperation,
 	KanbanStepOperation,
 	KanbanTaskOperation,
+	KanbanTaskProductOperation,
 	LabelOperation,
 	ProfileOperation,
 	ScheduledMessageOperation,
@@ -32,8 +34,10 @@ import { conversationDescription, executeConversationOperation } from './actions
 import { customAttributeDescription, executeCustomAttributeOperation } from './actions/customAttribute';
 import { labelDescription, executeLabelOperation } from './actions/label';
 import { kanbanBoardDescription, executeKanbanBoardOperation } from './actions/kanbanBoard';
+import { kanbanProductDescription, executeKanbanProductOperation } from './actions/kanbanProduct';
 import { kanbanStepDescription, executeKanbanStepOperation } from './actions/kanbanStep';
 import { kanbanTaskDescription, executeKanbanTaskOperation } from './actions/kanbanTask';
+import { kanbanTaskProductDescription, executeKanbanTaskProductOperation } from './actions/kanbanTaskProduct';
 import { teamDescription, executeTeamOperation } from './actions/team';
 import { scheduledMessageDescription, executeScheduledMessageOperation } from './actions/scheduledMessage';
 import { listSearch, loadOptions } from './methods';
@@ -95,7 +99,7 @@ export class Chatwoot implements INodeType {
 					{
 						name: 'Custom Attribute',
 						value: 'customAttribute',
-						description: 'Manage custom attributes on contacts and conversations',
+						description: 'Manage custom attribute definitions',
 					},
 					{
 						name: 'Inbox',
@@ -108,6 +112,11 @@ export class Chatwoot implements INodeType {
 						description: 'Manage Kanban boards',
 					},
 					{
+						name: 'Kanban Product',
+						value: 'kanbanProduct',
+						description: 'Manage Kanban products',
+					},
+					{
 						name: 'Kanban Step',
 						value: 'kanbanStep',
 						description: 'Manage Kanban steps',
@@ -116,6 +125,11 @@ export class Chatwoot implements INodeType {
 						name: 'Kanban Task',
 						value: 'kanbanTask',
 						description: 'Manage Kanban tasks',
+					},
+					{
+						name: 'Kanban Task Product',
+						value: 'kanbanTaskProduct',
+						description: 'Manage products attached to Kanban tasks',
 					},
 					{
 						name: 'Label',
@@ -149,8 +163,10 @@ export class Chatwoot implements INodeType {
 			...customAttributeDescription,
 			...labelDescription,
 			...kanbanBoardDescription,
+			...kanbanProductDescription,
 			...kanbanStepDescription,
 			...kanbanTaskDescription,
+			...kanbanTaskProductDescription,
 			...scheduledMessageDescription,
 			...teamDescription,
 		],
@@ -208,11 +224,17 @@ export class Chatwoot implements INodeType {
 					case 'kanbanBoard':
 						responseData = await executeKanbanBoardOperation(this, operation as KanbanBoardOperation, i);
 						break;
+					case 'kanbanProduct':
+						responseData = await executeKanbanProductOperation(this, operation as KanbanProductOperation, i);
+						break;
 					case 'kanbanStep':
 						responseData = await executeKanbanStepOperation(this, operation as KanbanStepOperation, i);
 						break;
 					case 'kanbanTask':
 						responseData = await executeKanbanTaskOperation(this, operation as KanbanTaskOperation, i);
+						break;
+					case 'kanbanTaskProduct':
+						responseData = await executeKanbanTaskProductOperation(this, operation as KanbanTaskProductOperation, i);
 						break;
 					case 'scheduledMessage':
 						responseData = await executeScheduledMessageOperation(this, operation as ScheduledMessageOperation, i);

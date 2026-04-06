@@ -129,7 +129,19 @@ const kanbanStepFields: INodeProperties[] = [
 				type: 'boolean',
 				default: true,
 				description: 'Whether this step represents cancelled tasks',
-			}
+			},
+			{
+				displayName: 'Probability',
+				name: 'probability',
+				type: 'number',
+				typeOptions: {
+					minValue: 0,
+					maxValue: 100,
+					numberPrecision: 2,
+				},
+				default: 100,
+				description: 'Probability percentage for weighted value calculation (0-100)',
+			},
 		],
 	},
 	{
@@ -175,6 +187,18 @@ const kanbanStepFields: INodeProperties[] = [
 				type: 'string',
 				default: '',
 				description: 'New name for the step',
+			},
+			{
+				displayName: 'Probability',
+				name: 'probability',
+				type: 'number',
+				typeOptions: {
+					minValue: 0,
+					maxValue: 100,
+					numberPrecision: 2,
+				},
+				default: 100,
+				description: 'Probability percentage for weighted value calculation (0-100)',
 			},
 		],
 	},

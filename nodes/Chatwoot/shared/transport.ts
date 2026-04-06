@@ -202,10 +202,24 @@ export function getKanbanStepId(this: IExecuteFunctions | ILoadOptionsFunctions,
 }
 
 /**
+ * Helper to get the kanban product ID from parameters (handles resourceLocator)
+ */
+export function getKanbanProductId(this: IExecuteFunctions | ILoadOptionsFunctions, itemIndex: number): string {
+	return getResourceId.call(this, itemIndex, 'kanbanProductId');
+}
+
+/**
  * Helper to get kanban task ID from parameters (handles resourceLocator)
  */
 export function getKanbanTaskId(this: IExecuteFunctions | ILoadOptionsFunctions, itemIndex: number): string {
 	return getResourceId.call(this, itemIndex, 'kanbanTaskId');
+}
+
+/**
+ * Helper to get kanban task product ID from parameters (handles resourceLocator)
+ */
+export function getKanbanTaskProductId(this: IExecuteFunctions | ILoadOptionsFunctions, itemIndex: number): string {
+	return getResourceId.call(this, itemIndex, 'kanbanTaskProductId');
 }
 
 /**
