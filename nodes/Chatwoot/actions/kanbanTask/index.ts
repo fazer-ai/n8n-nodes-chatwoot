@@ -241,12 +241,7 @@ const kanbanTaskFields: INodeProperties[] = [
 		},
 		placeholder: 'Add Attribute',
 		default: {
-			attributes: [
-				{
-					name: '',
-					value: '',
-				},
-			],
+			attributes: [],
 		},
 		options: [
 			{
@@ -529,12 +524,7 @@ const kanbanTaskFields: INodeProperties[] = [
 		},
 		placeholder: 'Add Attribute',
 		default: {
-			attributes: [
-				{
-					name: '',
-					value: '',
-				},
-			],
+			attributes: [],
 		},
 		options: [
 			{

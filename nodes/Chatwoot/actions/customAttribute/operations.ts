@@ -57,7 +57,7 @@ async function createCustomAttribute(
 		attribute_display_name: attributeDisplayName,
 		attribute_key: attributeKey,
 		attribute_display_type: displayTypeMap[attributeType] ?? 0,
-		attribute_model: attributeModel === 'conversation_attribute' ? 0 : 1,
+		attribute_model: { conversation_attribute: 0, contact_attribute: 1, task_attribute: 2 }[attributeModel] ?? 0,
 	};
 
 	const attributeValuesRaw = additionalFields.attributeValues as string | string[] | undefined;
