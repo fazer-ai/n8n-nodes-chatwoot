@@ -3,7 +3,7 @@ import type {
 	INodeListSearchItems,
 	INodeListSearchResult,
 } from 'n8n-workflow';
-import { chatwootApiRequest, getAccountId, getChatwootBaseUrl, getConversationId, getInboxId, getKanbanBoardId, getMessageId, getTeamId, getTemplateName } from '../shared/transport';
+import { chatwootApiRequest, getAccountId, getChatwootBaseUrl, getConversationId, getInboxId, getKanbanBoardId, getKanbanTaskId, getMessageId, getTeamId, getTemplateName } from '../shared/transport';
 import {
 	ChatwootAccount,
 	ChatwootAgent,
@@ -12,8 +12,10 @@ import {
 	ChatwootConversation,
 	ChatwootInbox,
 	ChatwootKanbanBoard,
+	ChatwootKanbanProduct,
 	ChatwootKanbanStep,
 	ChatwootKanbanTask,
+	ChatwootKanbanTaskProduct,
 	ChatwootLabel,
 	ChatwootMessage,
 	ChatwootMessageTemplate,
@@ -498,6 +500,38 @@ export async function searchKanbanBoards(
 }
 
 /**
+ * Get all kanban products for the selected board (for resourceLocator)
+ */
+export async function searchKanbanProducts(
+	this: ILoadOptionsFunctions,
+): Promise<INodeListSearchResult> {
+	const accountId = getAccountId.call(this, 0);
+	const boardId = getKanbanBoardId.call(this, 0);
+
+	if (!accountId || !boardId) {
+		return { results: [] };
+	}
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/products`,
+	)) as { products?: ChatwootKanbanProduct[] } | ChatwootKanbanProduct[];
+
+	const products =
+		(response as { products?: ChatwootKanbanProduct[] }).products ||
+		(response as ChatwootKanbanProduct[]) ||
+		[];
+
+	const results = products.map((product: ChatwootKanbanProduct) => ({
+		name: `#${product.id} - ${product.name}${product.archived ? ' (Archived)' : ''}`,
+		value: String(product.id),
+	}));
+
+	return { results };
+}
+
+/**
  * Get all kanban steps for the selected board (for resourceLocator)
  */
 export async function searchKanbanSteps(
@@ -580,6 +614,38 @@ export async function searchKanbanTasks(
 			url: `${baseUrl}/app/accounts/${accountId}/kanban/boards/${boardId}`,
 		};
 	});
+
+	return { results };
+}
+
+/**
+ * Get all task products for the selected task (for resourceLocator)
+ */
+export async function searchKanbanTaskProducts(
+	this: ILoadOptionsFunctions,
+): Promise<INodeListSearchResult> {
+	const accountId = getAccountId.call(this, 0);
+	const taskId = getKanbanTaskId.call(this, 0);
+
+	if (!accountId || !taskId) {
+		return { results: [] };
+	}
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/kanban/tasks/${taskId}/products`,
+	)) as { task_products?: ChatwootKanbanTaskProduct[] } | ChatwootKanbanTaskProduct[];
+
+	const taskProducts =
+		(response as { task_products?: ChatwootKanbanTaskProduct[] }).task_products ||
+		(response as ChatwootKanbanTaskProduct[]) ||
+		[];
+
+	const results = taskProducts.map((tp: ChatwootKanbanTaskProduct) => ({
+		name: `#${tp.id} - ${tp.product?.name || 'Product'} (qty: ${tp.quantity})`,
+		value: String(tp.id),
+	}));
 
 	return { results };
 }

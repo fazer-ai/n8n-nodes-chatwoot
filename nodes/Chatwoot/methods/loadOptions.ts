@@ -290,6 +290,32 @@ export async function loadKanbanStepsOptions(
 }
 
 /**
+ * Get task custom attribute definitions for the selected account (for loadOptions)
+ */
+export async function loadTaskCustomAttributeDefinitionsOptions(
+  this: ILoadOptionsFunctions,
+): Promise<INodePropertyOptions[]> {
+  const accountId = getAccountId.call(this, 0);
+  if (!accountId) {
+    return [];
+  }
+
+  const response = (await chatwootApiRequest.call(
+    this,
+    'GET',
+    `/api/v1/accounts/${accountId}/custom_attribute_definitions`,
+    undefined,
+    { attribute_model: 'task_attribute' },
+  )) as ChatwootCustomAttributeDefinition[];
+
+  return (response || []).map((attr: ChatwootCustomAttributeDefinition) => ({
+    name: `${attr.attribute_display_name} (${attr.attribute_key})`,
+    value: attr.attribute_key,
+    description: `[${attr.attribute_display_type}]${attr.attribute_description ? ` - ${attr.attribute_description}` : ''}`,
+  }));
+}
+
+/**
  * Get all contacts for the selected kanban board (for loadOptions)
 */
 export async function loadContactsOptions(

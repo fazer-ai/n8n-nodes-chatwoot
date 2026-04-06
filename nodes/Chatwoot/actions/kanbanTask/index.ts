@@ -149,6 +149,142 @@ const kanbanTaskFields: INodeProperties[] = [
 		},
 	},
 	{
+		displayName: 'Specify Custom Attributes',
+		name: 'specifyCustomAttributesUpdate',
+		type: 'options',
+		displayOptions: {
+			show: {
+				...showOnlyForKanbanTask,
+				operation: ['update'],
+			},
+		},
+		options: [
+			{
+				name: 'None',
+				value: 'none',
+				description: 'Do not set custom attributes',
+			},
+			{
+				name: 'From Definitions',
+				value: 'definition',
+				description: 'Select from pre-defined task attributes',
+			},
+			{
+				name: 'Using Fields Below',
+				value: 'keypair',
+			},
+			{
+				name: 'JSON',
+				value: 'json',
+			},
+		],
+		default: 'none',
+	},
+	{
+		displayName: 'Custom Attributes',
+		name: 'customAttributesDefinitionUpdate',
+		type: 'fixedCollection',
+		displayOptions: {
+			show: {
+				...showOnlyForKanbanTask,
+				operation: ['update'],
+				specifyCustomAttributesUpdate: ['definition'],
+			},
+		},
+		typeOptions: {
+			multipleValues: true,
+		},
+		placeholder: 'Add Attribute',
+		default: {
+			attributes: [],
+		},
+		options: [
+			{
+				name: 'attributes',
+				displayName: 'Attribute',
+				values: [
+					{
+						// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-options
+						displayName: 'Attribute',
+						name: 'key',
+						type: 'options',
+						default: '',
+						description: 'Select the custom attribute. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+						typeOptions: {
+							loadOptionsMethod: 'loadTaskCustomAttributeDefinitionsOptions',
+						},
+					},
+					{
+						displayName: 'Value',
+						name: 'value',
+						type: 'string',
+						default: '',
+						description: 'Value of the custom attribute',
+					},
+				],
+			},
+		],
+	},
+	{
+		displayName: 'Custom Attributes',
+		name: 'customAttributesParametersUpdate',
+		type: 'fixedCollection',
+		displayOptions: {
+			show: {
+				...showOnlyForKanbanTask,
+				operation: ['update'],
+				specifyCustomAttributesUpdate: ['keypair'],
+			},
+		},
+		typeOptions: {
+			multipleValues: true,
+		},
+		placeholder: 'Add Attribute',
+		default: {
+			attributes: [
+				{
+					name: '',
+					value: '',
+				},
+			],
+		},
+		options: [
+			{
+				name: 'attributes',
+				displayName: 'Attribute',
+				values: [
+					{
+						displayName: 'Name',
+						name: 'name',
+						type: 'string',
+						default: '',
+						description: 'Name of the custom attribute',
+					},
+					{
+						displayName: 'Value',
+						name: 'value',
+						type: 'string',
+						default: '',
+						description: 'Value of the custom attribute',
+					},
+				],
+			},
+		],
+	},
+	{
+		displayName: 'JSON',
+		name: 'customAttributesJsonUpdate',
+		type: 'json',
+		default: '{}',
+		displayOptions: {
+			show: {
+				...showOnlyForKanbanTask,
+				operation: ['update'],
+				specifyCustomAttributesUpdate: ['json'],
+			},
+		},
+	},
+	{
 		displayName: 'Update Fields',
 		name: 'updateFields',
 		type: 'collection',
@@ -288,7 +424,153 @@ const kanbanTaskFields: INodeProperties[] = [
 				},
 				default: [],
 			},
+			{
+				displayName: 'Value',
+				name: 'value',
+				type: 'number',
+				typeOptions: {
+					numberPrecision: 2,
+				},
+				default: 0,
+				description: 'Monetary value of the task. Ignored when task has products (auto-calculated).',
+			},
 		],
+	},
+	{
+		displayName: 'Specify Custom Attributes',
+		name: 'specifyCustomAttributesCreate',
+		type: 'options',
+		displayOptions: {
+			show: {
+				...showOnlyForKanbanTask,
+				operation: ['create'],
+			},
+		},
+		options: [
+			{
+				name: 'None',
+				value: 'none',
+				description: 'Do not set custom attributes',
+			},
+			{
+				name: 'From Definitions',
+				value: 'definition',
+				description: 'Select from pre-defined task attributes',
+			},
+			{
+				name: 'Using Fields Below',
+				value: 'keypair',
+			},
+			{
+				name: 'JSON',
+				value: 'json',
+			},
+		],
+		default: 'none',
+	},
+	{
+		displayName: 'Custom Attributes',
+		name: 'customAttributesDefinitionCreate',
+		type: 'fixedCollection',
+		displayOptions: {
+			show: {
+				...showOnlyForKanbanTask,
+				operation: ['create'],
+				specifyCustomAttributesCreate: ['definition'],
+			},
+		},
+		typeOptions: {
+			multipleValues: true,
+		},
+		placeholder: 'Add Attribute',
+		default: {
+			attributes: [],
+		},
+		options: [
+			{
+				name: 'attributes',
+				displayName: 'Attribute',
+				values: [
+					{
+						// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-options
+						displayName: 'Attribute',
+						name: 'key',
+						type: 'options',
+						default: '',
+						description: 'Select the custom attribute. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+						typeOptions: {
+							loadOptionsMethod: 'loadTaskCustomAttributeDefinitionsOptions',
+						},
+					},
+					{
+						displayName: 'Value',
+						name: 'value',
+						type: 'string',
+						default: '',
+						description: 'Value of the custom attribute',
+					},
+				],
+			},
+		],
+	},
+	{
+		displayName: 'Custom Attributes',
+		name: 'customAttributesParametersCreate',
+		type: 'fixedCollection',
+		displayOptions: {
+			show: {
+				...showOnlyForKanbanTask,
+				operation: ['create'],
+				specifyCustomAttributesCreate: ['keypair'],
+			},
+		},
+		typeOptions: {
+			multipleValues: true,
+		},
+		placeholder: 'Add Attribute',
+		default: {
+			attributes: [
+				{
+					name: '',
+					value: '',
+				},
+			],
+		},
+		options: [
+			{
+				name: 'attributes',
+				displayName: 'Attribute',
+				values: [
+					{
+						displayName: 'Name',
+						name: 'name',
+						type: 'string',
+						default: '',
+						description: 'Name of the custom attribute',
+					},
+					{
+						displayName: 'Value',
+						name: 'value',
+						type: 'string',
+						default: '',
+						description: 'Value of the custom attribute',
+					},
+				],
+			},
+		],
+	},
+	{
+		displayName: 'JSON',
+		name: 'customAttributesJsonCreate',
+		type: 'json',
+		default: '{}',
+		displayOptions: {
+			show: {
+				...showOnlyForKanbanTask,
+				operation: ['create'],
+				specifyCustomAttributesCreate: ['json'],
+			},
+		},
 	},
 	{
 		displayName: 'Additional Fields',
@@ -364,7 +646,6 @@ const kanbanTaskFields: INodeProperties[] = [
 					loadOptionsDependsOn: ['accountId'],
 				},
 				default: [],
-
 			},
 			{
 				// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-multi-options
@@ -389,7 +670,17 @@ const kanbanTaskFields: INodeProperties[] = [
 					loadOptionsDependsOn: ['accountId'],
 				},
 				default: [],
-			}
+			},
+			{
+				displayName: 'Value',
+				name: 'value',
+				type: 'number',
+				typeOptions: {
+					numberPrecision: 2,
+				},
+				default: 0,
+				description: 'Monetary value of the task. Ignored when task has products (auto-calculated).',
+			},
 		],
 	},
 	{
@@ -469,6 +760,7 @@ const kanbanTaskFields: INodeProperties[] = [
 					{ name: 'Created At', value: 'created_at' },
 					{ name: 'Priority', value: 'priority' },
 					{ name: 'Due Date', value: 'due_date' },
+					{ name: 'Value', value: 'value' },
 				],
 				description: 'Sort field',
 			},

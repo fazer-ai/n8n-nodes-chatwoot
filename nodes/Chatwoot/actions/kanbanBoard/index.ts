@@ -150,6 +150,19 @@ const kanbanBoardFields: INodeProperties[] = [
 		},
 	},
 	{
+		displayName: 'Currency',
+		name: 'currency',
+		type: 'string',
+		default: '',
+		description: 'Currency code for monetary values (ISO 4217, e.g. USD, BRL, EUR). Max 3 characters.',
+		displayOptions: {
+			show: {
+				...showOnlyForKanbanBoard,
+				operation: ['create', 'update'],
+			},
+		},
+	},
+	{
 		displayName: 'Automations',
 		name: 'automations',
 		type: 'fixedCollection',
@@ -205,6 +218,13 @@ const kanbanBoardFields: INodeProperties[] = [
 						type: 'boolean',
 						default: true,
 					},
+					{
+						displayName: 'Sync Task and Conversation Labels/Priority',
+						name: 'sync_task_and_conversation_labels_priority',
+						description: 'Whether to keep labels and priority in sync between tasks and their linked conversations',
+						type: 'boolean',
+						default: true,
+					},
 				],
 			},
 		],
@@ -218,6 +238,7 @@ const kanbanBoardFields: INodeProperties[] = [
 			{ name: 'Created At', value: 'created_at' },
 			{ name: 'Name', value: 'name' },
 			{ name: 'Updated At', value: 'updated_at' },
+			{ name: 'Weighted Value', value: 'weighted_value' },
 		],
 		displayOptions: {
 			show: {

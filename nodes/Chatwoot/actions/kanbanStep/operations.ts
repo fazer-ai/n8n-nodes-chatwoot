@@ -41,6 +41,7 @@ async function createStep(
 				description: additionalFields.description ?? '',
 				color: additionalFields.color ?? `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
 				cancelled: additionalFields.cancelled ?? false,
+				...(additionalFields.probability !== undefined ? { probability: additionalFields.probability } : {}),
 			}
 		},
 	) as IDataObject;
@@ -79,6 +80,7 @@ async function updateStep(
 	if (updateFields.description) step.description = updateFields.description;
 	if (updateFields.color) step.color = updateFields.color;
 	if (updateFields.cancelled !== undefined) step.cancelled = updateFields.cancelled;
+	if (updateFields.probability !== undefined) step.probability = updateFields.probability;
 
 	if (Object.keys(step).length === 0) {
 		throw new NodeOperationError(

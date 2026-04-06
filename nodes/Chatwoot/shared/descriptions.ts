@@ -76,6 +76,16 @@ export const kanbanStepSelector: INodeProperties = resourceSelector(
 );
 
 /**
+ * Kanban Product selector using resourceLocator (From List / By ID in single field)
+ */
+export const kanbanProductSelector: INodeProperties = resourceSelector(
+	'Kanban Product',
+	'kanbanProductId',
+	'Select the kanban product to use.',
+	'searchKanbanProducts',
+);
+
+/**
  * Kanban Task selector using resourceLocator (From List / By ID in single field)
  */
 export const kanbanTaskSelector: INodeProperties = resourceSelector(
@@ -83,6 +93,16 @@ export const kanbanTaskSelector: INodeProperties = resourceSelector(
 	'kanbanTaskId',
 	'Select the kanban task to use.',
 	'searchKanbanTasks',
+);
+
+/**
+ * Kanban Task Product selector using resourceLocator (From List / By ID in single field)
+ */
+export const kanbanTaskProductSelector: INodeProperties = resourceSelector(
+	'Kanban Task Product',
+	'kanbanTaskProductId',
+	'Select the task product to use.',
+	'searchKanbanTaskProducts',
 );
 
 /**

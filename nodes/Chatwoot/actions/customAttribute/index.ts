@@ -57,6 +57,7 @@ const customAttributeFields: INodeProperties[] = [
 		options: [
 			{ name: 'Contact Attribute', value: 'contact_attribute' },
 			{ name: 'Conversation Attribute', value: 'conversation_attribute' },
+			{ name: 'Task Attribute', value: 'task_attribute' },
 		],
 		displayOptions: {
 			show: {

@@ -2,6 +2,62 @@ import { type IDataObject, type IExecuteFunctions, type INodeExecutionData, Node
 import { chatwootApiRequest, getAccountId, getKanbanBoardId, getKanbanStepId, getKanbanTaskId } from '../../shared/transport';
 import type { KanbanTaskOperation } from './types';
 
+function parseTaskCustomAttributes(
+	context: IExecuteFunctions,
+	itemIndex: number,
+	paramSuffix: string = '',
+): IDataObject | undefined {
+	const specifyParamName = paramSuffix ? `specifyCustomAttributes${paramSuffix}` : 'specifyCustomAttributes';
+	const specifyMode = context.getNodeParameter(specifyParamName, itemIndex, 'none') as string;
+
+	if (specifyMode === 'none') {
+		return undefined;
+	}
+
+	if (specifyMode === 'definition') {
+		const definitionParamName = paramSuffix ? `customAttributesDefinition${paramSuffix}.attributes` : 'customAttributesDefinition.attributes';
+		const attributes = context.getNodeParameter(
+			definitionParamName,
+			itemIndex,
+			[],
+		) as Array<{ key: string; value: string }>;
+
+		const customAttributes: IDataObject = {};
+		for (const attr of attributes) {
+			if (attr.key) {
+				customAttributes[attr.key] = attr.value;
+			}
+		}
+		return Object.keys(customAttributes).length > 0 ? customAttributes : undefined;
+	}
+
+	if (specifyMode === 'keypair') {
+		const keypairParamName = paramSuffix ? `customAttributesParameters${paramSuffix}.attributes` : 'customAttributesParameters.attributes';
+		const attributes = context.getNodeParameter(
+			keypairParamName,
+			itemIndex,
+			[],
+		) as Array<{ name: string; value: string }>;
+
+		const customAttributes: IDataObject = {};
+		for (const attr of attributes) {
+			if (attr.name) {
+				customAttributes[attr.name] = attr.value;
+			}
+		}
+		return Object.keys(customAttributes).length > 0 ? customAttributes : undefined;
+	}
+
+	if (specifyMode === 'json') {
+		const jsonParamName = paramSuffix ? `customAttributesJson${paramSuffix}` : 'customAttributesJson';
+		const jsonValue = context.getNodeParameter(jsonParamName, itemIndex, '{}') as string;
+		const parsed = JSON.parse(jsonValue) as IDataObject;
+		return Object.keys(parsed).length > 0 ? parsed : undefined;
+	}
+
+	return undefined;
+}
+
 export async function executeKanbanTaskOperation(
 	context: IExecuteFunctions,
 	operation: KanbanTaskOperation,
@@ -37,11 +93,14 @@ async function createTask(
 		additionalFields.priority = null;
 	}
 
+	const customAttributes = parseTaskCustomAttributes(context, itemIndex, 'Create');
+
 	const task: IDataObject = {
 		title,
 		board_id: boardId,
 		board_step_id: stepId,
 		...additionalFields,
+		...(customAttributes ? { custom_attributes: customAttributes } : {}),
 	};
 
 	const result = await chatwootApiRequest.call(
@@ -109,7 +168,12 @@ async function updateTask(
 		updateFields.board_step_id = (updateFields.board_step_id as IDataObject).value;
 	}
 
-	const task: IDataObject = { ...updateFields };
+	const customAttributes = parseTaskCustomAttributes(context, itemIndex, 'Update');
+
+	const task: IDataObject = {
+		...updateFields,
+		...(customAttributes ? { custom_attributes: customAttributes } : {}),
+	};
 
 	if (Object.keys(task).length === 0) {
 		throw new NodeOperationError(
