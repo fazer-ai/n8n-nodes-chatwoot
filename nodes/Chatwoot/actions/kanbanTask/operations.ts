@@ -51,8 +51,16 @@ function parseTaskCustomAttributes(
 	if (specifyMode === 'json') {
 		const jsonParamName = paramSuffix ? `customAttributesJson${paramSuffix}` : 'customAttributesJson';
 		const jsonValue = context.getNodeParameter(jsonParamName, itemIndex, '{}') as string;
-		const parsed = JSON.parse(jsonValue) as IDataObject;
-		return Object.keys(parsed).length > 0 ? parsed : undefined;
+		const parsed = JSON.parse(jsonValue) as unknown;
+		if (parsed === null || Array.isArray(parsed) || typeof parsed !== 'object') {
+			throw new NodeOperationError(
+				context.getNode(),
+				'Custom attributes JSON must be an object',
+				{ itemIndex },
+			);
+		}
+		const customAttributes = parsed as IDataObject;
+		return Object.keys(customAttributes).length > 0 ? customAttributes : undefined;
 	}
 
 	return undefined;

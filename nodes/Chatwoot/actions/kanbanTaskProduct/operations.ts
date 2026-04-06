@@ -1,6 +1,6 @@
 import type { IDataObject, IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { chatwootApiRequest, getAccountId, getKanbanTaskId, getKanbanTaskProductId } from '../../shared/transport';
+import { chatwootApiRequest, getAccountId, getKanbanTaskId, getKanbanTaskProductId, getKanbanProductId } from '../../shared/transport';
 import type { KanbanTaskProductOperation } from './types';
 
 export async function executeKanbanTaskProductOperation(
@@ -26,7 +26,7 @@ async function createTaskProduct(
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const taskId = getKanbanTaskId.call(context, itemIndex);
-	const productId = context.getNodeParameter('productId', itemIndex) as number;
+	const productId = getKanbanProductId.call(context, itemIndex);
 	const additionalFields = context.getNodeParameter('additionalFields', itemIndex, {}) as IDataObject;
 
 	const result = await chatwootApiRequest.call(
@@ -55,9 +55,13 @@ async function listTaskProducts(
 		context,
 		'GET',
 		`/api/v1/accounts/${accountId}/kanban/tasks/${taskId}/products`,
-	) as { task_products: IDataObject[] };
+	) as { task_products?: IDataObject[] } | IDataObject[];
 
-	return result.task_products.map((tp) => ({ json: tp }));
+	const taskProducts =
+		(result as { task_products?: IDataObject[] }).task_products ??
+		(Array.isArray(result) ? result : []);
+
+	return taskProducts.map((tp) => ({ json: tp }));
 }
 
 async function updateTaskProduct(

@@ -2,6 +2,7 @@ import type { INodeProperties } from 'n8n-workflow';
 import {
   accountSelector,
   kanbanBoardSelector,
+  kanbanProductSelector,
   kanbanTaskSelector,
   kanbanTaskProductSelector,
 } from '../../shared/descriptions';
@@ -90,17 +91,18 @@ const kanbanTaskProductFields: INodeProperties[] = [
 		},
 	},
 	{
-		displayName: 'Product ID',
-		name: 'productId',
-		type: 'number',
-		default: 0,
-		required: true,
-		description: 'ID of the product from the board catalog',
+		...kanbanProductSelector,
+		displayName: 'Product',
+		description: 'Select the product from the board catalog',
 		displayOptions: {
 			show: {
 				...showOnlyForKanbanTaskProduct,
 				operation: ['create'],
 			},
+		},
+		typeOptions: {
+			...kanbanProductSelector.typeOptions,
+			loadOptionsDependsOn: ['kanbanBoardId'],
 		},
 	},
 	{

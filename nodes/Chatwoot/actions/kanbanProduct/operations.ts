@@ -58,9 +58,13 @@ async function listProducts(
 		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/products`,
 		undefined,
 		filters,
-	) as { products: IDataObject[] };
+	) as { products?: IDataObject[] } | IDataObject[];
 
-	return result.products.map((product) => ({ json: product }));
+	const products =
+		(result as { products?: IDataObject[] }).products ??
+		(Array.isArray(result) ? result : []);
+
+	return products.map((product) => ({ json: product }));
 }
 
 async function updateProduct(
@@ -74,8 +78,8 @@ async function updateProduct(
 
 	const product: IDataObject = {};
 
-	if (updateFields.name) product.name = updateFields.name;
-	if (updateFields.description) product.description = updateFields.description;
+	if (updateFields.name !== undefined) product.name = updateFields.name;
+	if (updateFields.description !== undefined) product.description = updateFields.description;
 	if (updateFields.unit_price !== undefined) product.unit_price = updateFields.unit_price;
 	if (updateFields.archived !== undefined) product.archived = updateFields.archived;
 

@@ -153,6 +153,9 @@ const kanbanBoardFields: INodeProperties[] = [
 		displayName: 'Currency',
 		name: 'currency',
 		type: 'string',
+		typeOptions: {
+			maxLength: 3,
+		},
 		default: '',
 		description: 'Currency code for monetary values (ISO 4217, e.g. USD, BRL, EUR). Max 3 characters.',
 		displayOptions: {
