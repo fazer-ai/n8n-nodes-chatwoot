@@ -196,7 +196,7 @@ const kanbanProductFields: INodeProperties[] = [
 				name: 'archived',
 				type: 'boolean',
 				default: false,
-				description: 'Filter to show only archived products',
+				description: 'Whether to show only archived products',
 			},
 		],
 	},

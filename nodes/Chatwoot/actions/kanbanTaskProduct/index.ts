@@ -1,4 +1,3 @@
-/* eslint-disable n8n-nodes-base/node-param-collection-type-unsorted-items */
 import type { INodeProperties } from 'n8n-workflow';
 import {
   accountSelector,
