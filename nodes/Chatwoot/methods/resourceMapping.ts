@@ -72,6 +72,9 @@ export interface ChatwootLabel {
 export interface ChatwootWebhook {
   id: number;
   url: string;
+  name?: string;
+  subscriptions?: string[];
+  secret?: string;
 }
 
 export interface ChatwootProfileResponse {
