@@ -73,7 +73,14 @@ async function updateTaskProduct(
 	const taskProductId = getKanbanTaskProductId.call(context, itemIndex);
 	const updateFields = context.getNodeParameter('updateFields', itemIndex, {}) as IDataObject;
 
-	if (Object.keys(updateFields).length === 0) {
+	const cleanedFields: IDataObject = {};
+	for (const [key, value] of Object.entries(updateFields)) {
+		if (value !== undefined) {
+			cleanedFields[key] = value;
+		}
+	}
+
+	if (Object.keys(cleanedFields).length === 0) {
 		throw new NodeOperationError(
 			context.getNode(),
 			'At least one field must be provided to update the task product',
@@ -86,7 +93,7 @@ async function updateTaskProduct(
 		'PUT',
 		`/api/v1/accounts/${accountId}/kanban/tasks/${taskId}/products/${taskProductId}`,
 		{
-			task_product: { ...updateFields },
+			task_product: { ...cleanedFields },
 		},
 	) as IDataObject;
 
