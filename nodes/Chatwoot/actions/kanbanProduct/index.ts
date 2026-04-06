@@ -123,6 +123,7 @@ const kanbanProductFields: INodeProperties[] = [
 				type: 'number',
 				typeOptions: {
 					minValue: 0,
+					numberPrecision: 2,
 				},
 				default: 0,
 				description: 'Unit price of the product',
@@ -172,6 +173,7 @@ const kanbanProductFields: INodeProperties[] = [
 				type: 'number',
 				typeOptions: {
 					minValue: 0,
+					numberPrecision: 2,
 				},
 				default: 0,
 				description: 'New unit price for the product',
