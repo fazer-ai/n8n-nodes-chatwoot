@@ -6,6 +6,7 @@ import {
 	INodeTypeDescription,
 	IWebhookResponseData,
 	NodeApiError,
+	NodeOperationError,
 	JsonObject,
 	ILoadOptionsFunctions,
 	INodeListSearchResult,
@@ -24,6 +25,7 @@ import {
 	ChatwootInbox,
 	ChatwootPayloadResponse,
 } from './methods/resourceMapping';
+import { verifyWebhookSignature } from './shared/webhookSignature';
 
 function extractAccountId(context: IHookFunctions): number {
 	const accountIdParam = context.getNodeParameter('accountId') as
@@ -195,7 +197,7 @@ export class ChatwootTrigger implements INodeType {
 						],
 					},
 				],
-			}
+			},
 		],
 	};
 
@@ -269,6 +271,11 @@ export class ChatwootTrigger implements INodeType {
 				if (exactMatch) {
 					const webhookData = this.getWorkflowStaticData('node');
 					webhookData.webhookId = exactMatch.id;
+					if (exactMatch.secret) {
+						webhookData.webhookSecret = exactMatch.secret;
+					} else {
+						delete webhookData.webhookSecret;
+					}
 					return true;
 				}
 
@@ -335,6 +342,25 @@ export class ChatwootTrigger implements INodeType {
 				}
 
 				webhookData.webhookId = webhookId;
+
+				let webhookSecret: unknown;
+				if (response.payload && typeof response.payload === 'object') {
+					const payload = response.payload as IDataObject;
+					if (payload.webhook && typeof payload.webhook === 'object') {
+						webhookSecret = (payload.webhook as IDataObject).secret;
+					} else if (payload.secret) {
+						webhookSecret = payload.secret;
+					}
+				} else if (response.secret) {
+					webhookSecret = response.secret;
+				}
+
+				if (webhookSecret && typeof webhookSecret === 'string') {
+					webhookData.webhookSecret = webhookSecret;
+				} else {
+					delete webhookData.webhookSecret;
+				}
+
 				return true;
 			},
 
@@ -349,6 +375,7 @@ export class ChatwootTrigger implements INodeType {
 						// Ignore — webhook may have been removed externally
 					}
 					delete webhookData.webhookId;
+					delete webhookData.webhookSecret;
 				}
 				return true;
 			},
@@ -357,10 +384,37 @@ export class ChatwootTrigger implements INodeType {
 
 	async webhook(this: IWebhookFunctions): Promise<IWebhookResponseData> {
 		const bodyData = this.getBodyData();
+		const isTestMode = this.getMode() === 'manual';
+
+		if (!isTestMode) {
+			const webhookData = this.getWorkflowStaticData('node');
+			const secret = webhookData.webhookSecret as string | undefined;
+
+			if (secret) {
+				const req = this.getRequestObject();
+				const rawBody: string =
+					(req as unknown as { rawBody?: Buffer }).rawBody?.toString('utf-8')
+					?? JSON.stringify(bodyData);
+
+				const headers = this.getHeaderData();
+				const result = verifyWebhookSignature({
+					secret,
+					signatureHeader: headers['x-chatwoot-signature'] as string | undefined,
+					timestampHeader: headers['x-chatwoot-timestamp'] as string | undefined,
+					rawBody,
+				});
+
+				if (!result.valid) {
+					throw new NodeOperationError(
+						this.getNode(),
+						`Webhook signature verification failed: ${result.reason}`,
+					);
+				}
+			}
+		}
+
 		return {
-			workflowData: [
-				this.helpers.returnJsonArray(bodyData),
-			],
+			workflowData: [this.helpers.returnJsonArray(bodyData)],
 		};
 	}
 }
