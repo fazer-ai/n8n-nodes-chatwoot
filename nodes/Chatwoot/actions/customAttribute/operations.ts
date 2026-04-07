@@ -2,6 +2,7 @@ import type { IDataObject, IExecuteFunctions, INodeExecutionData } from 'n8n-wor
 import {
 	chatwootApiRequest,
 	getAccountId,
+	getCustomAttributeDefinitionId,
 } from '../../shared/transport';
 import { CustomAttributeOperation } from './types';
 
@@ -121,12 +122,12 @@ async function deleteCustomAttribute(
 	itemIndex: number,
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
-	const attributeKey = context.getNodeParameter('attributeKeyToDelete', itemIndex);
+	const attributeId = getCustomAttributeDefinitionId.call(context, itemIndex);
 
 	const result = await chatwootApiRequest.call(
 		context,
 		'DELETE',
-		`/api/v1/accounts/${accountId}/custom_attribute_definitions/${attributeKey}`,
+		`/api/v1/accounts/${accountId}/custom_attribute_definitions/${attributeId}`,
 	) as IDataObject;
 
 	return { json: result };

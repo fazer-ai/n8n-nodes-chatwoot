@@ -1,10 +1,12 @@
 import type { INodeProperties } from 'n8n-workflow';
 import {
   accountSelector,
+  agentSelector,
   inboxSelector,
   conversationSelector,
   contactSelector,
   messageTemplateSelector,
+  teamSelector,
 } from '../../shared/descriptions';
 
 const showOnlyForConversation = {
@@ -335,16 +337,8 @@ const conversationFields: INodeProperties[] = [
     ],
   },
   {
-    // eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-options
-    displayName: 'Agent',
-    name: 'agentId',
-    type: 'options',
-    default: '',
-    required: true,
-    description: 'Select the agent to assign. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
-    typeOptions: {
-      loadOptionsMethod: 'loadAgentsOptions',
-    },
+    ...agentSelector,
+    description: 'Select the agent to assign.',
     displayOptions: {
       show: {
         ...showOnlyForConversation,
@@ -353,16 +347,8 @@ const conversationFields: INodeProperties[] = [
     },
   },
   {
-    // eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-options
-    displayName: 'Team',
-    name: 'teamId',
-    type: 'options',
-    default: '',
-    required: true,
-    description: 'Select the team to assign. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
-    typeOptions: {
-      loadOptionsMethod: 'loadTeamsOptions',
-    },
+    ...teamSelector,
+    description: 'Select the team to assign.',
     displayOptions: {
       show: {
         ...showOnlyForConversation,

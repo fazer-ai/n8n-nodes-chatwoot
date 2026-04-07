@@ -153,17 +153,39 @@ const customAttributeFields: INodeProperties[] = [
 		],
 	},
 	{
-		// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-options
 		displayName: 'Attribute',
 		name: 'attributeKeyToDelete',
-		type: 'options',
-		default: '',
+		type: 'resourceLocator',
+		default: { mode: 'list', value: '' },
 		required: true,
-		description: 'Select the custom attribute to delete. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
-		typeOptions: {
-			loadOptionsMethod: 'loadCustomAttributeDefinitionsOptions',
-			loadOptionsDependsOn: ['attributeModel'],
-		},
+		description: 'Select the custom attribute to delete',
+		modes: [
+			{
+				displayName: 'From List',
+				name: 'list',
+				type: 'list',
+				placeholder: 'Select an attribute...',
+				typeOptions: {
+					searchListMethod: 'searchCustomAttributeDefinitions',
+					searchable: true,
+				},
+			},
+			{
+				displayName: 'By ID',
+				name: 'id',
+				type: 'string',
+				placeholder: 'e.g. 1',
+				validation: [
+					{
+						type: 'regex',
+						properties: {
+							regex: '^[0-9]*$',
+							errorMessage: 'The ID must be a number',
+						},
+					},
+				],
+			},
+		],
 		displayOptions: {
 			show: {
 				...showOnlyForCustomAttribute,

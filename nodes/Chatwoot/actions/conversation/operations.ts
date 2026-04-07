@@ -3,9 +3,11 @@ import {
 	asyncSleep,
 	chatwootApiRequest,
 	getAccountId,
+	getAgentId,
 	getInboxId,
 	getConversationId,
 	getContactId,
+	getTeamId,
 	getTemplateName,
 } from '../../shared/transport';
 import { ConversationOperation } from './types';
@@ -293,7 +295,7 @@ async function assignConversationAgent(
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const conversationId = getConversationId.call(context, itemIndex);
-	const agentId = context.getNodeParameter('agentId', itemIndex) as number;
+	const agentId = getAgentId.call(context, itemIndex);
 
 	const result = await chatwootApiRequest.call(
 		context,
@@ -311,7 +313,7 @@ async function assignConversationTeam(
 ): Promise<INodeExecutionData> {
 	const accountId = getAccountId.call(context, itemIndex);
 	const conversationId = getConversationId.call(context, itemIndex);
-	const teamId = context.getNodeParameter('teamId', itemIndex) as number;
+	const teamId = getTeamId.call(context, itemIndex);
 
 	const result = await chatwootApiRequest.call(
 		context,

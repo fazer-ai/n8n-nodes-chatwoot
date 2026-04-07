@@ -10,6 +10,7 @@ import {
 	ChatwootAttachment,
 	ChatwootContact,
 	ChatwootConversation,
+	ChatwootCustomAttributeDefinition,
 	ChatwootInbox,
 	ChatwootKanbanBoard,
 	ChatwootKanbanProduct,
@@ -978,6 +979,46 @@ export async function searchTemplateStructure(
 			name: 'No components found in template',
 			value: '',
 		});
+	}
+
+	return { results };
+}
+
+/**
+ * Get custom attribute definitions for the selected model (for resourceLocator)
+ */
+export async function searchCustomAttributeDefinitions(
+	this: ILoadOptionsFunctions,
+	filter?: string,
+): Promise<INodeListSearchResult> {
+	const accountId = getAccountId.call(this, 0);
+	if (!accountId) {
+		return { results: [] };
+	}
+
+	const attributeModel = this.getNodeParameter('attributeModel', 0) as string;
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/custom_attribute_definitions`,
+		undefined,
+		{ attribute_model: attributeModel },
+	)) as ChatwootCustomAttributeDefinition[];
+	const definitions = response || [];
+
+	let results: INodeListSearchItems[] = definitions.map((attr) => ({
+		name: `#${attr.id} - ${attr.attribute_display_name} (${attr.attribute_key})`,
+		value: String(attr.id),
+	}));
+
+	if (filter) {
+		const filterLower = filter.toLowerCase();
+		results = results.filter(
+			(item) =>
+				item.name.toLowerCase().includes(filterLower) ||
+				String(item.value).includes(filter),
+		);
 	}
 
 	return { results };

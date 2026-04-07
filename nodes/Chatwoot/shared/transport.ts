@@ -242,3 +242,10 @@ export function getScheduledMessageId(this: IExecuteFunctions | ILoadOptionsFunc
 export function getTemplateName(this: IExecuteFunctions | ILoadOptionsFunctions, itemIndex: number): string {
 	return getResourceId.call(this, itemIndex, 'templateName');
 }
+
+/**
+ * Helper to get the custom attribute definition ID from parameters (handles resourceLocator)
+ */
+export function getCustomAttributeDefinitionId(this: IExecuteFunctions | ILoadOptionsFunctions, itemIndex: number): string {
+	return getResourceId.call(this, itemIndex, 'attributeKeyToDelete');
+}
