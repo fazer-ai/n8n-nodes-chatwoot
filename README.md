@@ -92,11 +92,13 @@ A webhook trigger node that listens for Chatwoot events. Automatically registers
 
 ### Custom Attribute
 
-| Operation | Description                                                                     |
-| --------- | ------------------------------------------------------------------------------- |
-| Create    | Create a custom attribute definition (text, number, date, list, checkbox, link) |
-| List      | List all custom attribute definitions                                           |
-| Delete    | Delete a custom attribute definition                                            |
+| Operation | Description                                                                                             |
+| --------- | ------------------------------------------------------------------------------------------------------- |
+| Create    | Create a custom attribute definition for contact, conversation, or task (⚡) models                     |
+| List      | List all custom attribute definitions                                                                   |
+| Delete    | Delete a custom attribute definition                                                                    |
+
+Supported types: text, number, currency, percent, link, date, list, checkbox.
 
 ### Inbox
 
@@ -133,14 +135,36 @@ A webhook trigger node that listens for Chatwoot events. Automatically registers
 
 ### Kanban Task ⚡
 
-| Operation | Description                 |
-| --------- | --------------------------- |
-| Create    | Create a new task           |
-| Get       | Get a specific task         |
-| List      | List tasks from a board     |
-| Update    | Update a task               |
-| Move      | Move a task to another step |
-| Delete    | Delete a task               |
+| Operation | Description                                                           |
+| --------- | --------------------------------------------------------------------- |
+| Create    | Create a new task (with value, custom attributes, and line items)     |
+| Get       | Get a specific task                                                   |
+| List      | List tasks from a board                                               |
+| Update    | Update a task                                                         |
+| Move      | Move a task to another step                                           |
+| Delete    | Delete a task                                                         |
+
+### Kanban Product ⚡
+
+Manage a board-scoped product catalog used as the source for task line items.
+
+| Operation | Description                                                       |
+| --------- | ----------------------------------------------------------------- |
+| Create    | Create a product (name, description, unit price, archived flag)   |
+| List      | List products from a board                                        |
+| Update    | Update a product                                                  |
+| Delete    | Delete a product                                                  |
+
+### Kanban Task Product ⚡
+
+Manage the line items attached to a kanban task (quantity, unit price, discount).
+
+| Operation | Description                                                              |
+| --------- | ------------------------------------------------------------------------ |
+| Create    | Attach a product to a task (quantity, unit price, discount percentage)   |
+| List      | List line items for a task                                               |
+| Update    | Update a task line item                                                  |
+| Delete    | Remove a line item from a task                                           |
 
 ### Label
 
@@ -220,6 +244,10 @@ A Personal Access Token from your Chatwoot profile:
 4. Copy your token
 
 The token is sent as the `Api-Access-Token` header with each request.
+
+### Webhook Signature Verification
+
+The **Chatwoot fazer.ai Trigger** node verifies incoming webhook payloads using HMAC-SHA256 against the `X-Chatwoot-Signature` and `X-Chatwoot-Timestamp` headers, using the per-webhook secret provided by Chatwoot. Verification is automatically skipped when the Chatwoot instance does not supply a secret (older versions) or in test mode, keeping it backwards compatible.
 
 ## Compatibility
 
