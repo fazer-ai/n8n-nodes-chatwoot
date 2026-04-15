@@ -198,6 +198,13 @@ export class ChatwootTrigger implements INodeType {
 					},
 				],
 			},
+			{
+				displayName: 'Verify Webhook Signature',
+				name: 'verifySignature',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to verify the HMAC-SHA256 signature on incoming webhooks using the per-webhook secret. Requires Chatwoot fazer.ai v4.12.0 or newer. Leave disabled if your instance does not sign outgoing webhooks, otherwise all events will be rejected.',
+			},
 		],
 	};
 
@@ -385,8 +392,9 @@ export class ChatwootTrigger implements INodeType {
 	async webhook(this: IWebhookFunctions): Promise<IWebhookResponseData> {
 		const bodyData = this.getBodyData();
 		const isTestMode = this.getMode() === 'manual';
+		const verifySignature = this.getNodeParameter('verifySignature', false) as boolean;
 
-		if (!isTestMode) {
+		if (!isTestMode && verifySignature) {
 			const webhookData = this.getWorkflowStaticData('node');
 			const secret = webhookData.webhookSecret as string | undefined;
 
