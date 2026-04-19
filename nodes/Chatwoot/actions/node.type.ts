@@ -4,6 +4,10 @@ import type { ContactOperation } from './contact/types';
 import type { ConversationOperation } from './conversation/types';
 import type { CustomAttributeOperation } from './customAttribute/types';
 import type { InboxOperation } from './inbox/types';
+import type { InternalChatCategoryOperation } from './internalChatCategory/types';
+import type { InternalChatChannelOperation } from './internalChatChannel/types';
+import type { InternalChatMemberOperation } from './internalChatMember/types';
+import type { InternalChatMessageOperation } from './internalChatMessage/types';
 import type { KanbanBoardOperation } from './kanbanBoard/types';
 import type { KanbanProductOperation } from './kanbanProduct/types';
 import type { KanbanStepOperation } from './kanbanStep/types';
@@ -21,6 +25,10 @@ export type ChatwootResources =
 	| 'conversation'
 	| 'customAttribute'
 	| 'inbox'
+	| 'internalChatCategory'
+	| 'internalChatChannel'
+	| 'internalChatMember'
+	| 'internalChatMessage'
 	| 'kanbanBoard'
 	| 'kanbanProduct'
 	| 'kanbanStep'
@@ -38,6 +46,10 @@ export type ChatwootOperations =
 	| ConversationOperation
 	| CustomAttributeOperation
 	| InboxOperation
+	| InternalChatCategoryOperation
+	| InternalChatChannelOperation
+	| InternalChatMemberOperation
+	| InternalChatMessageOperation
 	| KanbanBoardOperation
 	| KanbanProductOperation
 	| KanbanStepOperation
@@ -55,6 +67,10 @@ export type {
 	ConversationOperation,
 	CustomAttributeOperation,
 	InboxOperation,
+	InternalChatCategoryOperation,
+	InternalChatChannelOperation,
+	InternalChatMemberOperation,
+	InternalChatMessageOperation,
 	KanbanBoardOperation,
 	KanbanProductOperation,
 	KanbanStepOperation,

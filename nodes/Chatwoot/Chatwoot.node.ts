@@ -14,6 +14,10 @@ import type {
 	ConversationOperation,
 	CustomAttributeOperation,
 	InboxOperation,
+	InternalChatCategoryOperation,
+	InternalChatChannelOperation,
+	InternalChatMemberOperation,
+	InternalChatMessageOperation,
 	KanbanBoardOperation,
 	KanbanProductOperation,
 	KanbanStepOperation,
@@ -32,6 +36,10 @@ import { inboxDescription, executeInboxOperation } from './actions/inbox';
 import { contactDescription, executeContactOperation } from './actions/contact';
 import { conversationDescription, executeConversationOperation } from './actions/conversation';
 import { customAttributeDescription, executeCustomAttributeOperation } from './actions/customAttribute';
+import { internalChatCategoryDescription, executeInternalChatCategoryOperation } from './actions/internalChatCategory';
+import { internalChatChannelDescription, executeInternalChatChannelOperation } from './actions/internalChatChannel';
+import { internalChatMemberDescription, executeInternalChatMemberOperation } from './actions/internalChatMember';
+import { internalChatMessageDescription, executeInternalChatMessageOperation } from './actions/internalChatMessage';
 import { labelDescription, executeLabelOperation } from './actions/label';
 import { kanbanBoardDescription, executeKanbanBoardOperation } from './actions/kanbanBoard';
 import { kanbanProductDescription, executeKanbanProductOperation } from './actions/kanbanProduct';
@@ -107,6 +115,26 @@ export class Chatwoot implements INodeType {
 						description: 'Manage inboxes',
 					},
 					{
+						name: 'Internal Chat Category',
+						value: 'internalChatCategory',
+						description: 'Manage internal chat categories (fazer.ai only)',
+					},
+					{
+						name: 'Internal Chat Channel',
+						value: 'internalChatChannel',
+						description: 'Manage internal chat channels and DMs (fazer.ai only)',
+					},
+					{
+						name: 'Internal Chat Member',
+						value: 'internalChatMember',
+						description: 'Manage members of internal chat channels (fazer.ai only)',
+					},
+					{
+						name: 'Internal Chat Message',
+						value: 'internalChatMessage',
+						description: 'Manage internal chat messages, polls, reactions, and drafts (fazer.ai only)',
+					},
+					{
 						name: 'Kanban Board',
 						value: 'kanbanBoard',
 						description: 'Manage Kanban boards',
@@ -161,6 +189,10 @@ export class Chatwoot implements INodeType {
 			...contactDescription,
 			...conversationDescription,
 			...customAttributeDescription,
+			...internalChatCategoryDescription,
+			...internalChatChannelDescription,
+			...internalChatMemberDescription,
+			...internalChatMessageDescription,
 			...labelDescription,
 			...kanbanBoardDescription,
 			...kanbanProductDescription,
@@ -217,6 +249,18 @@ export class Chatwoot implements INodeType {
 						break;
 					case 'customAttribute':
 						responseData = await executeCustomAttributeOperation(this, operation as CustomAttributeOperation, i);
+						break;
+					case 'internalChatCategory':
+						responseData = await executeInternalChatCategoryOperation(this, operation as InternalChatCategoryOperation, i);
+						break;
+					case 'internalChatChannel':
+						responseData = await executeInternalChatChannelOperation(this, operation as InternalChatChannelOperation, i);
+						break;
+					case 'internalChatMember':
+						responseData = await executeInternalChatMemberOperation(this, operation as InternalChatMemberOperation, i);
+						break;
+					case 'internalChatMessage':
+						responseData = await executeInternalChatMessageOperation(this, operation as InternalChatMessageOperation, i);
 						break;
 					case 'label':
 						responseData = await executeLabelOperation(this, operation as LabelOperation, i);

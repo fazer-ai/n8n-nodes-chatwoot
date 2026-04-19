@@ -17,13 +17,13 @@ export function chatwootFazerAiOnlyOperation(operationName: string): INodeProper
 	};
 }
 
-const resourceSelector = (displayName: string, name: string, description: string, searchListMethod: string) : INodeProperties => (
+const resourceSelector = (displayName: string, name: string, description: string, searchListMethod: string, required = true) : INodeProperties => (
 	{
 		displayName,
 		name,
 		type: 'resourceLocator',
 		default: { mode: 'list', value: '' },
-		required: true,
+		required,
 		description: description,
 		modes: [
 			{
@@ -53,6 +53,10 @@ const resourceSelector = (displayName: string, name: string, description: string
 			},
 		],
 	}
+);
+
+export const optionalResourceSelector = (displayName: string, name: string, description: string, searchListMethod: string): INodeProperties => (
+	resourceSelector(displayName, name, description, searchListMethod, false)
 );
 
 /**
@@ -273,6 +277,10 @@ export const webhookEventsSelector: INodeProperties = {
 		{ name: 'Conversation Typing Off', value: 'conversation_typing_off' },
 		{ name: 'Conversation Typing On', value: 'conversation_typing_on' },
 		{ name: 'Conversation Updated', value: 'conversation_updated' },
+		{ name: 'Internal Chat Channel Updated', value: 'internal_chat_channel_updated' },
+		{ name: 'Internal Chat Message Created', value: 'internal_chat_message_created' },
+		{ name: 'Internal Chat Message Deleted', value: 'internal_chat_message_deleted' },
+		{ name: 'Internal Chat Message Updated', value: 'internal_chat_message_updated' },
 		{ name: 'Kanban Task Created', value: 'kanban_task_created' },
 		{ name: 'Kanban Task Deleted', value: 'kanban_task_deleted' },
 		{ name: 'Kanban Task Overdue', value: 'kanban_task_overdue' },
@@ -285,3 +293,71 @@ export const webhookEventsSelector: INodeProperties = {
 		{ name: 'Provider Event Received', value: 'provider_event_received' },
 	]
 };
+
+/**
+ * Internal Chat Category selector using resourceLocator (From List / By ID in single field)
+ */
+export const internalChatCategorySelector: INodeProperties = resourceSelector(
+	'Internal Chat Category',
+	'internalChatCategoryId',
+	'Select the internal chat category to use',
+	'searchInternalChatCategories',
+);
+
+/**
+ * Internal Chat Channel selector using resourceLocator (From List / By ID in single field)
+ */
+export const internalChatChannelSelector: INodeProperties = resourceSelector(
+	'Internal Chat Channel',
+	'internalChatChannelId',
+	'Select the internal chat channel to use',
+	'searchInternalChatChannels',
+);
+
+/**
+ * Internal Chat Member selector using resourceLocator (From List / By ID in single field)
+ */
+export const internalChatMemberSelector: INodeProperties = resourceSelector(
+	'Internal Chat Member',
+	'internalChatMemberId',
+	'Select the channel member to use',
+	'searchInternalChatMembers',
+);
+
+/**
+ * Internal Chat Message selector using resourceLocator (From List / By ID in single field)
+ */
+export const internalChatMessageSelector: INodeProperties = resourceSelector(
+	'Internal Chat Message',
+	'internalChatMessageId',
+	'Select the internal chat message to use',
+	'searchInternalChatMessages',
+);
+
+/**
+ * Optional category selector for use inside collections (additionalFields/updateFields/filters).
+ * Returns a fresh INodeProperties so call sites can override displayName/name/description
+ * without leaving stale placeholders inside `modes`.
+ */
+export const internalChatCategoryOptionalSelector = (
+	overrides: Partial<{ displayName: string; name: string; description: string }> = {},
+): INodeProperties => optionalResourceSelector(
+	overrides.displayName ?? 'Category',
+	overrides.name ?? 'category_id',
+	overrides.description ?? 'Category to assign the channel to',
+	'searchInternalChatCategories',
+);
+
+/**
+ * Optional message selector for use inside collections or as a non-required reference.
+ * Returns a fresh INodeProperties so call sites can override displayName/name/description
+ * without leaving stale placeholders inside `modes`.
+ */
+export const internalChatMessageOptionalSelector = (
+	overrides: Partial<{ displayName: string; name: string; description: string }> = {},
+): INodeProperties => optionalResourceSelector(
+	overrides.displayName ?? 'Message',
+	overrides.name ?? 'messageId',
+	overrides.description ?? 'Internal chat message to reference',
+	'searchInternalChatMessages',
+);

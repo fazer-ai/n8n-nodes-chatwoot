@@ -84,6 +84,33 @@ export function asyncSleep(ms: number): Promise<void> {
 }
 
 /**
+ * Extract the value from a resourceLocator parameter that lives inside a collection.
+ * Returns the raw string value or undefined when empty.
+ */
+export function extractResourceLocatorId(value: unknown): string | undefined {
+	if (value === undefined || value === null || value === '') return undefined;
+	if (typeof value === 'object') {
+		const v = (value as { value?: string | number }).value;
+		if (v === undefined || v === null || v === '') return undefined;
+		return String(v);
+	}
+	if (typeof value === 'number') return String(value);
+	return value as string;
+}
+
+/**
+ * Same as extractResourceLocatorId but coerces to a finite number.
+ * Returns undefined for empty values or non-numeric input (e.g. expressions that resolve to garbage).
+ * Use this for IDs that must be sent as numbers in the API payload.
+ */
+export function extractResourceLocatorIdAsNumber(value: unknown): number | undefined {
+	const id = extractResourceLocatorId(value);
+	if (id === undefined) return undefined;
+	const num = Number(id);
+	return Number.isFinite(num) ? num : undefined;
+}
+
+/**
  * Helper to get the ID from a resourceLocator parameter
  */
 function getResourceId(
@@ -248,4 +275,32 @@ export function getTemplateName(this: IExecuteFunctions | ILoadOptionsFunctions,
  */
 export function getCustomAttributeDefinitionId(this: IExecuteFunctions | ILoadOptionsFunctions, itemIndex: number): string {
 	return getResourceId.call(this, itemIndex, 'attributeKeyToDelete');
+}
+
+/**
+ * Helper to get the internal chat category ID from parameters (handles resourceLocator)
+ */
+export function getInternalChatCategoryId(this: IExecuteFunctions | ILoadOptionsFunctions, itemIndex: number): string {
+	return getResourceId.call(this, itemIndex, 'internalChatCategoryId');
+}
+
+/**
+ * Helper to get the internal chat channel ID from parameters (handles resourceLocator)
+ */
+export function getInternalChatChannelId(this: IExecuteFunctions | ILoadOptionsFunctions, itemIndex: number): string {
+	return getResourceId.call(this, itemIndex, 'internalChatChannelId');
+}
+
+/**
+ * Helper to get the internal chat member ID from parameters (handles resourceLocator)
+ */
+export function getInternalChatMemberId(this: IExecuteFunctions | ILoadOptionsFunctions, itemIndex: number): string {
+	return getResourceId.call(this, itemIndex, 'internalChatMemberId');
+}
+
+/**
+ * Helper to get the internal chat message ID from parameters (handles resourceLocator)
+ */
+export function getInternalChatMessageId(this: IExecuteFunctions | ILoadOptionsFunctions, itemIndex: number): string {
+	return getResourceId.call(this, itemIndex, 'internalChatMessageId');
 }
