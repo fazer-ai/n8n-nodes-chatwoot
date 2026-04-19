@@ -74,6 +74,57 @@ export async function chatwootApiRequest(
 }
 
 /**
+ * Make an authenticated multipart request to the Chatwoot API.
+ * Mirrors chatwootApiRequest's error normalization but uses requestWithAuthentication
+ * because httpRequestWithAuthentication does not support the `formData` field.
+ */
+export async function chatwootMultipartRequest(
+	this: IExecuteFunctions,
+	method: 'POST' | 'PUT' | 'PATCH',
+	endpoint: string,
+	formData: IDataObject,
+): Promise<unknown> {
+	const baseURL = await getChatwootBaseUrl.call(this);
+
+	try {
+		// eslint-disable-next-line @n8n/community-nodes/no-deprecated-workflow-functions -- httpRequestWithAuthentication does not expose `formData` for multipart uploads; same approach as conversation.sendFile.
+		return await this.helpers.requestWithAuthentication.call(
+			this,
+			'fazerAiChatwootApi',
+			{
+				method,
+				uri: `${baseURL}${endpoint}`,
+				formData,
+				json: true,
+			},
+		);
+	} catch (error) {
+		const err = error as Error & Record<string, unknown>;
+		let apiErrors: string[] | undefined;
+
+		if (err.response && typeof err.response === 'object') {
+			const response = err.response as Record<string, unknown>;
+			if (response.body && typeof response.body === 'object') {
+				const data = response.body as Record<string, unknown>;
+				if (Array.isArray(data.errors)) {
+					apiErrors = data.errors;
+				} else if (typeof data.error === 'string') {
+					apiErrors = [data.error];
+				}
+			}
+		}
+
+		if (apiErrors && apiErrors.length > 0) {
+			const errorMessage = apiErrors.join('; ');
+			err.description = err.message;
+			err.message = errorMessage;
+		}
+
+		throw error;
+	}
+}
+
+/**
  * Async sleep helper for adding delays between operations.
  * NOTE: Uses setTimeout which is restricted on n8n Cloud.
  * This feature only works on self-hosted n8n installations.

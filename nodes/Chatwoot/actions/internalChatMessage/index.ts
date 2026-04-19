@@ -10,6 +10,28 @@ const showOnlyForInternalChatMessage = {
 	resource: ['internalChatMessage'],
 };
 
+const sharedMessageOptionFields = (): INodeProperties[] => [
+	{
+		displayName: 'Also Send in Channel',
+		name: 'also_send_in_channel',
+		type: 'boolean',
+		default: false,
+		description: 'Whether to mirror a thread reply into the main channel view. Only takes effect when Parent Message is set.',
+	},
+	{
+		displayName: 'Echo ID',
+		name: 'echo_id',
+		type: 'string',
+		default: '',
+		description: 'Client-generated ID for optimistic updates',
+	},
+	internalChatMessageOptionalSelector({
+		name: 'parent_id',
+		displayName: 'Parent Message',
+		description: 'Parent message for threaded replies',
+	}),
+];
+
 const internalChatMessageOperations: INodeProperties[] = [
 	{
 		displayName: 'Operation',
@@ -240,20 +262,7 @@ const internalChatMessageFields: INodeProperties[] = [
 			},
 		},
 		options: [
-			{
-				displayName: 'Also Send in Channel',
-				name: 'also_send_in_channel',
-				type: 'boolean',
-				default: false,
-				description: 'Whether to mirror a thread reply into the main channel view. Only takes effect when Parent Message is set.',
-			},
-			{
-				displayName: 'Echo ID',
-				name: 'echo_id',
-				type: 'string',
-				default: '',
-				description: 'Client-generated ID for optimistic updates',
-			},
+			...sharedMessageOptionFields(),
 			{
 				displayName: 'File Type',
 				name: 'file_type',
@@ -268,11 +277,6 @@ const internalChatMessageFields: INodeProperties[] = [
 					{ name: 'Video', value: 'video' },
 				],
 			},
-			internalChatMessageOptionalSelector({
-				name: 'parent_id',
-				displayName: 'Parent Message',
-				description: 'Parent message for threaded replies',
-			}),
 		],
 	},
 	{
@@ -287,27 +291,7 @@ const internalChatMessageFields: INodeProperties[] = [
 				operation: ['create'],
 			},
 		},
-		options: [
-			{
-				displayName: 'Also Send in Channel',
-				name: 'also_send_in_channel',
-				type: 'boolean',
-				default: false,
-				description: 'Whether to mirror a thread reply into the main channel view. Only takes effect when Parent Message is set.',
-			},
-			{
-				displayName: 'Echo ID',
-				name: 'echo_id',
-				type: 'string',
-				default: '',
-				description: 'Client-generated ID for optimistic updates',
-			},
-			internalChatMessageOptionalSelector({
-				name: 'parent_id',
-				displayName: 'Parent Message',
-				description: 'Parent message for threaded replies',
-			}),
-		],
+		options: sharedMessageOptionFields(),
 	},
 	{
 		displayName: 'Filters',
@@ -522,7 +506,7 @@ const internalChatMessageFields: INodeProperties[] = [
 		typeOptions: {
 			minValue: 0,
 		},
-		description: 'ID of the specific vote to remove (for multiple-choice polls). Leave empty to remove all votes.',
+		description: 'ID of the specific vote to remove (for multiple-choice polls). Use 0 (the default) to remove all votes for this poll; set a positive option ID to remove only that vote.',
 		displayOptions: {
 			show: {
 				...showOnlyForInternalChatMessage,

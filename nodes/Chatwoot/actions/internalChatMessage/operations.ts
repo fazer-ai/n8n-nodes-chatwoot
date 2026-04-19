@@ -1,6 +1,6 @@
 import { INodeExecutionData, NodeOperationError, type IDataObject, type IExecuteFunctions } from 'n8n-workflow';
-import { chatwootApiRequest, extractResourceLocatorIdAsNumber, getAccountId, getChatwootBaseUrl, getInternalChatChannelId, getInternalChatMessageId } from '../../shared/transport';
-import { InternalChatMessageOperation } from './types';
+import { chatwootApiRequest, chatwootMultipartRequest, extractResourceLocatorIdAsNumber, getAccountId, getInternalChatChannelId, getInternalChatMessageId } from '../../shared/transport';
+import type { InternalChatMessageOperation } from './types';
 
 export async function executeInternalChatMessageOperation(
 	context: IExecuteFunctions,
@@ -130,17 +130,11 @@ async function sendFileToChannel(
 	const parentId = extractResourceLocatorIdAsNumber(options.parent_id);
 	if (parentId !== undefined) formData.parent_id = String(parentId);
 
-	const baseURL = await getChatwootBaseUrl.call(context);
-
-	const result = await context.helpers.requestWithAuthentication.call(
+	const result = await chatwootMultipartRequest.call(
 		context,
-		'fazerAiChatwootApi',
-		{
-			method: 'POST',
-			uri: `${baseURL}/api/v1/accounts/${accountId}/internal_chat/channels/${channelId}/messages`,
-			formData,
-			json: true,
-		},
+		'POST',
+		`/api/v1/accounts/${accountId}/internal_chat/channels/${channelId}/messages`,
+		formData,
 	);
 
 	return { json: result as IDataObject };

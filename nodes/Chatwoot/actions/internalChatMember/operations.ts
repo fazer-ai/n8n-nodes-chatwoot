@@ -1,6 +1,6 @@
 import { INodeExecutionData, NodeOperationError, type IDataObject, type IExecuteFunctions } from 'n8n-workflow';
 import { chatwootApiRequest, getAccountId, getInternalChatChannelId, getInternalChatMemberId } from '../../shared/transport';
-import { InternalChatMemberOperation } from './types';
+import type { InternalChatMemberOperation } from './types';
 
 export async function executeInternalChatMemberOperation(
 	context: IExecuteFunctions,

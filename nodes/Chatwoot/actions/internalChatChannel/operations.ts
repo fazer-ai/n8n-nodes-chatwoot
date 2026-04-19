@@ -1,6 +1,6 @@
 import { INodeExecutionData, NodeOperationError, type IDataObject, type IExecuteFunctions } from 'n8n-workflow';
 import { chatwootApiRequest, extractResourceLocatorIdAsNumber, getAccountId, getInternalChatChannelId, getInternalChatMessageId } from '../../shared/transport';
-import { InternalChatChannelOperation } from './types';
+import type { InternalChatChannelOperation } from './types';
 
 export async function executeInternalChatChannelOperation(
 	context: IExecuteFunctions,
@@ -65,8 +65,12 @@ async function createChannel(
 		channel.name = context.getNodeParameter('name', itemIndex) as string;
 
 		if (channelType === 'private_channel') {
-			const memberIds = context.getNodeParameter('memberIds', itemIndex, []) as number[];
-			const teamIds = context.getNodeParameter('teamIds', itemIndex, []) as number[];
+			const memberIds = sanitizePositiveIntegerArray(
+				context, itemIndex, 'memberIds', 'memberIds',
+			);
+			const teamIds = sanitizePositiveIntegerArray(
+				context, itemIndex, 'teamIds', 'teamIds',
+			);
 			if (memberIds.length) channel.member_ids = memberIds;
 			if (teamIds.length) channel.team_ids = teamIds;
 		}
@@ -237,12 +241,20 @@ async function markUnread(
 	const accountId = getAccountId.call(context, itemIndex);
 	const channelId = getInternalChatChannelId.call(context, itemIndex);
 	const messageId = getInternalChatMessageId.call(context, itemIndex);
+	const numericId = Number(messageId);
+	if (!Number.isInteger(numericId) || numericId <= 0) {
+		throw new NodeOperationError(
+			context.getNode(),
+			`Invalid Mark Unread reference message ID: ${messageId}`,
+			{ itemIndex },
+		);
+	}
 
 	const result = await chatwootApiRequest.call(
 		context,
 		'POST',
 		`/api/v1/accounts/${accountId}/internal_chat/channels/${channelId}/mark_unread`,
-		{ message_id: Number(messageId) },
+		{ message_id: numericId },
 	) as IDataObject;
 
 	return { json: result || { success: true } };
@@ -283,4 +295,25 @@ async function searchInternalChat(
 	) as IDataObject;
 
 	return { json: result };
+}
+
+function sanitizePositiveIntegerArray(
+	context: IExecuteFunctions,
+	itemIndex: number,
+	parameterName: string,
+	humanLabel: string,
+): number[] {
+	const raw = context.getNodeParameter(parameterName, itemIndex, []) as unknown[];
+	if (!Array.isArray(raw)) return [];
+	return raw.map((value) => {
+		const num = typeof value === 'number' ? value : Number(String(value).trim());
+		if (!Number.isInteger(num) || num <= 0) {
+			throw new NodeOperationError(
+				context.getNode(),
+				`Invalid ${humanLabel} entry: ${value}`,
+				{ itemIndex },
+			);
+		}
+		return num;
+	});
 }
