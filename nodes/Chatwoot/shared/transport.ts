@@ -171,22 +171,12 @@ function getResourceId(
 	parameterName: string,
 ): string {
 	try {
-		const param = this.getNodeParameter(parameterName, itemIndex) as
-		| string
-		| number
-		| { mode: string; value: string };
-
-		if (!param) {
+		const param = this.getNodeParameter(parameterName, itemIndex);
+		const id = extractResourceLocatorId(param);
+		if (id === undefined) {
 			throw new NodeOperationError(this.getNode(), 'Parameter is missing');
 		}
-
-		if (typeof param === 'object') {
-			return param.value || '';
-		}
-		if (typeof param === 'number') {
-			return String(param);
-		}
-		return param;
+		return id;
 	}
 	catch {
 		throw new NodeOperationError(
