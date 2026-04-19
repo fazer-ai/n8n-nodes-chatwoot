@@ -3,7 +3,7 @@ import type {
 	INodeListSearchItems,
 	INodeListSearchResult,
 } from 'n8n-workflow';
-import { chatwootApiRequest, getAccountId, getChatwootBaseUrl, getConversationId, getInboxId, getKanbanBoardId, getKanbanTaskId, getMessageId, getTeamId, getTemplateName } from '../shared/transport';
+import { chatwootApiRequest, getAccountId, getChatwootBaseUrl, getConversationId, getInboxId, getInternalChatChannelId, getKanbanBoardId, getKanbanTaskId, getMessageId, getTeamId, getTemplateName } from '../shared/transport';
 import {
 	ChatwootAccount,
 	ChatwootAgent,
@@ -12,6 +12,10 @@ import {
 	ChatwootConversation,
 	ChatwootCustomAttributeDefinition,
 	ChatwootInbox,
+	ChatwootInternalChatCategory,
+	ChatwootInternalChatChannel,
+	ChatwootInternalChatMember,
+	ChatwootInternalChatMessage,
 	ChatwootKanbanBoard,
 	ChatwootKanbanProduct,
 	ChatwootKanbanStep,
@@ -979,6 +983,241 @@ export async function searchTemplateStructure(
 			name: 'No components found in template',
 			value: '',
 		});
+	}
+
+	return { results };
+}
+
+/**
+ * Resolve the frontend path segment (`channels` or `dm`) for a given internal chat channel,
+ * so quick-link URLs land on a real route. Falls back to `channels` on any error.
+ */
+async function internalChatChannelPath(
+	this: ILoadOptionsFunctions,
+	accountId: string,
+	channelId: string,
+): Promise<string> {
+	try {
+		const channel = await chatwootApiRequest.call(
+			this,
+			'GET',
+			`/api/v1/accounts/${accountId}/internal_chat/channels/${channelId}`,
+		) as ChatwootInternalChatChannel;
+		return channel?.channel_type === 'dm' ? 'dm' : 'channels';
+	} catch {
+		return 'channels';
+	}
+}
+
+async function getCurrentUserId(this: ILoadOptionsFunctions): Promise<number | undefined> {
+	try {
+		const profile = await chatwootApiRequest.call(this, 'GET', '/api/v1/profile') as { id?: number };
+		return profile?.id;
+	} catch {
+		return undefined;
+	}
+}
+
+function dmLabel(channel: ChatwootInternalChatChannel, currentUserId: number | undefined): string {
+	const members = channel.members ?? [];
+	const others = currentUserId !== undefined
+		? members.filter((m) => m.user_id !== currentUserId)
+		: members;
+	const named = (others.length ? others : members)
+		.map((m) => m.name)
+		.filter((n): n is string => Boolean(n));
+	if (named.length) return named.join(', ');
+	return `DM #${channel.id}`;
+}
+
+/**
+ * Get all internal chat categories for the selected account (for resourceLocator)
+ */
+export async function searchInternalChatCategories(
+	this: ILoadOptionsFunctions,
+	filter?: string,
+): Promise<INodeListSearchResult> {
+	const accountId = getAccountId.call(this, 0);
+	if (!accountId) {
+		return { results: [] };
+	}
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/internal_chat/categories`,
+	)) as ChatwootInternalChatCategory[] | { payload?: ChatwootInternalChatCategory[] };
+
+	const categories =
+		(response as { payload?: ChatwootInternalChatCategory[] }).payload ||
+		(response as ChatwootInternalChatCategory[]) ||
+		[];
+
+	let results = categories.map((category) => ({
+		name: `#${category.id} - ${category.name}`,
+		value: String(category.id),
+	}));
+
+	if (filter) {
+		const filterLower = filter.toLowerCase();
+		results = results.filter(
+			(item) =>
+				item.name.toLowerCase().includes(filterLower) ||
+				item.value.includes(filter),
+		);
+	}
+
+	return { results };
+}
+
+/**
+ * Get all internal chat channels for the selected account (for resourceLocator)
+ */
+export async function searchInternalChatChannels(
+	this: ILoadOptionsFunctions,
+	filter?: string,
+): Promise<INodeListSearchResult> {
+	const accountId = getAccountId.call(this, 0);
+	if (!accountId) {
+		return { results: [] };
+	}
+
+	const baseUrl = await getChatwootBaseUrl.call(this);
+
+	const [response, currentUserId] = await Promise.all([
+		chatwootApiRequest.call(
+			this,
+			'GET',
+			`/api/v1/accounts/${accountId}/internal_chat/channels`,
+		) as Promise<ChatwootInternalChatChannel[] | { payload?: ChatwootInternalChatChannel[] }>,
+		getCurrentUserId.call(this),
+	]);
+
+	const channels =
+		(response as { payload?: ChatwootInternalChatChannel[] }).payload ||
+		(response as ChatwootInternalChatChannel[]) ||
+		[];
+
+	let results = channels.map((channel) => {
+		const label = channel.channel_type === 'dm'
+			? dmLabel(channel, currentUserId)
+			: (channel.name || `Channel #${channel.id}`);
+		const typeSuffix = channel.channel_type === 'dm'
+			? ' (DM)'
+			: channel.channel_type === 'private_channel'
+				? ' (Private)'
+				: '';
+		const path = channel.channel_type === 'dm' ? 'dm' : 'channels';
+		return {
+			name: `#${channel.id} - ${label}${typeSuffix}`,
+			value: String(channel.id),
+			url: `${baseUrl}/app/accounts/${accountId}/internal-chat/${path}/${channel.id}`,
+		};
+	});
+
+	if (filter) {
+		const filterLower = filter.toLowerCase();
+		results = results.filter(
+			(item) =>
+				item.name.toLowerCase().includes(filterLower) ||
+				item.value.includes(filter),
+		);
+	}
+
+	return { results };
+}
+
+/**
+ * Get all members of the selected internal chat channel (for resourceLocator)
+ */
+export async function searchInternalChatMembers(
+	this: ILoadOptionsFunctions,
+	filter?: string,
+): Promise<INodeListSearchResult> {
+	const accountId = getAccountId.call(this, 0);
+	const channelId = getInternalChatChannelId.call(this, 0);
+	if (!accountId || !channelId) {
+		return { results: [] };
+	}
+
+	const baseUrl = await getChatwootBaseUrl.call(this);
+	const channelPath = await internalChatChannelPath.call(this, accountId, channelId);
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/internal_chat/channels/${channelId}/members`,
+	)) as ChatwootInternalChatMember[] | { payload?: ChatwootInternalChatMember[] };
+
+	const members =
+		(response as { payload?: ChatwootInternalChatMember[] }).payload ||
+		(response as ChatwootInternalChatMember[]) ||
+		[];
+
+	let results = members.map((member) => ({
+		name: `#${member.id} - ${member.name || `User ${member.user_id}`}${member.role === 'admin' ? ' (Admin)' : ''}`,
+		value: String(member.id),
+		url: `${baseUrl}/app/accounts/${accountId}/internal-chat/${channelPath}/${channelId}`,
+	}));
+
+	if (filter) {
+		const filterLower = filter.toLowerCase();
+		results = results.filter(
+			(item) =>
+				item.name.toLowerCase().includes(filterLower) ||
+				item.value.includes(filter),
+		);
+	}
+
+	return { results };
+}
+
+/**
+ * Get messages for the selected internal chat channel (for resourceLocator)
+ */
+export async function searchInternalChatMessages(
+	this: ILoadOptionsFunctions,
+	filter?: string,
+): Promise<INodeListSearchResult> {
+	const accountId = getAccountId.call(this, 0);
+	const channelId = getInternalChatChannelId.call(this, 0);
+	if (!accountId || !channelId) {
+		return { results: [] };
+	}
+
+	const baseUrl = await getChatwootBaseUrl.call(this);
+	const channelPath = await internalChatChannelPath.call(this, accountId, channelId);
+
+	const response = (await chatwootApiRequest.call(
+		this,
+		'GET',
+		`/api/v1/accounts/${accountId}/internal_chat/channels/${channelId}/messages`,
+	)) as { messages?: ChatwootInternalChatMessage[] } | ChatwootInternalChatMessage[];
+
+	const messages =
+		(response as { messages?: ChatwootInternalChatMessage[] }).messages ||
+		(response as ChatwootInternalChatMessage[]) ||
+		[];
+
+	let results = messages.map((message) => {
+		const preview = message.content
+			? message.content.substring(0, 50) + (message.content.length > 50 ? '...' : '')
+			: '(no content)';
+		const sender = message.sender?.name ? ` [${message.sender.name}]` : '';
+		return {
+			name: `#${message.id}${sender} - ${preview}`,
+			value: String(message.id),
+			url: `${baseUrl}/app/accounts/${accountId}/internal-chat/${channelPath}/${channelId}`,
+		};
+	});
+
+	if (filter) {
+		const filterLower = filter.toLowerCase();
+		results = results.filter(
+			(item) =>
+				item.name.toLowerCase().includes(filterLower) ||
+				item.value.includes(filter),
+		);
 	}
 
 	return { results };

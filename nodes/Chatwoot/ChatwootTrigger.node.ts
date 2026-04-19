@@ -153,6 +153,10 @@ export class ChatwootTrigger implements INodeType {
 				displayOptions: {
 					show: {
 						events: [
+							'internal_chat_channel_updated',
+							'internal_chat_message_created',
+							'internal_chat_message_deleted',
+							'internal_chat_message_updated',
 							'kanban_task_created',
 							'kanban_task_deleted',
 							'kanban_task_overdue',

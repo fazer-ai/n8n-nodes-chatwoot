@@ -1,0 +1,17 @@
+export type InternalChatMessageOperation =
+	| 'addReaction'
+	| 'create'
+	| 'createPoll'
+	| 'delete'
+	| 'deleteDraft'
+	| 'getThread'
+	| 'list'
+	| 'listDrafts'
+	| 'pin'
+	| 'removeReaction'
+	| 'removeVote'
+	| 'saveDraft'
+	| 'sendFile'
+	| 'unpin'
+	| 'update'
+	| 'vote';

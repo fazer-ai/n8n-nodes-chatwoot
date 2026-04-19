@@ -187,3 +187,42 @@ export interface ChatwootAttachment {
 		type: string;
 	};
 }
+
+export interface ChatwootInternalChatCategory {
+	id: number;
+	name: string;
+	position?: number;
+	channels_count?: number;
+}
+
+export interface ChatwootInternalChatChannel {
+	id: number;
+	name?: string | null;
+	description?: string | null;
+	channel_type: 'public_channel' | 'private_channel' | 'dm';
+	is_dm?: boolean;
+	status?: 'active' | 'archived';
+	category_id?: number | null;
+	members_count?: number;
+	unread_count?: number;
+	members?: Array<{ user_id: number; name?: string; avatar_url?: string | null; availability_status?: string }>;
+}
+
+export interface ChatwootInternalChatMember {
+	id: number;
+	user_id: number;
+	role?: 'admin' | 'member';
+	name?: string;
+	avatar_url?: string | null;
+}
+
+export interface ChatwootInternalChatMessage {
+	id: number;
+	content?: string | null;
+	content_type?: string;
+	internal_chat_channel_id?: number;
+	sender?: { id: number; name?: string } | null;
+	parent_id?: number | null;
+	created_at?: string;
+	poll?: { id: number; question?: string };
+}
