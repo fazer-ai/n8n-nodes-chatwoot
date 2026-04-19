@@ -52,7 +52,15 @@ async function createChannel(
 				{ itemIndex },
 			);
 		}
-		channel.member_ids = [Number(dmMemberId)];
+		const numericId = Number(dmMemberId);
+		if (!Number.isInteger(numericId) || numericId <= 0) {
+			throw new NodeOperationError(
+				context.getNode(),
+				`Invalid recipient ID: ${dmMemberId}`,
+				{ itemIndex },
+			);
+		}
+		channel.member_ids = [numericId];
 	} else {
 		channel.name = context.getNodeParameter('name', itemIndex) as string;
 
@@ -138,6 +146,14 @@ async function updateChannel(
 		} else {
 			channel[key] = value;
 		}
+	}
+
+	if (!Object.keys(channel).length) {
+		throw new NodeOperationError(
+			context.getNode(),
+			'At least one field must be provided to update a channel',
+			{ itemIndex },
+		);
 	}
 
 	const result = await chatwootApiRequest.call(

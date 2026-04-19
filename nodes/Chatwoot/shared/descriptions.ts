@@ -357,7 +357,7 @@ export const internalChatMessageOptionalSelector = (
 	overrides: Partial<{ displayName: string; name: string; description: string }> = {},
 ): INodeProperties => optionalResourceSelector(
 	overrides.displayName ?? 'Message',
-	overrides.name ?? 'messageId',
+	overrides.name ?? 'message_id',
 	overrides.description ?? 'Internal chat message to reference',
 	'searchInternalChatMessages',
 );

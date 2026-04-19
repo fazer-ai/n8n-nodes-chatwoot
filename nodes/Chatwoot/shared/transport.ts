@@ -88,24 +88,25 @@ export function asyncSleep(ms: number): Promise<void> {
  * Returns the raw string value or undefined when empty.
  */
 export function extractResourceLocatorId(value: unknown): string | undefined {
-	if (value === undefined || value === null || value === '') return undefined;
+	if (value === undefined || value === null) return undefined;
 	if (typeof value === 'object') {
 		const v = (value as { value?: string | number }).value;
-		if (v === undefined || v === null || v === '') return undefined;
-		return String(v);
+		return extractResourceLocatorId(v);
 	}
-	if (typeof value === 'number') return String(value);
-	return value as string;
+	if (typeof value === 'number') return Number.isFinite(value) ? String(value) : undefined;
+	const trimmed = String(value).trim();
+	return trimmed === '' ? undefined : trimmed;
 }
 
 /**
- * Same as extractResourceLocatorId but coerces to a finite number.
- * Returns undefined for empty values or non-numeric input (e.g. expressions that resolve to garbage).
+ * Same as extractResourceLocatorId but coerces to a positive integer.
+ * Returns undefined for empty values, non-numeric input, decimals, or negatives.
  * Use this for IDs that must be sent as numbers in the API payload.
  */
 export function extractResourceLocatorIdAsNumber(value: unknown): number | undefined {
 	const id = extractResourceLocatorId(value);
 	if (id === undefined) return undefined;
+	if (!/^\d+$/.test(id)) return undefined;
 	const num = Number(id);
 	return Number.isFinite(num) ? num : undefined;
 }

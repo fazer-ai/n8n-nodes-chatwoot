@@ -1,4 +1,4 @@
-import { INodeExecutionData, type IDataObject, type IExecuteFunctions } from 'n8n-workflow';
+import { INodeExecutionData, NodeOperationError, type IDataObject, type IExecuteFunctions } from 'n8n-workflow';
 import { chatwootApiRequest, getAccountId, getInternalChatCategoryId } from '../../shared/transport';
 import { InternalChatCategoryOperation } from './types';
 
@@ -61,11 +61,23 @@ async function updateCategory(
 	const categoryId = getInternalChatCategoryId.call(context, itemIndex);
 	const updateFields = context.getNodeParameter('updateFields', itemIndex, {}) as IDataObject;
 
+	const category = Object.fromEntries(
+		Object.entries(updateFields).filter(([, value]) => value !== undefined),
+	);
+
+	if (!Object.keys(category).length) {
+		throw new NodeOperationError(
+			context.getNode(),
+			'At least one field must be provided to update a category',
+			{ itemIndex },
+		);
+	}
+
 	const result = await chatwootApiRequest.call(
 		context,
 		'PATCH',
 		`/api/v1/accounts/${accountId}/internal_chat/categories/${categoryId}`,
-		{ category: updateFields },
+		{ category },
 	) as IDataObject;
 
 	return { json: result };

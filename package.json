@@ -25,13 +25,14 @@
 	"scripts": {
 		"build": "n8n-node build",
 		"build:watch": "tsc --watch",
-		"dev": "n8n-node dev",
+		"dev": "bash scripts/dev.sh",
+		"docker:dev": "bash scripts/docker-dev.sh",
 		"lint": "n8n-node lint",
 		"lint:fix": "n8n-node lint --fix",
 		"release": "n8n-node release",
 		"prepublishOnly": "n8n-node prerelease",
-		"start": "pnpm build && docker restart n8n-dev",
-		"start:log": "pnpm build && docker restart n8n-dev && docker logs n8n-dev -f"
+		"start": "bash scripts/docker-dev.sh",
+		"start:log": "bash scripts/docker-dev.sh --logs"
 	},
 	"files": [
 		"dist"
