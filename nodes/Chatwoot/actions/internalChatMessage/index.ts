@@ -4,6 +4,7 @@ import {
 	internalChatChannelSelector,
 	internalChatMessageOptionalSelector,
 	internalChatMessageSelector,
+	internalChatNotice,
 } from '../../shared/descriptions';
 
 const showOnlyForInternalChatMessage = {
@@ -155,6 +156,8 @@ const operationsRequiringChannel = [
 	'createPoll',
 	'saveDraft',
 	'deleteDraft',
+	'addReaction',
+	'removeReaction',
 ];
 
 const operationsRequiringMessageSelector = [
@@ -169,13 +172,7 @@ const operationsRequiringMessageSelector = [
 
 const internalChatMessageFields: INodeProperties[] = [
 	{
-		displayName: 'Internal chat is only available on <a href="https://github.com/fazer-ai/chatwoot/pkgs/container/chatwoot" target="_blank">Chatwoot fazer.ai</a>',
-		name: 'fazerAiNotice',
-		type: 'notice',
-		default: '',
-		typeOptions: {
-			theme: 'info',
-		},
+		...internalChatNotice,
 		displayOptions: {
 			show: showOnlyForInternalChatMessage,
 		},

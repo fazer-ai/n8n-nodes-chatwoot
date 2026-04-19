@@ -4,6 +4,7 @@ import {
 	internalChatCategoryOptionalSelector,
 	internalChatChannelSelector,
 	internalChatMessageSelector,
+	internalChatNotice,
 } from '../../shared/descriptions';
 
 const showOnlyForInternalChatChannel = {
@@ -93,13 +94,7 @@ const internalChatChannelOperations: INodeProperties[] = [
 
 const internalChatChannelFields: INodeProperties[] = [
 	{
-		displayName: 'Internal chat is only available on <a href="https://github.com/fazer-ai/chatwoot/pkgs/container/chatwoot" target="_blank">Chatwoot fazer.ai</a>',
-		name: 'fazerAiNotice',
-		type: 'notice',
-		default: '',
-		typeOptions: {
-			theme: 'info',
-		},
+		...internalChatNotice,
 		displayOptions: {
 			show: showOnlyForInternalChatChannel,
 		},

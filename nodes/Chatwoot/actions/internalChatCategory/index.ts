@@ -1,5 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { accountSelector, internalChatCategorySelector } from '../../shared/descriptions';
+import { accountSelector, internalChatCategorySelector, internalChatNotice } from '../../shared/descriptions';
 
 const showOnlyForInternalChatCategory = {
 	resource: ['internalChatCategory'],
@@ -46,13 +46,7 @@ const internalChatCategoryOperations: INodeProperties[] = [
 
 const internalChatCategoryFields: INodeProperties[] = [
 	{
-		displayName: 'Internal chat is only available on <a href="https://github.com/fazer-ai/chatwoot/pkgs/container/chatwoot" target="_blank">Chatwoot fazer.ai</a>',
-		name: 'fazerAiNotice',
-		type: 'notice',
-		default: '',
-		typeOptions: {
-			theme: 'info',
-		},
+		...internalChatNotice,
 		displayOptions: {
 			show: showOnlyForInternalChatCategory,
 		},

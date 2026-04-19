@@ -295,6 +295,20 @@ export const webhookEventsSelector: INodeProperties = {
 };
 
 /**
+ * Shared notice for all internal chat resources, signaling that the feature
+ * is only available on the Chatwoot fazer.ai fork.
+ */
+export const internalChatNotice: INodeProperties = {
+	displayName: 'Internal chat is only available on <a href="https://github.com/fazer-ai/chatwoot/pkgs/container/chatwoot" target="_blank">Chatwoot fazer.ai</a>',
+	name: 'fazerAiNotice',
+	type: 'notice',
+	default: '',
+	typeOptions: {
+		theme: 'info',
+	},
+};
+
+/**
  * Internal Chat Category selector using resourceLocator (From List / By ID in single field)
  */
 export const internalChatCategorySelector: INodeProperties = resourceSelector(
