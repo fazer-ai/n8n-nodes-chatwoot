@@ -106,7 +106,7 @@ export function extractResourceLocatorId(value: unknown): string | undefined {
 export function extractResourceLocatorIdAsNumber(value: unknown): number | undefined {
 	const id = extractResourceLocatorId(value);
 	if (id === undefined) return undefined;
-	if (!/^\d+$/.test(id)) return undefined;
+	if (!/^[1-9]\d*$/.test(id)) return undefined;
 	const num = Number(id);
 	return Number.isSafeInteger(num) ? num : undefined;
 }

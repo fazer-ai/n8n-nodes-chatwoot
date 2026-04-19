@@ -279,13 +279,15 @@ async function createPoll(
 	const pollAdditionalFields = context.getNodeParameter('pollAdditionalFields', itemIndex, {}) as IDataObject;
 
 	const options = optionsParam
-		.filter((option) => option.text)
 		.map((option) => {
-			const entry: IDataObject = { text: option.text };
+			const text = typeof option.text === 'string' ? option.text.trim() : '';
+			if (!text) return undefined;
+			const entry: IDataObject = { text };
 			if (option.emoji) entry.emoji = option.emoji;
 			if (option.image_url) entry.image_url = option.image_url;
 			return entry;
-		});
+		})
+		.filter((entry): entry is IDataObject => entry !== undefined);
 
 	if (options.length < 2) {
 		throw new NodeOperationError(
