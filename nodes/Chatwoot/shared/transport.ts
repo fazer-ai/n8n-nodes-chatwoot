@@ -108,7 +108,7 @@ export function extractResourceLocatorIdAsNumber(value: unknown): number | undef
 	if (id === undefined) return undefined;
 	if (!/^\d+$/.test(id)) return undefined;
 	const num = Number(id);
-	return Number.isFinite(num) ? num : undefined;
+	return Number.isSafeInteger(num) ? num : undefined;
 }
 
 /**

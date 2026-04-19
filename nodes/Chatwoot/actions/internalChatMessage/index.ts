@@ -133,8 +133,6 @@ const operationsRequiringChannel = [
 	'createPoll',
 	'saveDraft',
 	'deleteDraft',
-	'addReaction',
-	'removeReaction',
 ];
 
 const operationsRequiringMessageSelector = [
