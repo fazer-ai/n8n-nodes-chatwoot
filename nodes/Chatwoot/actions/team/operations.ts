@@ -72,7 +72,7 @@ async function listTeams(
 		`/api/v1/accounts/${accountId}/teams`,
 	) as IDataObject[];
 
-	return result.map((team) => ({ json: team }));
+	return result.map((team) => ({ json: team, pairedItem: { item: itemIndex } }));
 }
 
 async function getTeamMembers(
@@ -88,7 +88,7 @@ async function getTeamMembers(
 		`/api/v1/accounts/${accountId}/teams/${teamId}/team_members`,
 	) as IDataObject[];
 
-	return result.map((member) => ({ json: member }));
+	return result.map((member) => ({ json: member, pairedItem: { item: itemIndex } }));
 }
 
 async function assignAgentToTeam(
@@ -106,7 +106,7 @@ async function assignAgentToTeam(
 		{ user_ids: [agentId] },
 	) as IDataObject[];
 
-	return result.map((member) => ({ json: member }));
+	return result.map((member) => ({ json: member, pairedItem: { item: itemIndex } }));
 }
 
 async function unassignAgentFromTeam(
@@ -134,5 +134,5 @@ async function unassignAgentFromTeam(
 		{ user_ids: remainingMemberIds },
 	) as IDataObject[];
 
-	return result.map((member) => ({ json: member }));
+	return result.map((member) => ({ json: member, pairedItem: { item: itemIndex } }));
 }

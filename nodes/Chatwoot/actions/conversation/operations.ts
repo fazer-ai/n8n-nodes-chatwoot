@@ -177,7 +177,7 @@ async function listConversationMessages(
 		beforeId = nextBeforeId;
 	}
 
-	return allMessages.map((msg) => ({ json: msg }));
+	return allMessages.map((msg) => ({ json: msg, pairedItem: { item: itemIndex } }));
 }
 
 async function createConversation(
@@ -357,7 +357,7 @@ async function listConversationLabels(
 	) as { payload?: string[] } | string[];
 
 	const labels = Array.isArray(result) ? result : (result.payload || []);
-	return labels.map((label) => ({ json: { label } }));
+	return labels.map((label) => ({ json: { label }, pairedItem: { item: itemIndex } }));
 }
 
 async function addLabelsToConversation(
@@ -1331,7 +1331,7 @@ async function listConversationAttachments(
 
 	const attachments = response.payload || [];
 
-	return attachments.map((attachment) => ({ json: attachment }));
+	return attachments.map((attachment) => ({ json: attachment, pairedItem: { item: itemIndex } }));
 }
 
 async function updateAttachmentMeta(

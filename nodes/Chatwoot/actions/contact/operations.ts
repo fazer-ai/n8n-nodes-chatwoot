@@ -404,7 +404,7 @@ async function listContactConversations(
 	) as { payload?: IDataObject[] } | IDataObject[];
 
 	const conversations = Array.isArray(result) ? result : (result.payload || []);
-	return conversations.map((conv) => ({ json: conv }));
+	return conversations.map((conv) => ({ json: conv, pairedItem: { item: itemIndex } }));
 }
 
 async function mergeContacts(
@@ -454,7 +454,7 @@ async function listContactLabels(
 	) as { payload?: string[] } | string[];
 
 	const labels = Array.isArray(result) ? result : (result.payload || []);
-	return labels.map((label) => ({ json: { label } }));
+	return labels.map((label) => ({ json: { label }, pairedItem: { item: itemIndex } }));
 }
 
 async function updateContactLabels(

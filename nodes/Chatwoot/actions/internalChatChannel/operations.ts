@@ -131,7 +131,7 @@ async function listChannels(
 	) as IDataObject | IDataObject[];
 
 	const channels = Array.isArray(result) ? result : ((result.payload as IDataObject[]) || []);
-	return channels.map((channel) => ({ json: channel }));
+	return channels.map((channel) => ({ json: channel, pairedItem: { item: itemIndex } }));
 }
 
 async function updateChannel(

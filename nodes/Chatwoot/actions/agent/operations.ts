@@ -72,7 +72,7 @@ async function listAgents(
 		`/api/v1/accounts/${accountId}/agents`,
 	) as IDataObject[];
 
-	return result.map((agent) => ({ json: agent }));
+	return result.map((agent) => ({ json: agent, pairedItem: { item: itemIndex } }));
 }
 
 async function updateAgent(

@@ -61,7 +61,7 @@ async function listTaskProducts(
 		(result as { task_products?: IDataObject[] }).task_products ??
 		(Array.isArray(result) ? result : []);
 
-	return taskProducts.map((tp) => ({ json: tp }));
+	return taskProducts.map((tp) => ({ json: tp, pairedItem: { item: itemIndex } }));
 }
 
 async function updateTaskProduct(

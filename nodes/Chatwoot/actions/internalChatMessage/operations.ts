@@ -67,7 +67,7 @@ async function listMessages(
 	const messages = Array.isArray(result)
 		? result
 		: ((result.messages as IDataObject[]) || (result.payload as IDataObject[]) || []);
-	return messages.map((message) => ({ json: message }));
+	return messages.map((message) => ({ json: message, pairedItem: { item: itemIndex } }));
 }
 
 async function createMessage(
@@ -366,7 +366,7 @@ async function listDrafts(
 	const drafts = Array.isArray(result)
 		? result
 		: ((result.drafts as IDataObject[]) || (result.payload as IDataObject[]) || []);
-	return drafts.map((draft) => ({ json: draft }));
+	return drafts.map((draft) => ({ json: draft, pairedItem: { item: itemIndex } }));
 }
 
 async function saveDraft(

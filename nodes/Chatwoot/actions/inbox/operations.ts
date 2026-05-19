@@ -42,7 +42,7 @@ async function listInboxes(
 	) as { payload?: IDataObject[] } | IDataObject[];
 
 	const inboxes = Array.isArray(result) ? result : (result.payload || []);
-	return inboxes.map((inbox) => ({ json: inbox }));
+	return inboxes.map((inbox) => ({ json: inbox, pairedItem: { item: itemIndex } }));
 }
 
 async function getInbox(
@@ -75,7 +75,7 @@ async function listInboxAgents(
 	) as { payload?: IDataObject[] } | IDataObject[];
 
 	const agents = Array.isArray(result) ? result : (result.payload || []);
-	return agents.map((agent) => ({ json: agent }));
+	return agents.map((agent) => ({ json: agent, pairedItem: { item: itemIndex } }));
 }
 
 async function addInboxAgents(

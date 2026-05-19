@@ -64,7 +64,7 @@ async function listProducts(
 		(result as { products?: IDataObject[] }).products ??
 		(Array.isArray(result) ? result : []);
 
-	return products.map((product) => ({ json: product }));
+	return products.map((product) => ({ json: product, pairedItem: { item: itemIndex } }));
 }
 
 async function updateProduct(

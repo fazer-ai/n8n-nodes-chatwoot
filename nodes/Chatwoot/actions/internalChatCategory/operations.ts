@@ -50,7 +50,7 @@ async function listCategories(
 	) as IDataObject | IDataObject[];
 
 	const categories = Array.isArray(result) ? result : ((result.payload as IDataObject[]) || []);
-	return categories.map((category) => ({ json: category }));
+	return categories.map((category) => ({ json: category, pairedItem: { item: itemIndex } }));
 }
 
 async function updateCategory(

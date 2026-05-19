@@ -62,7 +62,7 @@ async function listSteps(
 		`/api/v1/accounts/${accountId}/kanban/boards/${boardId}/steps`,
 	) as { steps: IDataObject[] };
 
-	return result.steps.map((step) => ({ json: step }));
+	return result.steps.map((step) => ({ json: step, pairedItem: { item: itemIndex } }));
 }
 
 async function updateStep(

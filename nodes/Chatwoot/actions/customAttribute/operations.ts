@@ -114,7 +114,7 @@ async function listCustomAttributes(
 		query,
 	) as IDataObject[];
 
-	return result.map((attr) => ({ json: attr }));
+	return result.map((attr) => ({ json: attr, pairedItem: { item: itemIndex } }));
 }
 
 async function deleteCustomAttribute(

@@ -33,7 +33,7 @@ async function listMembers(
 	) as IDataObject | IDataObject[];
 
 	const members = Array.isArray(result) ? result : ((result.payload as IDataObject[]) || []);
-	return members.map((member) => ({ json: member }));
+	return members.map((member) => ({ json: member, pairedItem: { item: itemIndex } }));
 }
 
 async function addMembers(

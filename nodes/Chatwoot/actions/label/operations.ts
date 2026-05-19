@@ -60,7 +60,7 @@ async function listLabels(
 
 	const labels = (result.payload ?? result) as IDataObject[];
 
-	return labels.map((label) => ({ json: label }));
+	return labels.map((label) => ({ json: label, pairedItem: { item: itemIndex } }));
 }
 
 async function updateLabel(

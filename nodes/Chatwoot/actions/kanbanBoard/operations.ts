@@ -89,7 +89,7 @@ async function listBoards(
 		{sort, order},
 	) as { boards: IDataObject[] };
 
-	return result.boards.map((board) => ({ json: board }));
+	return result.boards.map((board) => ({ json: board, pairedItem: { item: itemIndex } }));
 }
 
 async function updateBoard(
